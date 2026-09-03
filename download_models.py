@@ -1,18 +1,19 @@
 """Download model checkpoints from Google Drive for Render deployment.
 
 Run during build:  python download_models.py
-Uses gdown to fetch the full models/ folder from a shared Google Drive link.
+Downloads a single models.tar.gz archive and extracts it.
 """
 import subprocess
 import sys
 import os
+import tarfile
 from pathlib import Path
 
-FOLDER_ID = "1FxI1eeinaTsRDAqmRa6doQrX7IrnEKgy"
-FOLDER_URL = f"https://drive.google.com/drive/folders/{FOLDER_ID}"
+FILE_ID = "1FxI1eeinaTsRDAqmRa6doQrX7IrnEKgy"
 
 ROOT = Path(__file__).resolve().parent
 MODELS_DIR = ROOT / "models"
+ARCHIVE = ROOT / "models.tar.gz"
 
 
 def main():
@@ -20,7 +21,7 @@ def main():
         print("[download_models] models/ already populated, skipping download")
         return
 
-    print(f"[download_models] Downloading models from Google Drive folder {FOLDER_ID}...")
+    print(f"[download_models] Downloading models archive from Google Drive (file {FILE_ID})...")
 
     try:
         import gdown
@@ -29,36 +30,36 @@ def main():
         subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown", "-q"])
         import gdown
 
-    os.makedirs(MODELS_DIR, exist_ok=True)
+    url = f"https://drive.google.com/uc?id={FILE_ID}"
+    result = gdown.download(url, str(ARCHIVE), quiet=False, use_cookies=False)
 
-    gdown.download_folder(
-        FOLDER_URL,
-        output=str(MODELS_DIR),
-        quiet=False,
-        use_cookies=False,
-    )
+    if not result:
+        print("[download_models] ERROR: Download failed. Check Google Drive share settings.")
+        print("[download_models] The file must be shared as 'Anyone with the link' can view.")
+        sys.exit(1)
 
-    # Handle case where Google Drive folder contained a nested "models" subfolder
-    nested_models = MODELS_DIR / "models"
-    if nested_models.exists() and nested_models.is_dir():
-        print("[download_models] Found nested models/ folder, flattening...")
-        import shutil
-        for item in nested_models.iterdir():
-            dest = MODELS_DIR / item.name
-            if dest.exists():
-                shutil.rmtree(dest) if dest.is_dir() else dest.unlink()
-            shutil.move(str(item), str(dest))
-        nested_models.rmdir()
+    size_mb = ARCHIVE.stat().st_size / (1024 * 1024)
+    print(f"[download_models] Downloaded {size_mb:.1f} MB. Extracting...")
+
+    with tarfile.open(ARCHIVE, "r:gz") as tar:
+        tar.extractall(path=ROOT)
+
+    ARCHIVE.unlink()
+    print("[download_models] Archive extracted and removed.")
 
     pt_files = list(MODELS_DIR.rglob("*.pt"))
-    print(f"[download_models] Download complete. Found {len(pt_files)} .pt files:")
-    for f in pt_files:
+    pth_files = list(MODELS_DIR.rglob("*.pth"))
+    all_models = pt_files + pth_files
+    print(f"[download_models] Found {len(all_models)} model files:")
+    for f in all_models:
         size_mb = f.stat().st_size / (1024 * 1024)
         print(f"  {f.relative_to(ROOT)} ({size_mb:.1f} MB)")
 
-    if not pt_files:
-        print("[download_models] WARNING: No .pt files found! Check Google Drive share settings.")
+    if not all_models:
+        print("[download_models] WARNING: No model files found after extraction!")
         sys.exit(1)
+
+    print("[download_models] Models ready.")
 
 
 if __name__ == "__main__":
