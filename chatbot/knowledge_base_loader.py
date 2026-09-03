@@ -1,5 +1,5 @@
 """
-Knowledge base loader for CCNSA knowledge base.
+Knowledge base loader for CDCNSA knowledge base.
 
 Loads JSONL RAG data and provides TF-IDF search over topics and symptoms.
 """

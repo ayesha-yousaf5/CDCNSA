@@ -1,6 +1,6 @@
 {
   "registry_version": 1,
-  "project": "CCNSA",
+  "project": "CDCNSA",
   "device_policy": "cuda_if_available_else_cpu",
   "disease_confidence_threshold": 0.55,
   "severity_abstain_threshold": 0.4,

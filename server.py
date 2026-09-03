@@ -1,4 +1,4 @@
-"""CCNSA local/production-style server with real crop-model routing.
+"""CDCNSA local/production-style server with real crop-model routing.
 
 Run:
     pip install -r requirements.txt
@@ -24,7 +24,7 @@ from chatbot import chat_service
 from chatbot import voice_service
 
 ROOT=Path(__file__).resolve().parent
-app=FastAPI(title='CCNSA')
+app=FastAPI(title='CDCNSA')
 runtime=ModelRuntime(ROOT)
 
 @app.get('/api/health')

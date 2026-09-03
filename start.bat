@@ -1,6 +1,6 @@
 @echo off
 echo ============================================
-echo   CCNSA - Starting Server
+echo   CDCNSA - Starting Server
 echo ============================================
 echo.
 

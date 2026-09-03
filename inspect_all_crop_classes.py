@@ -286,7 +286,7 @@ IGNORE_DIRS = {
 
 
 print("=" * 90)
-print("CCNSA — EXACT MODEL CLASS AUDIT")
+print("CDCNSA — EXACT MODEL CLASS AUDIT")
 print("=" * 90)
 print("Project root:", ROOT)
 

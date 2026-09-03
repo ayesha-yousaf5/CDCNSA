@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "============================================"
-echo "  CCNSA - Starting Server"
+echo "  CDCNSA - Starting Server"
 echo "============================================"
 echo ""
 
