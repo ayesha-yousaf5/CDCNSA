@@ -8,8 +8,7 @@
     "healthy_skips_severity": true,
     "uncertain_disease_skips_severity": true,
     "missing_disease_model_fails_closed": true,
-    "missing_severity_model_preserves_disease_and_returns_na": true,
-    "confidence_heverity_fallback": true
+    "missing_severity_model_preserves_disease_and_returns_na": true
   },
   "crops": {
     "corn": {
@@ -30,7 +29,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "ae5ef35703cc622d0ccb53115c1acecc023496c7efc287d2096c8c34ab70db10",
         "note": "Checkpoint embeds class_mapping and architecture=efficientnet_b0.",
         "source": "attached checkpoint"
       },
@@ -72,7 +71,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "9f51d1eb6cd6f093f5c7d006acc29d9e10f479f99ee4d5aeded5a5d465ea4dcc",
         "note": "Checkpoint embeds class_to_idx and model_name=mobilenet_v3_large.",
         "source": "attached checkpoint"
       },
@@ -89,7 +88,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "20817f1e402f2af9b71808cc1eadde27479375509aefb8c62ec303f7bdf3715a",
         "note": "Checkpoint embeds severity_to_idx and model_name=mobilenet_v3_large.",
         "source": "attached checkpoint"
       }
@@ -120,7 +119,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "c4c535ad2566e9fc29c2035db34991c48fb07a266bc2360aee407b8c32c10660",
         "note": "Checkpoint embeds class_order and architecture=efficientnet_b0.",
         "source": "attached checkpoint"
       },
@@ -137,7 +136,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "70e5d82602e28c999a4bd348f93ad432ca85ad27d396f26fe29b75dcfb85b61e",
         "note": "Checkpoint embeds severity_classes and architecture=MobileNetV3-Large.",
         "source": "attached checkpoint"
       }
@@ -159,7 +158,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "22e129ee92f8f4e52f89ba4cca32a3417fc45b60a1ec0a5993307751e25841fc",
         "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
         "source": "attached checkpoint"
       },
@@ -176,7 +175,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "8a98f69a1977dea5030dbcc6bc407e57c2a7e9038382051faa072170b7f78457",
         "note": "Checkpoint embeds class_to_idx and architecture=mobilenet_v3_large.",
         "source": "attached checkpoint"
       }
@@ -399,7 +398,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "25ed16f2d231c9a250374384be3b049a5697f9d747d2052439e6f7661850e2e9",
         "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
         "source": "attached checkpoint"
       },
@@ -416,7 +415,7 @@
         "normalization_mean": [0.485, 0.456, 0.406],
         "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": null,
+        "expected_sha256": "b0b8e4ecd6fa11ba8099ebd8cecaf209dec1adde97922f67d37e5c9d846c6a62",
         "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
         "source": "attached checkpoint"
       }

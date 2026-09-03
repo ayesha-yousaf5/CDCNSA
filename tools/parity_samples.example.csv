@@ -1,0 +1,3 @@
+crop,image,expected_disease,expected_severity,source
+apple,path/to/non_test_apple_image.jpg,Apple Scab,MODERATE,independent field sample
+peas,path/to/non_test_peas_image.jpg,Ascochyta Blight,MILD,independent field sample

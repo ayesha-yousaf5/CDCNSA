@@ -67,3 +67,19 @@ Disease drawers now use curated exact Wikimedia Commons files when available and
 ## Real model runtime integration
 
 See `MODEL_INTEGRATION_STATUS.md`. Run `python tools/verify_models.py` before launch. The diagnosis endpoint no longer generates demo/fallback predictions.
+
+## Runtime parity audit
+
+`tools/verify_models.py` verifies that checkpoint files load and have the expected output shape. It does not measure semantic accuracy. Use the parity auditor for checkpoint metadata, out-of-distribution behavior, labeled external images, and local-vs-deployed website comparisons:
+
+```bash
+python tools/runtime_parity_auditor.py --crops apple corn cotton tomato peas
+python tools/runtime_parity_auditor.py \
+  --samples-csv tools/parity_samples.example.csv \
+  --endpoint http://127.0.0.1:8000 \
+  --json-out parity_report.json
+```
+
+Copy `tools/parity_samples.example.csv`, replace its example rows with real labeled image paths, and keep those images outside all training, validation, and official test populations.
+
+The runtime defaults to a one-model LRU cache (`CDCNSA_MAX_CACHED_MODELS=1`) because small Render instances cannot retain multiple CNN checkpoints safely. Disease and severity inference are serialized, and checkpoint tensor payloads are discarded immediately after their weights are copied into the model.

@@ -1,6 +1,6 @@
 # Plant Health AI — Model Runtime Integration Status
 
-This build uses the approved polished 12-crop website as its UI base. The neural-tree variant is not used.
+This build uses the approved polished 12-crop website codebase. The current diagnosis UI exposes 10 crops; Lemon and Soybean remain hidden and disabled because their checkpoint binaries are unavailable.
 
 ## What is now real
 
@@ -10,27 +10,42 @@ This build uses the approved polished 12-crop website as its UI base. The neural
 - Checkpoint SHA256 is enforced when a protected hash is available.
 - Checkpoint/classifier output count and state-dict architecture are checked before inference.
 - Healthy predictions skip severity and return `N/A`.
-- Low-confidence disease predictions skip severity.
+- Low-confidence disease predictions return `Uncertain`, hide the candidate label, and skip severity. A low-confidence `healthy` candidate cannot override uncertainty.
+- Degenerate, near-uniform images fail closed before model inference.
 - Low-confidence severity can abstain to `N/A`.
 - `/api/models/status?deep=true` performs a deserialization/contract load check.
 
-## Binary checkpoints physically attached in this ZIP
+## Model delivery and active runtime
+
+Model binaries are intentionally excluded from Git. `download_models.py` downloads the shared Google Drive `models.tar.gz` archive during deployment and then verifies that every enabled classification checkpoint is present and every protected hash matches.
 
 | Crop | Task | Architecture | Status |
 |---|---|---|---|
-| Apple | Disease | EfficientNet-B0 | attached + enabled |
-| Apple | Severity | DenseNet121 | attached + enabled; 224px input should be cross-checked against original Apple severity training code |
-| Grape | Disease | ResNet50 | attached + enabled |
-| Mango | Severity | ResNet50 | attached + enabled |
-| Rice | Severity | EfficientNet-B0 | attached + enabled |
+| Corn | Disease | EfficientNet-B0 | enabled |
+| Corn | Severity | lesion-area/abstention contract | runtime not attached; disabled |
+| Cotton | Disease / Severity | MobileNetV3-Large | enabled |
+| Tomato | Disease | EfficientNet-B0 | enabled as a single model; frozen three-model ensemble is not deployed |
+| Tomato | Severity | MobileNetV3-Large | enabled |
+| Apple | Disease | ResNet50 | enabled |
+| Apple | Severity | MobileNetV3-Large | enabled |
+| Rice | Disease / Severity | ResNet50 / EfficientNet-B0 | enabled |
+| Mango | Disease / Severity | EfficientNet-B0 / ResNet50 | enabled |
+| Grape | Disease / Severity | ResNet50 / MobileNetV3-Large | enabled |
+| Eggplant | Disease / Severity | ResNet50 / ResNet50 | enabled |
+| Cucumber | Disease / Severity | ResNet50 / DenseNet121 | enabled |
+| Peas | Disease / Severity | ResNet50 / ResNet50 | enabled |
+| Lemon | Disease / Severity | — | no binaries; disabled |
+| Soybean | Disease / Severity | — | no binaries; disabled |
 
-Mango/Rice diagnosis still fails closed because their **disease** binaries are not physically present in the active runtime. Grape can return disease and will return severity `N/A` until its severity checkpoint is mounted. Apple is the only crop in this build with both disease and severity binaries physically attached.
+## Known limitations
 
-## Prepared but not enabled model slots
-
-The registry/folder contracts are already prepared for Corn, Cotton, Tomato, Rice disease, Mango disease, Grape severity, Eggplant/Brinjal, Cucumber, Peas, Lemon and Soybean. Their historical/training evidence can be searchable while the actual binary payload is not exposed to this runtime; therefore the package does not pretend those checkpoint bytes are present.
-
-For Corn, the final severity slot is deliberately marked `lesion_area_abstention`; it must not be replaced by an experimental generic severity classifier.
+- A checkpoint load and dummy-forward pass proves structural compatibility, not real-image accuracy.
+- The global disease threshold (`0.55`) and severity threshold (`0.40`) are not per-crop calibrated open-set thresholds.
+- The basic uniform-image rejection is not a trained leaf/crop/out-of-distribution detector.
+- Tomato's recorded frozen three-model ensemble rule is not implemented by the active single-EfficientNet runtime.
+- Several severity checkpoints have weak validation Macro-F1 and must not be described as production-ready.
+- The deployment uses a one-model LRU cache by default; retaining every lazily loaded CNN caused Render 502/process restarts during disease-plus-severity requests.
+- Use `tools/runtime_parity_auditor.py` with independent labeled field images and the deployed endpoint before accepting a crop.
 
 ## Files that make the models work
 
@@ -40,6 +55,7 @@ For Corn, the final severity slot is deliberately marked `lesion_area_abstention
 - `inference/registry.py` — registry and SHA256 verification.
 - `inference/runtime.py` — lazy loading, checkpoint-contract validation, softmax inference, healthy/uncertainty/severity gates.
 - `tools/verify_models.py` — deep load + dummy-forward validation for every enabled checkpoint.
+- `tools/runtime_parity_auditor.py` — metadata, OOD, labeled-image and local-vs-endpoint parity audit.
 - `models/<crop>/<task>/evidence/` — preserved machine-readable class maps/configs where available.
 
 ## Completion procedure for a missing model

@@ -1,7 +1,11 @@
 from __future__ import annotations
+import gc
+import os
 import threading
+from collections import OrderedDict
 from pathlib import Path
 import torch
+from PIL import ImageStat
 from torch.nn import functional as F
 from .architectures import build_classifier
 from .errors import ModelContractError, ModelUnavailable
@@ -24,13 +28,37 @@ def is_healthy(label:str)->bool:
     return x=='healthy'
 
 class ModelRuntime:
+    _RUNTIME_META_KEYS=(
+        'backbone','architecture','model_name','class_to_idx','class_mapping',
+        'severity_to_idx','class_order','severity_classes','classes','image_size',
+        'input_size','imagenet_mean','imagenet_std','normalization_mean',
+        'normalization_std',
+    )
     def __init__(self,root:Path):
         self.root=Path(root)
         self.registry=ModelRegistry(self.root)
         self.device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self._models={}; self._locks={}; self._errors={}
-    def _lock(self,key):
-        self._locks.setdefault(key,threading.Lock()); return self._locks[key]
+        # Render's smaller instances cannot safely retain multiple CNNs. Keep the
+        # limit configurable, but default to one model so disease is released
+        # before severity is loaded.
+        try:
+            self.max_cached_models=max(1,int(os.getenv('CDCNSA_MAX_CACHED_MODELS','1')))
+        except ValueError:
+            self.max_cached_models=1
+        self._models=OrderedDict(); self._cache_lock=threading.RLock()
+        self._inference_lock=threading.RLock(); self._errors={}
+    def _cached(self,key):
+        loaded=self._models.get(key)
+        if loaded is not None:self._models.move_to_end(key)
+        return loaded
+    def _make_cache_room(self):
+        evicted=False
+        while len(self._models)>=self.max_cached_models:
+            _,loaded=self._models.popitem(last=False)
+            del loaded; evicted=True
+        if evicted:
+            gc.collect()
+            if self.device.type=='cuda':torch.cuda.empty_cache()
     def _extract(self,obj):
         if not isinstance(obj,dict): raise ModelContractError('Checkpoint must deserialize to a dict/state_dict.')
         for key in ('model_state_dict','state_dict','model'):
@@ -42,19 +70,24 @@ class ModelRuntime:
         return {k[7:] if k.startswith('module.') else k:v for k,v in sd.items()}
     def load(self,crop:str,task:str):
         crop=canonical_crop(crop); key=(crop,task)
-        if key in self._models:return self._models[key]
-        spec=self.registry.task(crop,task)
-        if not spec.get('enabled'): raise ModelUnavailable(f'{crop} {task} model is not enabled in this build.')
-        if spec.get('runtime_kind')!='classification': raise ModelUnavailable(f'{crop} {task} uses {spec.get("runtime_kind")}; its dedicated runtime is not attached yet.')
-        p=self.registry.checkpoint_path(spec)
-        if not p.is_file(): raise ModelUnavailable(f'{crop} {task} checkpoint is missing: {spec.get("checkpoint")}')
-        with self._lock(key):
-            if key in self._models:return self._models[key]
+        with self._cache_lock:
+            loaded=self._cached(key)
+            if loaded is not None:return loaded
+            spec=self.registry.task(crop,task)
+            if not spec.get('enabled'): raise ModelUnavailable(f'{crop} {task} model is not enabled in this build.')
+            if spec.get('runtime_kind')!='classification': raise ModelUnavailable(f'{crop} {task} uses {spec.get("runtime_kind")}; its dedicated runtime is not attached yet.')
+            p=self.registry.checkpoint_path(spec)
+            if not p.is_file(): raise ModelUnavailable(f'{crop} {task} checkpoint is missing: {spec.get("checkpoint")}')
+            self._make_cache_room()
             if spec.get('expected_sha256'):
                 actual=self.registry.sha256(p)
                 if actual!=spec['expected_sha256']: raise ModelContractError(f'{crop} {task} checkpoint SHA256 mismatch.')
             obj=torch.load(p,map_location='cpu',weights_only=False)
             sd,meta=self._extract(obj); sd=self._strip_module(sd)
+            # Never retain the checkpoint/state_dict as "metadata" alongside the
+            # instantiated model. Several checkpoints embed model_state_dict in
+            # the top-level dict, which otherwise nearly doubles resident RAM.
+            runtime_meta={k:meta[k] for k in self._RUNTIME_META_KEYS if k in meta}
             class_to_idx=(meta.get('class_to_idx') or meta.get('class_mapping')
                           or meta.get('severity_to_idx') or spec.get('class_to_idx'))
             if not class_to_idx:
@@ -72,55 +105,54 @@ class ModelRuntime:
             try: model.load_state_dict(sd,strict=True)
             except RuntimeError as exc: raise ModelContractError(f'{crop} {task} state_dict does not match {arch}/{len(ordered)} classes: {exc}') from exc
             model.eval().to(self.device)
-            loaded={'model':model,'classes':ordered,'spec':spec,'architecture':arch,'meta':meta}
+            del sd,meta,obj
+            gc.collect()
+            loaded={'model':model,'classes':ordered,'spec':spec,'architecture':arch,'meta':runtime_meta}
             self._models[key]=loaded
             return loaded
     @torch.inference_mode()
     def predict_task(self,crop:str,task:str,image):
-        loaded=self.load(crop,task); spec=loaded['spec']
-        x=transform_for(spec)(image).unsqueeze(0).to(self.device)
-        logits=loaded['model'](x)
-        if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
-        probs=F.softmax(logits,dim=1)[0]; conf,idx=torch.max(probs,dim=0)
-        idx=int(idx.item()); return loaded['classes'][idx],float(conf.item())
+        with self._inference_lock:
+            loaded=self.load(crop,task); spec=loaded['spec']
+            x=transform_for(spec)(image).unsqueeze(0).to(self.device)
+            logits=loaded['model'](x)
+            if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
+            probs=F.softmax(logits,dim=1)[0]; conf,idx=torch.max(probs,dim=0)
+            idx=int(idx.item()); return loaded['classes'][idx],float(conf.item())
     @staticmethod
-    def _confidence_to_severity(conf: float) -> str:
-        if conf >= 0.85:
-            return 'SEVERE'
-        if conf >= 0.65:
-            return 'MODERATE'
-        return 'MILD'
+    def _image_quality_reason(image):
+        # Reject only degenerate inputs here. A true leaf/crop OOD detector must
+        # be calibrated separately on representative field and negative images.
+        if min(image.size)<32:return 'image_too_small'
+        gray=image.resize((64,64)).convert('L')
+        if float(ImageStat.Stat(gray).stddev[0])<2.0:return 'image_too_uniform'
+        return None
     def diagnose(self,crop:str,payload:bytes,language:str='en')->dict:
+        with self._inference_lock:
+            return self._diagnose(crop,payload,language)
+    def _diagnose(self,crop:str,payload:bytes,language:str='en')->dict:
         crop=canonical_crop(crop); image=decode_rgb(payload)
+        quality_reason=self._image_quality_reason(image)
+        if quality_reason:
+            return {'crop':crop,'disease':'Uncertain','candidate_disease':None,'confidence':0.0,'healthy':False,'candidate_healthy':False,'uncertain':True,'severity':'N/A','severity_confidence':None,'severity_unavailable':False,'severity_abstained':False,'language':language,'runtime_device':str(self.device),'demo':False,'reason':quality_reason}
         label,conf=self.predict_task(crop,'disease',image)
         disease=display_label(label); healthy=is_healthy(label)
         threshold=float(self.registry.data.get('disease_confidence_threshold',0.55))
         uncertain=conf<threshold
-        out={'crop':crop,'disease':disease,'confidence':round(conf,6),'healthy':healthy,'uncertain':uncertain,'severity':'N/A','severity_confidence':None,'severity_unavailable':False,'severity_abstained':False,'language':language,'runtime_device':str(self.device),'demo':False}
+        out={'crop':crop,'disease':disease,'candidate_disease':None,'confidence':round(conf,6),'healthy':healthy,'candidate_healthy':healthy,'uncertain':uncertain,'severity':'N/A','severity_confidence':None,'severity_unavailable':False,'severity_abstained':False,'language':language,'runtime_device':str(self.device),'demo':False}
+        if uncertain:
+            out['candidate_disease']=disease
+            out['disease']='Uncertain'
+            out['healthy']=False
+            out['reason']='disease_uncertain_skips_severity'; return out
         if healthy:
             out['reason']='healthy_skips_severity'; return out
-        if uncertain:
-            out['reason']='disease_uncertain_skips_severity'; return out
         sev_spec=self.registry.task(crop,'severity')
         if not sev_spec.get('enabled') or not self.registry.checkpoint_path(sev_spec).is_file():
-            use_heuristic = self.registry.data.get('rules', {}).get('confidence_heverity_fallback', False)
-            if use_heuristic:
-                out['severity'] = self._confidence_to_severity(conf)
-                out['severity_confidence'] = round(conf, 6)
-                out['severity_source'] = 'confidence_heuristic'
-                out['reason'] = 'severity_heuristic_fallback'
-                return out
             out['severity_unavailable']=True; out['reason']='severity_model_unavailable'; return out
         try:
             sev_label,sev_conf=self.predict_task(crop,'severity',image)
         except ModelUnavailable:
-            use_heuristic = self.registry.data.get('rules', {}).get('confidence_heverity_fallback', False)
-            if use_heuristic:
-                out['severity'] = self._confidence_to_severity(conf)
-                out['severity_confidence'] = round(conf, 6)
-                out['severity_source'] = 'confidence_heuristic'
-                out['reason'] = 'severity_heuristic_fallback'
-                return out
             out['severity_unavailable']=True; out['reason']='severity_runtime_unavailable'; return out
         out['severity_confidence']=round(sev_conf,6)
         sev_threshold=float(self.registry.data.get('severity_abstain_threshold',0.40))
@@ -130,7 +162,7 @@ class ModelRuntime:
             out['severity']=display_label(sev_label).upper(); out['reason']='ok'
         return out
     def status(self,deep:bool=False)->dict:
-        result={'device':str(self.device),'crops':{}}
+        result={'device':str(self.device),'max_cached_models':self.max_cached_models,'crops':{}}
         for crop,tasks in self.registry.crops.items():
             result['crops'][crop]={}
             for task,spec in tasks.items():

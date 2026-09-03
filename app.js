@@ -3069,24 +3069,27 @@ async function analyzePlant(){
   state.latestDiagnosis=normalizeDiagnosis(result);showResult(state.latestDiagnosis,false);saveHistory(state.latestDiagnosis);renderChatContext();
 }
 function normalizeDiagnosis(r){
-  const disease=String(r.disease||r.prediction||'Uncertain').trim();
+  const rawDisease=String(r.disease||r.prediction||'Uncertain').trim();
   const confidence=Number(r.confidence??r.disease_confidence??0);
-  const healthy=Boolean(r.healthy)||disease.toLowerCase()==='healthy';
+  const uncertain=Boolean(r.uncertain)||confidence<.55;
+  const disease=uncertain?'Uncertain':rawDisease;
+  const healthy=!uncertain&&(Boolean(r.healthy)||disease.toLowerCase()==='healthy');
   const rawSeverityConfidence=r.severity_confidence??r.severityConfidence;
   return{
     crop:r.crop||state.selectedCrop,
     disease,
+    candidateDisease:r.candidate_disease||(!uncertain?null:rawDisease),
     confidence,
-    severity:healthy?'N/A':(r.severity||'N/A'),
-    severityConfidence:healthy?null:(rawSeverityConfidence==null?null:Number(rawSeverityConfidence)),
-    uncertain:Boolean(r.uncertain)||confidence<.55,
+    severity:(healthy||uncertain)?'N/A':(r.severity||'N/A'),
+    severityConfidence:(healthy||uncertain)?null:(rawSeverityConfidence==null?null:Number(rawSeverityConfidence)),
+    uncertain,
     healthy
   };
 }
 function showResult(r,demo){
-  $('#resultSection').classList.remove('hidden');$('#resultDisease').textContent=displayDisease(r.disease);$('#resultConfidence').textContent=`${Math.round(r.confidence*100)}%`;$('#confidenceFill').style.width=`${Math.round(r.confidence*100)}%`;$('#resultCrop').textContent=state.lang==='ur'?activeCrop().ur:activeCrop().en;$('#resultSeverity').textContent=r.healthy?t('severityNA'):translateSeverity(r.severity);$('#severityConfidence').textContent=r.healthy?t('severityNA'):(r.severityConfidence?`${Math.round(r.severityConfidence*100)}%`:'—');
-  const status=$('.result-status');status.classList.remove('healthy','uncertain'); if(r.healthy){status.classList.add('healthy');$('#resultStatusLabel').textContent=t('healthy');$('#resultStatusIcon').textContent='✓'}else if(r.uncertain){status.classList.add('uncertain');$('#resultStatusLabel').textContent=t('uncertain');$('#resultStatusIcon').textContent='!'}else{$('#resultStatusLabel').textContent=t('detected');$('#resultStatusIcon').textContent='✦'}
-  $('#uncertaintyNote').classList.toggle('hidden',!r.uncertain); const entry=findDisease(r.disease); $('#resultGuidance').textContent=entry?(state.lang==='ur'?entry.urduSymptoms:entry.management):t('defaultGuidance');$('#demoNotice').textContent=t('demoNoticeText');$('#demoNotice').classList.toggle('hidden',!demo);$('#resultSection').scrollIntoView({behavior:'smooth',block:'start'});
+  $('#resultSection').classList.remove('hidden');$('#resultDisease').textContent=r.uncertain?t('uncertain'):displayDisease(r.disease);$('#resultConfidence').textContent=`${Math.round(r.confidence*100)}%`;$('#confidenceFill').style.width=`${Math.round(r.confidence*100)}%`;$('#resultCrop').textContent=state.lang==='ur'?activeCrop().ur:activeCrop().en;$('#resultSeverity').textContent=(r.healthy||r.uncertain)?t('severityNA'):translateSeverity(r.severity);$('#severityConfidence').textContent=(r.healthy||r.uncertain)?t('severityNA'):(r.severityConfidence?`${Math.round(r.severityConfidence*100)}%`:'—');
+  const status=$('.result-status');status.classList.remove('healthy','uncertain'); if(r.uncertain){status.classList.add('uncertain');$('#resultStatusLabel').textContent=t('uncertain');$('#resultStatusIcon').textContent='!'}else if(r.healthy){status.classList.add('healthy');$('#resultStatusLabel').textContent=t('healthy');$('#resultStatusIcon').textContent='✓'}else{$('#resultStatusLabel').textContent=t('detected');$('#resultStatusIcon').textContent='✦'}
+  $('#uncertaintyNote').classList.toggle('hidden',!r.uncertain); const entry=r.uncertain?null:findDisease(r.disease); $('#resultGuidance').textContent=entry?(state.lang==='ur'?entry.urduSymptoms:entry.management):t('defaultGuidance');$('#demoNotice').textContent=t('demoNoticeText');$('#demoNotice').classList.toggle('hidden',!demo);$('#resultSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function translateSeverity(s){const x=String(s).toUpperCase();if(state.lang==='en')return x;return({MILD:'ہلکی',MODERATE:'درمیانی',SEVERE:'شدید','N/A':t('severityNA')})[x]||s}
 function displayDisease(name){const entry=findDisease(name);return entry?(state.lang==='ur'?entry.ur:entry.en):name}
@@ -3095,7 +3098,7 @@ function newCheck(){state.latestDiagnosis=null;clearPhoto();$('#resultSection').
 function saveHistory(r){
   const c=activeCrop();
   const healthy=Boolean(r.healthy)||String(r.disease||'').toLowerCase()==='healthy';
-  const item={id:Date.now(),crop:c.id,disease:r.disease,confidence:r.confidence,healthy,severity:healthy?'N/A':(r.severity||'N/A'),severityConfidence:healthy?null:(r.severityConfidence??null),time:new Date().toISOString()};
+  const item={id:Date.now(),crop:c.id,disease:r.disease,confidence:r.confidence,healthy,uncertain:Boolean(r.uncertain),severity:(healthy||r.uncertain)?'N/A':(r.severity||'N/A'),severityConfidence:(healthy||r.uncertain)?null:(r.severityConfidence??null),time:new Date().toISOString()};
   state.history=[item,...state.history].slice(0,12);
   localStorage.setItem('ksa_history',JSON.stringify(state.history));
   renderHistory();

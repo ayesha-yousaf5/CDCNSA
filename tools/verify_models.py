@@ -13,7 +13,9 @@ print(json.dumps(status,indent=2,ensure_ascii=False))
 failed=[]
 for crop,tasks in status['crops'].items():
     for task,s in tasks.items():
-        if s['enabled'] and s['present'] and s['loadable'] is not True: failed.append((crop,task,s['load_error']))
+        if not s['enabled'] or s['runtime_kind']!='classification': continue
+        if not s['present']: failed.append((crop,task,'checkpoint missing'))
+        elif s['loadable'] is not True: failed.append((crop,task,s['load_error']))
 if failed:
     print('FAILED ENABLED MODELS:')
     for x in failed: print(x)
