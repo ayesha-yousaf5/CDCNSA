@@ -1,0 +1,39 @@
+# Secrets
+.env
+
+# Model weights (too large for GitHub)
+models/
+inference/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Backup files
+*.backup.*
+*.before_*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large assets
+ChatGPT*.png
+
+# Temp
+*.log

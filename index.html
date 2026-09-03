@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b6e4f" />
+  <meta name="description" content="Kisaan Sehat AI — bilingual crop health diagnosis and farmer assistant." />
+  <title>CCNSA</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%2322C55E'/><stop offset='100%25' stop-color='%2316A34A'/></linearGradient></defs><path d='M14 34c0-12 8-20 20-22-2 14-10 22-20 22z' fill='url(%23g)' opacity='0.9'/><path d='M16 32c4-8 10-14 16-16' stroke='%2322C55E' stroke-width='1.5' fill='none' stroke-linecap='round'/><circle cx='20' cy='28' r='1.5' fill='%2322C55E'/><circle cx='24' cy='24' r='1.5' fill='%2322C55E'/><circle cx='28' cy='20' r='1.5' fill='%2322C55E'/></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Manrope:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=11" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+
+  <div id="appShell" class="app-shell">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebar-top">
+        <button class="brand" data-nav="home" aria-label="Home">
+          <div class="brand-mark" aria-hidden="true"><svg viewBox="0 0 48 48" role="img"><defs><linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#22C55E;stop-opacity:1" /><stop offset="100%" style="stop-color:#16A34A;stop-opacity:1" /></linearGradient></defs><path d="M14 34c0-12 8-20 20-22-2 14-10 22-20 22z" fill="url(#leafGrad)" opacity="0.9"/><path d="M16 32c4-8 10-14 16-16" stroke="#22C55E" stroke-width="1.5" fill="none" stroke-linecap="round"/><circle cx="20" cy="28" r="1.5" fill="#22C55E"/><circle cx="24" cy="24" r="1.5" fill="#22C55E"/><circle cx="28" cy="20" r="1.5" fill="#22C55E"/><path d="M20 28l4-4m0 0l4-4" stroke="#22C55E" stroke-width="1" opacity="0.6"/></svg></div>
+          <div class="brand-text">
+            <strong>CCNSA</strong>
+            <small data-i18n="brandTagline">Crop Health Assistant</small>
+          </div>
+        </button>
+        <div class="sidebar-top-actions">
+          <button id="sidebarCollapse" class="icon-btn sidebar-collapse" aria-label="Collapse sidebar" title="Collapse sidebar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
+          <button id="sidebarClose" class="icon-btn sidebar-close" aria-label="Close sidebar">×</button>
+        </div>
+      </div>
+
+      <nav class="nav-list" aria-label="Primary navigation">
+        <button class="nav-item active" data-nav="home">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 5l8 6.5V20h-5v-5H9v5H4z"/></svg></span><span data-i18n="navHome">Home</span>
+        </button>
+        <button class="nav-item" data-nav="diagnose">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span data-i18n="navDiagnose">Diagnose Crop</span>
+        </button>
+        <button class="nav-item" data-nav="diseases">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M6 5.5h9.5A2.5 2.5 0 0 1 18 8v11H8.5A2.5 2.5 0 0 1 6 16.5z"/><path d="M9 9h6M9 13h6"/></svg></span><span data-i18n="navDiseases">Disease Library</span>
+        </button>
+        <button class="nav-item" data-nav="history">
+          <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.2-5.5L4 9"/><path d="M4 4v5h5"/></svg></span><span data-i18n="navHistory">Recent Checks</span>
+        </button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+
+      <footer class="sidebar-footer">
+        <span class="status-dot"></span>
+        <span data-i18n="systemReady">AI system ready</span>
+      </footer>
+    </aside>
+
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
+
+    <main class="main-content">
+      <header class="topbar">
+        <button id="menuBtn" class="icon-btn menu-btn" aria-label="Open menu">☰</button>
+        <div class="topbar-title">
+          <span class="mobile-brand">CCNSA</span>
+          <div class="topbar-context"><span class="context-line"></span><span id="breadcrumb" data-i18n="breadcrumbHome">Home</span></div>
+        </div>
+        <div class="topbar-actions">
+          <button id="quickLang" class="top-action language-chip" aria-label="Switch language"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3c2.5 2.7 3.8 5.7 3.8 9S14.5 18.3 12 21c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><span id="quickLangLabel">اردو</span></button>
+          <button class="top-action help-chip" id="helpBtn"><span>?</span><span data-i18n="help">Help</span></button>
+        </div>
+      </header>
+
+      <section id="homePage" class="page active-page">
+        <div class="hero-section premium-hero">
+          <div class="hero-media" aria-hidden="true">
+            <div class="hero-slide hero-slide-a"></div>
+            <div class="hero-slide hero-slide-b"></div>
+            <div class="hero-slide hero-slide-c"></div>
+            <div class="hero-vignette"></div>
+            <div class="hero-grain"></div>
+          </div>
+          <div class="hero-copy">
+            <div class="hero-kicker"><span class="hero-kicker-line"></span><span data-i18n="heroBadge">AI crop health support for Pakistan</span></div>
+            <h1 data-i18n="heroTitle">Check your crop’s health in seconds.</h1>
+            <p data-i18n="heroText">Choose a crop, take a clear photo, and get an easy-to-understand health assessment with guidance you can act on.</p>
+            <div class="hero-actions">
+              <button class="btn btn-primary" data-nav="diagnose"><span data-i18n="startDiagnosis">Start a diagnosis</span><span class="btn-arrow">→</span></button>
+              <button class="btn btn-secondary" data-nav="diseases"><span data-i18n="exploreDiseases">Explore crop diseases</span></button>
+            </div>
+            <div class="trust-row">
+              <div><span class="trust-index">01</span><span data-i18n="trust1">12 project crops</span></div>
+              <div><span class="trust-index">02</span><span data-i18n="trust2">English + Urdu</span></div>
+              <div><span class="trust-index">03</span><span data-i18n="trust3">Farmer-friendly guidance</span></div>
+            </div>
+          </div>
+          <div class="hero-side-note">
+            <span>FIELD INTELLIGENCE</span>
+            <strong>Built for real crop decisions.</strong>
+            <small>Punjab, Pakistan · agricultural imagery</small>
+          </div>
+        </div>
+
+        <div class="section-head crop-head">
+          <div>
+            <p class="eyebrow" data-i18n="chooseCropEyebrow">YOUR FIELD, YOUR CROP</p>
+            <h2 data-i18n="chooseCropTitle">Choose the crop you want to check</h2>
+            <p data-i18n="chooseCropText">Tap a crop card to make it active for diagnosis and disease guidance.</p>
+          </div>
+          <div id="selectedCropBadge" class="selected-crop-badge hidden"></div>
+        </div>
+
+        <div id="cropGrid" class="crop-grid"></div>
+
+        <section class="neural-tree-section">
+          <div style="border-radius:24px;padding:clamp(24px,4vw,48px);margin-top:48px;border:1px solid rgba(34,197,94,0.1)">
+            <div style="text-align:center;margin-bottom:1.5rem">
+              <p class="eyebrow" style="margin-bottom:0.5rem">How it works</p>
+              <h2 style="font-size:1.6rem;margin-bottom:0.5rem;color:#F8FAFC">The Tree of Knowledge</h2>
+              <p style="color:#94A3B8;font-size:0.9rem;max-width:400px;margin:0 auto">Watch the pathways activate as each step processes your crop diagnosis</p>
+            </div>
+            <div id="neuralTreeWrap" class="neural-tree-wrap"></div>
+          </div>
+        </section>
+
+        <div style="text-align:center;padding:24px 24px 8px;color:#64748B;font-size:0.85rem;letter-spacing:0.5px">
+          Crops Classification and Severity Analysis (CCNSA)
+        </div>
+
+      </section>
+
+      <section id="diagnosePage" class="page">
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow" data-i18n="diagnoseEyebrow">FIELD DIAGNOSIS</p>
+            <h1 data-i18n="diagnoseTitle">Check a crop photo</h1>
+            <p data-i18n="diagnoseSubtitle">Select your crop, then upload an image or use your camera.</p>
+          </div>
+          <div id="diagnoseCropChip" class="diagnose-crop-chip"></div>
+        </div>
+
+        <div class="diagnose-layout">
+          <div class="diagnose-panel">
+            <div class="panel-header">
+              <div><span class="panel-step">1</span><div><h2 data-i18n="chooseCrop">Choose crop</h2><p data-i18n="chooseCropSmall">Tell us which crop is in the image.</p></div></div>
+              <span id="cropStatus" class="status-label" data-i18n="notSelected">Not selected</span>
+            </div>
+            <div id="diagnoseCropStrip" class="crop-strip"></div>
+
+            <div class="panel-divider"></div>
+
+            <div class="panel-header">
+              <div><span class="panel-step">2</span><div><h2 data-i18n="addPhoto">Add crop photo</h2><p data-i18n="photoAdvice">Use a clear image with the affected leaf or plant visible.</p></div></div>
+            </div>
+
+            <div id="uploadZone" class="upload-zone" tabindex="0" role="button">
+              <input id="fileInput" type="file" accept="image/*,.heic,.heif,.tif,.tiff,.bmp,.webp" hidden />
+              <div id="uploadEmpty" class="upload-empty">
+                <div class="upload-icon"><svg viewBox="0 0 24 24"><path d="M12 16V5M8 9l4-4 4 4"/><path d="M5 15v4h14v-4"/></svg></div>
+                <h3 data-i18n="dropPhoto">Drop your crop photo here</h3>
+                <p data-i18n="orChoose">or choose an option below</p>
+                <div class="upload-actions">
+                  <button id="browseBtn" class="btn btn-primary compact"><span class="button-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><circle cx="9" cy="10" r="2"/><path d="m6 17 4-4 3 3 2-2 3 3"/></svg></span><span data-i18n="uploadPhoto">Upload Photo</span></button>
+                  <button id="cameraBtn" class="btn btn-dark compact"><span class="button-icon"><svg viewBox="0 0 24 24"><path d="M4 8h4l1.5-2h5L16 8h4v11H4z"/><circle cx="12" cy="13.5" r="3.5"/></svg></span><span data-i18n="openCamera">Open Camera</span></button>
+                </div>
+                <small data-i18n="formatHelp">Images such as JPG, PNG, WEBP, HEIC/HEIF, BMP and TIFF can be sent to the backend.</small>
+              </div>
+              <div id="previewState" class="preview-state hidden">
+                <div class="preview-frame"><img id="imagePreview" alt="Selected crop preview" /><div id="formatFallback" class="format-fallback hidden"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="m6 17 4-4 3 3 2-2 3 3"/></svg><span data-i18n="previewUnavailable">Preview unavailable, but this file can still be submitted.</span></div></div>
+                <div class="preview-info"><div><strong id="previewName"></strong><small id="previewMeta"></small></div><button id="removePhoto" class="text-btn danger" data-i18n="remove">Remove</button></div>
+              </div>
+            </div>
+
+            <div class="photo-tips">
+              <div class="tip-title"><span class="tip-line"></span><strong data-i18n="betterPhoto">For a better result</strong></div>
+              <div class="tip-list"><span data-i18n="tip1">Use natural light</span><span data-i18n="tip2">Keep the affected area in focus</span><span data-i18n="tip3">Avoid extreme zoom or blur</span></div>
+            </div>
+
+            <button id="analyzeBtn" class="btn btn-primary analyze-btn" disabled><span class="analyze-icon"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/><circle cx="12" cy="12" r="7"/></svg></span><span data-i18n="analyzePlant">Analyze plant</span><span>→</span></button>
+          </div>
+
+          <aside class="diagnosis-side">
+            <div class="side-card selected-summary">
+              <p class="eyebrow" data-i18n="currentCheck">CURRENT CHECK</p>
+              <div id="currentCropVisual" class="current-crop-visual"><span class="crop-thumb-placeholder"></span><div><small data-i18n="crop">Crop</small><strong data-i18n="chooseCropPrompt">Choose a crop</strong></div></div>
+              <div class="summary-row"><span data-i18n="photo">Photo</span><strong id="photoSummary" data-i18n="notAdded">Not added</strong></div>
+              <div class="summary-row"><span data-i18n="languageLabel">Language</span><strong id="langSummary">English</strong></div>
+            </div>
+            <div class="side-card safe-card"><div class="safe-icon"><svg viewBox="0 0 24 24"><path d="M12 3 19 6v5c0 4.7-2.9 8.2-7 10-4.1-1.8-7-5.3-7-10V6z"/><path d="m9 12 2 2 4-4"/></svg></div><h3 data-i18n="safeTitle">Designed to fail safely</h3><p data-i18n="safeText">If the image is unclear or confidence is weak, the app should ask for another photo instead of overstating the result.</p></div>
+          </aside>
+        </div>
+
+        <div id="analysisOverlay" class="analysis-overlay hidden" aria-live="polite">
+          <div class="analysis-card"><div class="scanner"><div class="scanner-frame"><span></span><span></span><span></span><span></span></div><div class="scanner-beam"></div></div><h2 data-i18n="analyzing">Checking your crop…</h2><p data-i18n="analyzingText">Looking at visual signs and preparing an easy-to-understand result.</p><div class="progress-track"><span id="analysisProgress"></span></div></div>
+        </div>
+
+        <section id="resultSection" class="result-section hidden">
+          <div class="result-topbar"><div><p class="eyebrow" data-i18n="resultEyebrow">AI HEALTH ASSESSMENT</p><h2 data-i18n="resultTitle">Your crop result</h2></div><button id="newCheckBtn" class="btn btn-secondary compact" data-i18n="newCheck">New check</button></div>
+          <div class="result-grid">
+            <article class="result-card primary-result">
+              <div class="result-status"><span id="resultStatusIcon"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span><span id="resultStatusLabel" data-i18n="detected">Disease detected</span></div>
+              <div class="result-main"><div><small data-i18n="likelyCondition">Likely condition</small><h3 id="resultDisease">—</h3></div><div class="confidence-badge"><strong id="resultConfidence">—</strong><small data-i18n="confidence">confidence</small></div></div>
+              <div class="confidence-bar"><span id="confidenceFill"></span></div>
+              <div class="metric-grid">
+                <div><span data-i18n="severity">Severity</span><strong id="resultSeverity">—</strong></div>
+                <div><span data-i18n="severityConfidence">Severity confidence</span><strong id="severityConfidence">—</strong></div>
+                <div><span data-i18n="crop">Crop</span><strong id="resultCrop">—</strong></div>
+              </div>
+              <div id="uncertaintyNote" class="uncertainty-note hidden"><span>!</span><p data-i18n="uncertainAdvice">This result is uncertain. Please take another clear photo before acting on it.</p></div>
+            </article>
+
+            <article class="result-card guidance-card">
+              <div class="guidance-icon"><svg viewBox="0 0 24 24"><path d="M12 20V9"/><path d="M12 13C8 13 5 10 5 6c4 0 7 1 7 5"/><path d="M12 11c0-4 3-6 7-6 0 4-3 7-7 7"/></svg></div>
+              <h3 data-i18n="whatNext">What should I do next?</h3>
+              <p id="resultGuidance" data-i18n="defaultGuidance">Review crop-specific guidance and ask the assistant if you need help understanding the result.</p>
+              <div class="guidance-actions"><button id="viewDiseaseBtn" class="btn btn-primary compact" data-i18n="viewGuidance">View guidance</button><button id="askAssistantBtn" class="btn btn-secondary compact" data-i18n="askAssistant">Ask assistant</button></div>
+              <small id="demoNotice" class="demo-notice hidden">Demo preview — connect <code>/api/diagnose</code> for real model inference.</small>
+            </article>
+          </div>
+        </section>
+      </section>
+
+      <section id="diseasesPage" class="page">
+        <div class="page-heading disease-heading">
+          <div><p class="eyebrow" data-i18n="libraryEyebrow">CROP KNOWLEDGE</p><h1 data-i18n="libraryTitle">Crop disease library</h1><p data-i18n="librarySubtitle">Learn symptoms, prevention and management for the selected crop.</p></div>
+          <div class="library-select-wrap"><label for="libraryCropSelect" data-i18n="selectCropLabel">Select crop</label><select id="libraryCropSelect"></select></div>
+        </div>
+        <div id="libraryHero" class="library-hero"></div>
+        <div class="library-toolbar"><div class="search-box"><span class="search-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg></span><input id="diseaseSearch" type="search" data-i18n-placeholder="searchDiseases" placeholder="Search diseases or symptoms" /></div></div>
+        <div id="diseaseGrid" class="disease-grid"></div>
+      </section>
+
+      <section id="historyPage" class="page">
+        <div class="page-heading"><div><p class="eyebrow" data-i18n="historyEyebrow">YOUR ACTIVITY</p><h1 data-i18n="historyTitle">Recent crop checks</h1><p data-i18n="historySubtitle">This prototype stores recent demo checks only in your browser.</p></div><button id="clearHistory" class="btn btn-secondary compact" data-i18n="clearHistory">Clear history</button></div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </main>
+
+    <button id="chatFab" class="chat-fab" aria-label="Open AI assistant"><span class="chat-fab-ring"></span><span class="chat-fab-icon"><svg viewBox="0 0 28 28"><path d="M6 5.5h16v11.2H12l-5.6 4.2v-4.2H6z"/><path d="M10 10.2h8M10 13.5h5"/></svg></span><span class="chat-fab-label">AI</span></button>
+
+    <section id="chatPanel" class="chat-panel" aria-label="AI Farmer Assistant">
+      <header class="chat-header">
+        <div class="chat-identity"><div class="assistant-monogram">CC</div><div><strong data-i18n="assistantName">CCNSA Assistant</strong><span><i class="online-dot"></i><span data-i18n="assistantOnline">Ready to help</span></span></div></div>
+        <div class="chat-header-actions"><button id="expandChat" class="icon-btn" aria-label="Expand chat">⤢</button><button id="closeChat" class="icon-btn" aria-label="Close chat">×</button></div>
+      </header>
+      <div id="chatContext" class="chat-context"></div>
+      <div id="chatMessages" class="chat-messages"></div>
+      <div class="quick-prompts" id="quickPrompts"></div>
+      <form id="chatForm" class="chat-compose"><button id="chatMic" type="button" class="chat-mic-btn" aria-label="Voice input"><svg viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg></button><button id="chatMicLang" type="button" class="chat-mic-lang-btn" onclick="toggleMicLang()" title="Toggle voice language">اُردو</button><textarea id="chatInput" rows="1" data-i18n-placeholder="chatPlaceholder" placeholder="Ask about your crop…"></textarea><button id="chatSend" type="submit" aria-label="Send"><svg viewBox="0 0 24 24"><path d="m4 5 16 7-16 7 3-7z"/><path d="M7 12h13"/></svg></button></form>
+      <audio id="chatAudio" style="display:none"></audio>
+    </section>
+
+    <div id="cameraModal" class="camera-modal hidden" role="dialog" aria-modal="true">
+      <div class="camera-shell">
+        <header><div><strong data-i18n="cameraTitle">Take crop photo</strong><small data-i18n="cameraInstruction">Place the affected leaf clearly inside the frame.</small></div><button id="cameraClose" class="icon-btn">×</button></header>
+        <div class="camera-view"><video id="cameraVideo" autoplay playsinline muted></video><canvas id="cameraCanvas" class="hidden"></canvas><div class="camera-guide"><span></span><span></span><span></span><span></span></div><div class="camera-label" data-i18n="cameraGuide">Keep the affected area inside this frame</div></div>
+        <footer><button id="switchCamera" class="camera-mini" title="Switch camera"><svg viewBox="0 0 24 24"><path d="M4 8a8 8 0 0 1 13-2l2 2"/><path d="M19 4v4h-4"/><path d="M20 16a8 8 0 0 1-13 2l-2-2"/><path d="M5 20v-4h4"/></svg></button><button id="capturePhoto" class="shutter" aria-label="Capture photo"><span></span></button><div class="camera-mini ghost"></div></footer>
+      </div>
+    </div>
+
+    <div id="diseaseDrawerBackdrop" class="drawer-backdrop hidden"></div>
+    <aside id="diseaseDrawer" class="disease-drawer">
+      <button id="closeDiseaseDrawer" class="icon-btn drawer-close">×</button>
+      <div id="diseaseDrawerContent"></div>
+    </aside>
+
+    <div id="toast" class="toast" role="status"></div>
+  </div>
+
+  <script src="app.js?v=22"></script>
+</body>
+</html>

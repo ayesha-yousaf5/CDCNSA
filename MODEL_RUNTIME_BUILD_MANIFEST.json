@@ -1,0 +1,60 @@
+{
+  "build": "plant_health_ai_professional_v6_mint_12crops_model_runtime",
+  "base": "plant_health_ai_professional_v6_mint_12crops_diagnose_polished",
+  "important_files": {
+    "model_registry.json": {
+      "sha256": "a56c1639e052b2a1d82d6b46d2dacf572a2747027efab71eedc94a170cb16815",
+      "bytes": 20345
+    },
+    "server.py": {
+      "sha256": "e42970eb803348747a18595404d8cf27a5da66d3d1246605565e4e459d4066b0",
+      "bytes": 4172
+    },
+    "app.js": {
+      "sha256": "1f84d5c225967b0308e7002067f8a14174ffc614adc3e1a9df50af5d7d5495db",
+      "bytes": 187686
+    },
+    "inference/architectures.py": {
+      "sha256": "5915edef54770152b3dc7397fe5374c5b846ab98702b78f33f0c314fa839e519",
+      "bytes": 1203
+    },
+    "inference/preprocess.py": {
+      "sha256": "a628a58414ccd12e712c32945bd3b260b06a2b9298143b56d914c68ea2da2779",
+      "bytes": 1079
+    },
+    "inference/registry.py": {
+      "sha256": "5f3319f6e14a853efc3271b5c6a3b169aea48134c93352c313e758e8fa7a544f",
+      "bytes": 1548
+    },
+    "inference/runtime.py": {
+      "sha256": "2dbda2a858b863c416c7831a0422d2f135c9d9c9af6799430713023ad26be1d8",
+      "bytes": 7281
+    },
+    "tools/verify_models.py": {
+      "sha256": "bb9c2d4db0e2911926f913095a1725c72abf4e4c2fa21a170c0db774a0904a43",
+      "bytes": 1242
+    }
+  },
+  "attached_model_files": {
+    "models/apple/disease/Apple_Disease_EfficientNet_B0_FINAL_BEST.pth.zip": {
+      "sha256": "3921f08045c5b655e530c12d57ae6cc3cb0868f6e10c6e2ff3e708db460e96e9",
+      "bytes": 16370057
+    },
+    "models/apple/severity/Apple_Severity_DenseNet121_best.pth.zip": {
+      "sha256": "7f6d0ee17f4b1860fe0766faef9b1cb9a7dc0e7f4ab89078a29ee910d1eb8970",
+      "bytes": 28450633
+    },
+    "models/grape/disease/final_model.pt": {
+      "sha256": "9b6f1ffbbba855d32882640b4aa5ec0efe7d13d42871ba92bec033431d158346",
+      "bytes": 94414845
+    },
+    "models/mango/severity/final_model.pt": {
+      "sha256": "1164ea8b6ed1fc9a839e027fc344cfcfff9c72976523aaa0df69445f7edc03bb",
+      "bytes": 94382211
+    },
+    "models/rice/severity/final_model.pt": {
+      "sha256": "26789d432bf39c95621a4c4f8259b42468364f9628cec177cfca7fcc2b832c16",
+      "bytes": 16354935
+    }
+  }
+}

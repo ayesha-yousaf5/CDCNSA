@@ -1,0 +1,80 @@
+crop,source_name,url,scope
+Corn / Maize,Punjab Agriculture - Maize & Millets Research Institute,https://agripunjab.gov.pk/aari-inst-MaizeMillets,crop-specific
+Corn / Maize,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Corn / Maize,CIMMYT,https://www.cimmyt.org/,crop-specific
+Corn / Maize,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Corn / Maize,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Corn / Maize,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Rice,Punjab Agriculture - Rice varieties and sowing windows,https://agripunjab.gov.pk/aari-cvrice,crop-specific
+Rice,IRRI Rice Knowledge Bank - Diseases,https://www.knowledgebank.irri.org/step-by-step-production/growth/pests-and-diseases/diseases,crop-specific
+Rice,IRRI - Rice Blast,https://www.knowledgebank.irri.org/training/fact-sheets/pest-management/diseases/item/blast-leaf-collar,crop-specific
+Rice,IRRI - Tungro,https://www.knowledgebank.irri.org/training/fact-sheets/pest-management/diseases/item/tungro,crop-specific
+Rice,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Rice,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Rice,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Rice,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Cotton,Punjab Agriculture - Cotton varieties and sowing,https://agripunjab.gov.pk/aari-cvcotton,crop-specific
+Cotton,Punjab Agriculture - Cotton research stations / CLCuV,https://agripunjab.gov.pk/cotton-stations,crop-specific
+Cotton,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Cotton,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Cotton,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Cotton,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Apple,PHDEC - Pakistan fruit production windows,https://phdec.gov.pk/introduction/,crop-specific
+Apple,Penn State Extension - Apple disease fungicide timing,https://extension.psu.edu/apple-disease-control-toolbox-fungicide-timing,crop-specific
+Apple,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Apple,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Apple,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Tomato,Punjab Agriculture - Vegetable varieties and sowing,https://www.agripunjab.gov.pk/aari-cvVegetables,crop-specific
+Tomato,Cornell Vegetables - Managing Tomato Diseases,https://www.vegetables.cornell.edu/pest-management/disease-factsheets/managing-tomato-diseases-successfully/,crop-specific
+Tomato,Cornell - Tomato Leaf Mold,https://www.vegetables.cornell.edu/pest-management/disease-factsheets/tomato-leaf-mold/,crop-specific
+Tomato,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Tomato,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Tomato,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Tomato,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Mango,PHDEC - Mango season and postharvest,https://phdec.gov.pk/mango-bagging-initiative-boost-pakistans-mango-industrymultan/,crop-specific
+Mango,Punjab Agriculture - Mango Research Institute,https://agripunjab.gov.pk/node/9748,crop-specific
+Mango,Punjab Agriculture - Fruit planting seasons,https://agripunjab.gov.pk/index.php/aari-services,crop-specific
+Mango,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Mango,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Mango,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Mango,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Cucumber,Punjab Agriculture - Vegetable research / protected cultivation,https://agripunjab.gov.pk/aari-inst-Vegetable,crop-specific
+Cucumber,Cornell Vegetables - Cucurbits,https://www.vegetables.cornell.edu/crops/cucurbits/,crop-specific
+Cucumber,Cornell - Cucumber wilt/crown decline key,https://www.vegetables.cornell.edu/pest-management/keys-for-identifying-vegetable-diseases/cucurbit-key/cucumber-disease-key/cucurbit-wilt-crown-and-general-plant-decline/,crop-specific
+Cucumber,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Cucumber,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Cucumber,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Cucumber,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Eggplant / Brinjal,Punjab Agriculture - Vegetable varieties and sowing,https://www.agripunjab.gov.pk/aari-cvVegetables,crop-specific
+Eggplant / Brinjal,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Eggplant / Brinjal,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Eggplant / Brinjal,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Eggplant / Brinjal,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Grape,PHDEC - Pakistan grape regions/supply window,https://phdec.gov.pk/introduction/,crop-specific
+Grape,PHDEC - Grape orchard management,https://phdec.gov.pk/grapes-orchard-management-for-better-quality-and-high-yield/,crop-specific
+Grape,Penn State Extension - Managing fungal diseases of grapevines,https://extension.psu.edu/fundamental-considerations-for-managing-fungal-diseases-of-grapevines,crop-specific
+Grape,Penn State - Home grape pesticide efficacy table,https://extension.psu.edu/home-fruit-gardens-table-6-5-efficacy-of-pesticides-for-grape-disease-control,crop-specific
+Grape,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Grape,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Grape,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Lemon / Citrus,Punjab Agriculture - Citrus varieties/maturity,https://agripunjab.gov.pk/aari-cvCitrus,crop-specific
+Lemon / Citrus,Punjab Agriculture - Fruit planting seasons,https://agripunjab.gov.pk/index.php/aari-services,crop-specific
+Lemon / Citrus,UC IPM - Citrus Leafminer,https://ipm.ucanr.edu/agriculture/citrus/citrus-leafminer/,crop-specific
+Lemon / Citrus,Punjab Agriculture - Economic Thresholds,https://agripunjab.gov.pk/pw_economic,crop-specific
+Lemon / Citrus,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Lemon / Citrus,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Lemon / Citrus,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Soybean,Punjab Agriculture - Soybean varieties/sowing,https://agripunjab.gov.pk/aari-cvoriSoybean,crop-specific
+Soybean,Crop Protection Network - Charcoal Rot,https://cropprotectionnetwork.org/publications/an-overview-of-charcoal-rot-of-soybean,crop-specific
+Soybean,Crop Protection Network - Frogeye Leaf Spot,https://cropprotectionnetwork.org/publications/an-overview-of-frogeye-leaf-spot,crop-specific
+Soybean,Crop Protection Network - Bacterial Blight,https://cropprotectionnetwork.org/encyclopedia/bacterial-blight-of-soybean,crop-specific
+Soybean,Crop Protection Network - Soybean Rust,https://cropprotectionnetwork.org/encyclopedia/soybean-rust-of-soybean,crop-specific
+Soybean,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Soybean,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Soybean,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared
+Tea,PARC - National Tea & High Value Crops Research Institute,https://www.parc.gov.pk/Detail/ZWE5NTkxNjMtMjBkMS00MzRmLWI0MTktZWVhNmEyZDllZDNh,crop-specific
+Tea,UPASI Tea Research Foundation - Entomology,https://www.upasitearesearch.org/entomology/,crop-specific
+Tea,UPASI Tea Research Foundation - Pests & Diseases,https://www.upasitearesearch.org/pests-diseases/,crop-specific
+Tea,Pakistan Department of Plant Protection - Registered Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-registered-pesticides-in-pakistan/,shared
+Tea,Pakistan Department of Plant Protection - Banned Pesticides,https://plantprotection.gov.pk/services/pesticide-registration/list-of-banned-pesticides-in-pakistan/,shared
+Tea,Punjab Agriculture - Economic Threshold Levels of Insect Pests,https://agripunjab.gov.pk/pw_economic,shared

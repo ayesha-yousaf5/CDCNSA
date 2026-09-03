@@ -1,0 +1,20 @@
+{
+  "results": [
+    {
+      "lang": "en",
+      "total": 75,
+      "failures": []
+    },
+    {
+      "lang": "ur",
+      "total": 75,
+      "failures": []
+    }
+  ],
+  "language_switch_drawer": {
+    "open": true,
+    "before": "سِٹرس کینکر",
+    "after": "Citrus Canker",
+    "changed": true
+  }
+}

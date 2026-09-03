@@ -1,0 +1,496 @@
+{
+  "registry_version": 1,
+  "project": "CCNSA",
+  "device_policy": "cuda_if_available_else_cpu",
+  "disease_confidence_threshold": 0.55,
+  "severity_abstain_threshold": 0.4,
+  "rules": {
+    "healthy_skips_severity": true,
+    "uncertain_disease_skips_severity": true,
+    "missing_disease_model_fails_closed": true,
+    "missing_severity_model_preserves_disease_and_returns_na": true
+  },
+  "crops": {
+    "corn": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "efficientnet_b0",
+        "checkpoint": "models/corn/disease/corn_disease_efficientnet_b0_stage_a_best.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "Bacterial Leaf Streak": 0,
+          "Common Rust": 1,
+          "Gray Leaf Spot": 2,
+          "Maize Lethal Necrosis": 3,
+          "Maize Streak Virus": 4,
+          "Northern Leaf Blight": 5,
+          "healthy": 6
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_mapping and architecture=efficientnet_b0.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "lesion_area_abstention",
+        "architecture": null,
+        "checkpoint": "models/corn/severity/",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": false,
+        "expected_sha256": null,
+        "note": "Corn severity uses lesion-area/segmentation + abstention. No classification checkpoint available.",
+        "source": "project final severity contract"
+      }
+    },
+    "cotton": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "mobilenet_v3_large",
+        "checkpoint": "models/cotton/disease/cotton_mobilenetv3_stage_a_best.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "Alternaria Leaf Spot": 0,
+          "Bacterial Blight": 1,
+          "Curl Virus": 2,
+          "Herbicide Growth Damage": 3,
+          "Leaf Hopper Jassids": 4,
+          "Leaf Redding": 5,
+          "Leaf Variegation": 6,
+          "Verticillium Wilt": 7,
+          "healthy": 8
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and model_name=mobilenet_v3_large.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "mobilenet_v3_large",
+        "checkpoint": "models/cotton/severity/cotton_severity_mobilenetv3_stage_b_best.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds severity_to_idx and model_name=mobilenet_v3_large.",
+        "source": "attached checkpoint"
+      }
+    },
+    "tomato": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "efficientnet_b0",
+        "checkpoint": "models/tomato/disease/efficientnet_b0/tomato_efficientnet_b0_previousflow_stage_b_best.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "Bacterial Spot": 0,
+          "Cercospora Leaf Mold": 1,
+          "Early Blight": 2,
+          "General Pest Damage": 3,
+          "Late Blight": 4,
+          "Leaf Miner": 5,
+          "Leaf Mold": 6,
+          "Septoria Leaf Spot": 7,
+          "Shot Hole Disease": 8,
+          "Spider Mites": 9,
+          "Target Spot": 10,
+          "Tomato Leaf Curl Virus": 11,
+          "Tomato Mosaic Virus": 12,
+          "Tomato Yellow Leaf Curl Virus": 13,
+          "healthy": 14
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_order and architecture=efficientnet_b0.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "mobilenet_v3_large",
+        "checkpoint": "models/tomato/severity/TOMATO_SEVERITY_V2_FINAL_DEVELOPMENT_WINNER.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds severity_classes and architecture=MobileNetV3-Large.",
+        "source": "attached checkpoint"
+      }
+    },
+    "apple": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/apple/disease/Apple_Disease_ResNet50_FROZEN.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "Alternaria Apple": 0,
+          "Apple Powdery Mildew": 1,
+          "Apple Scab": 2,
+          "Black Rot": 3,
+          "Cedar Apple Rust": 4,
+          "healthy": 5
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "mobilenet_v3_large",
+        "checkpoint": "models/apple/severity/Apple_Severity_MobileNetV3_Large_FROZEN.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and architecture=mobilenet_v3_large.",
+        "source": "attached checkpoint"
+      }
+    },
+    "rice": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/rice/disease/disease_model_resnet50_Rice.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "Rice / Bacterial Leaf Blight": 0,
+          "Rice / Brown Spot": 1,
+          "Rice / Leaf Scald": 2,
+          "Rice / Narrow Brown Leaf Spot": 3,
+          "Rice / Rice Blast": 4,
+          "Rice / Rice Hispa": 5,
+          "Rice / Rice Leaffolder": 6,
+          "Rice / Rice Stripes": 7,
+          "Rice / Rice Tungro": 8,
+          "Rice / Sheath Blight": 9,
+          "Rice / healthy": 10
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and backbone=resnet50.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "efficientnet_b0",
+        "checkpoint": "models/rice/severity/final_model.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and backbone=efficientnet_b0.",
+        "source": "attached checkpoint"
+      }
+    },
+    "mango": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "efficientnet_b0",
+        "checkpoint": "models/mango/disease/disease_model_efficientnet_b0_Mango.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "Mango / Anthracnose": 0,
+          "Mango / Bacterial Canker": 1,
+          "Mango / Cutting Weevil": 2,
+          "Mango / Die Back": 3,
+          "Mango / Gall Midge": 4,
+          "Mango / Powdery Mildew": 5,
+          "Mango / Sooty Mould": 6,
+          "Mango / healthy": 7,
+          "Mango / senescence or dry": 8
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and backbone=efficientnet_b0.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/mango/severity/final_model.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and backbone=resnet50.",
+        "source": "attached checkpoint"
+      }
+    },
+    "grape": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/grape/disease/final_model.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "Grape / Bacterial Leaf Spot": 0,
+          "Grape / Black Rot": 1,
+          "Grape / Downy Mildew": 2,
+          "Grape / Esca Black Measles": 3,
+          "Grape / Leaf Blight Isariopsis Leaf Spot": 4,
+          "Grape / Yellow Leaf Spot": 5,
+          "Grape / healthy": 6
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and backbone=resnet50.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "mobilenet_v3_large",
+        "checkpoint": "models/grape/severity/severity_model_mobilenet_v3_Grape.pt",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and backbone=mobilenet_v3.",
+        "source": "attached checkpoint"
+      }
+    },
+    "eggplant": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/eggplant/disease/Brinjal_Disease_ResNet50_best.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "General Pest Damage": 0,
+          "Leaf Spot": 1,
+          "Mosaic Virus": 2,
+          "Phomopsis Blight": 3,
+          "White Mold": 4
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Pure state_dict; no healthy class. Class mapping from registry.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/eggplant/severity/Brinjal_Severity_ResNet50_best.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Pure state_dict; class mapping from registry.",
+        "source": "attached checkpoint"
+      }
+    },
+    "cucumber": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/cucumber/disease/Cucumber_Disease_ResNet50_best.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "Bacterial Wilt": 0,
+          "Belly Rot": 1,
+          "Downy Mildew": 2,
+          "Gummy Stem Blight": 3,
+          "Pythium Fruit Rot": 4
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Pure state_dict; no healthy class. Class mapping from registry.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "densenet121",
+        "checkpoint": "models/cucumber/severity/Cucumber_Severity_DenseNet121_best.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Pure state_dict; class mapping from registry.",
+        "source": "attached checkpoint"
+      }
+    },
+    "peas": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/peas/disease/Peas_Disease_ResNet50_FROZEN.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "Ascochyta Blight": 0,
+          "Botrytis Blight": 1,
+          "Fusarium Wilt": 2,
+          "Pod Borer Damage": 3,
+          "healthy": 4
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
+        "source": "attached checkpoint"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "resnet50",
+        "checkpoint": "models/peas/severity/Peas_Severity_ResNet50_FROZEN.pth",
+        "image_size": 224,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": true,
+        "expected_sha256": null,
+        "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
+        "source": "attached checkpoint"
+      }
+    },
+    "lemon": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet18",
+        "checkpoint": "models/lemon/disease/lemon_disease_best.pth",
+        "image_size": 64,
+        "class_to_idx": {
+          "healthy": 0,
+          "citrus_canker": 1,
+          "sooty_mould": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": false,
+        "expected_sha256": null,
+        "note": "No checkpoint binary available. Disabled.",
+        "source": "no binary available"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "resnet18",
+        "checkpoint": "models/lemon/severity/lemon_severity_best.pth",
+        "image_size": 64,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": false,
+        "expected_sha256": null,
+        "note": "No checkpoint binary available. Disabled.",
+        "source": "no binary available"
+      }
+    },
+    "soybean": {
+      "disease": {
+        "runtime_kind": "classification",
+        "architecture": "resnet18",
+        "checkpoint": "models/soybean/disease/soybean_disease_best.pth",
+        "image_size": 64,
+        "class_to_idx": {
+          "healthy": 0,
+          "bacterial_blight": 1,
+          "frogeye_leaf_spot": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": false,
+        "expected_sha256": null,
+        "note": "No checkpoint binary available. Disabled.",
+        "source": "no binary available"
+      },
+      "severity": {
+        "runtime_kind": "classification",
+        "architecture": "resnet18",
+        "checkpoint": "models/soybean/severity/soybean_severity_best.pth",
+        "image_size": 64,
+        "class_to_idx": {
+          "MILD": 0,
+          "MODERATE": 1,
+          "SEVERE": 2
+        },
+        "normalization_mean": [0.485, 0.456, 0.406],
+        "normalization_std": [0.229, 0.224, 0.225],
+        "enabled": false,
+        "expected_sha256": null,
+        "note": "No checkpoint binary available. Disabled.",
+        "source": "no binary available"
+      }
+    }
+  }
+}

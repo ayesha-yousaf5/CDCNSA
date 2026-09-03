@@ -1,0 +1,78 @@
+{
+  "builder_name": "csv",
+  "citation": "",
+  "config_name": "default",
+  "dataset_name": "csv",
+  "dataset_size": 58778421,
+  "description": "",
+  "download_size": 48616757,
+  "features": {
+    "image_id": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "crop": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "disease": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "category": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "severity": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "question": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "answer": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "question_category": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "visual_grounding": {
+      "dtype": "large_string",
+      "_type": "Value"
+    },
+    "question_number": {
+      "dtype": "float64",
+      "_type": "Value"
+    },
+    "dataset_source": {
+      "dtype": "large_string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": "",
+  "size_in_bytes": 107395178,
+  "splits": {
+    "test": {
+      "name": "test",
+      "num_bytes": 23545879,
+      "num_examples": 55268,
+      "dataset_name": "csv"
+    },
+    "train": {
+      "name": "train",
+      "num_bytes": 35232542,
+      "num_examples": 82800,
+      "dataset_name": "csv"
+    }
+  },
+  "version": {
+    "version_str": "0.0.0",
+    "major": 0,
+    "minor": 0,
+    "patch": 0
+  }
+}

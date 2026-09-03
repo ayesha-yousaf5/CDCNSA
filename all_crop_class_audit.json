@@ -1,0 +1,593 @@
+[
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.corn.disease.class_to_idx",
+    "value": [
+      "Bacterial Leaf Streak",
+      "Common Rust",
+      "Gray Leaf Spot",
+      "Maize Lethal Necrosis",
+      "Maize Streak Virus",
+      "Northern Leaf Blight",
+      "healthy"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.corn.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.cotton.disease.class_to_idx",
+    "value": [
+      "Alternaria Leaf Spot",
+      "Bacterial Blight",
+      "Curl Virus",
+      "Herbicide Growth Damage",
+      "Leaf Hopper Jassids",
+      "Leaf Redding",
+      "Leaf Variegation",
+      "Verticillium Wilt",
+      "healthy"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.cotton.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.tomato.disease.class_to_idx",
+    "value": [
+      "Bacterial Spot",
+      "Cercospora Leaf Mold",
+      "Early Blight",
+      "General Pest Damage",
+      "Late Blight",
+      "Leaf Miner",
+      "Leaf Mold",
+      "Septoria Leaf Spot",
+      "Shot Hole Disease",
+      "Spider Mites",
+      "Target Spot",
+      "Tomato Leaf Curl Virus",
+      "Tomato Mosaic Virus",
+      "Tomato Yellow Leaf Curl Virus",
+      "healthy"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.tomato.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.apple.disease.class_to_idx",
+    "value": [
+      "Alternaria Apple",
+      "Apple Powdery Mildew",
+      "Apple Scab",
+      "Black Rot",
+      "Cedar Apple Rust",
+      "healthy"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.apple.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.rice.disease.class_to_idx",
+    "value": [
+      "Rice / Bacterial Leaf Blight",
+      "Rice / Brown Spot",
+      "Rice / Leaf Scald",
+      "Rice / Narrow Brown Leaf Spot",
+      "Rice / Rice Blast",
+      "Rice / Rice Hispa",
+      "Rice / Rice Leaffolder",
+      "Rice / Rice Stripes",
+      "Rice / Rice Tungro",
+      "Rice / Sheath Blight",
+      "Rice / healthy"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.rice.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.mango.disease.class_to_idx",
+    "value": [
+      "Mango / Anthracnose",
+      "Mango / Bacterial Canker",
+      "Mango / Cutting Weevil",
+      "Mango / Die Back",
+      "Mango / Gall Midge",
+      "Mango / Powdery Mildew",
+      "Mango / Sooty Mould",
+      "Mango / healthy",
+      "Mango / senescence or dry"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.mango.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.grape.disease.class_to_idx",
+    "value": [
+      "Grape / Bacterial Leaf Spot",
+      "Grape / Black Rot",
+      "Grape / Downy Mildew",
+      "Grape / Esca Black Measles",
+      "Grape / Leaf Blight Isariopsis Leaf Spot",
+      "Grape / Yellow Leaf Spot",
+      "Grape / healthy"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.grape.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.eggplant.disease.class_to_idx",
+    "value": [
+      "General Pest Damage",
+      "Leaf Spot",
+      "Mosaic Virus",
+      "Phomopsis Blight",
+      "White Mold"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.eggplant.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.cucumber.disease.class_to_idx",
+    "value": [
+      "Bacterial Wilt",
+      "Belly Rot",
+      "Downy Mildew",
+      "Gummy Stem Blight",
+      "Pythium Fruit Rot"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.cucumber.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.peas.disease.class_to_idx",
+    "value": [
+      "Ascochyta Blight",
+      "Botrytis Blight",
+      "Fusarium Wilt",
+      "Pod Borer Damage",
+      "healthy"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.peas.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.lemon.disease.class_to_idx",
+    "value": [
+      "healthy",
+      "citrus_canker",
+      "sooty_mould"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.lemon.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.soybean.disease.class_to_idx",
+    "value": [
+      "healthy",
+      "bacterial_blight",
+      "frogeye_leaf_spot"
+    ]
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\model_registry.json",
+    "key": "crops.soybean.severity.class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "corn",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\train_corn_severity.py",
+    "key": "text_match",
+    "value": "{c: i for i, c in enumerate(SEVERITY_CLASSES)}"
+  },
+  {
+    "crop": "corn",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\train_corn_severity.py",
+    "key": "text_match",
+    "value": "['MILD', 'MODERATE', 'SEVERE']"
+  },
+  {
+    "crop": "corn",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\train_corn_severity.py",
+    "key": "text_match",
+    "value": "['MILD', 'MODERATE', 'SEVERE']"
+  },
+  {
+    "crop": null,
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\inference\\runtime.py",
+    "key": "text_match",
+    "value": "{c:i for i,c in enumerate(meta[list_key])}"
+  },
+  {
+    "crop": "apple",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\apple\\disease\\Apple_Disease_ResNet50_FROZEN.pth",
+    "key": "class_to_idx",
+    "value": [
+      "Alternaria Apple",
+      "Apple Powdery Mildew",
+      "Apple Scab",
+      "Black Rot",
+      "Cedar Apple Rust",
+      "healthy"
+    ]
+  },
+  {
+    "crop": "apple",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\apple\\severity\\Apple_Severity_MobileNetV3_Large_FROZEN.pth",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "corn",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\corn\\severity\\evidence\\official_test\\corn_test_final_metrics.json",
+    "key": "disease_model.classes",
+    "value": [
+      "Bacterial Leaf Streak",
+      "Common Rust",
+      "Gray Leaf Spot",
+      "Maize Lethal Necrosis",
+      "Maize Streak Virus",
+      "Northern Leaf Blight",
+      "healthy"
+    ]
+  },
+  {
+    "crop": "cotton",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\cotton\\disease\\cotton_mobilenetv3_stage_a_best.pt",
+    "key": "class_to_idx",
+    "value": [
+      "Alternaria Leaf Spot",
+      "Bacterial Blight",
+      "Curl Virus",
+      "Herbicide Growth Damage",
+      "Leaf Hopper Jassids",
+      "Leaf Redding",
+      "Leaf Variegation",
+      "Verticillium Wilt",
+      "healthy"
+    ]
+  },
+  {
+    "crop": "grape",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\grape\\disease\\disease_model_resnet50_Grape.pt",
+    "key": "class_to_idx",
+    "value": [
+      "Grape / Bacterial Leaf Spot",
+      "Grape / Black Rot",
+      "Grape / Esca Black Measles",
+      "Grape / Leaf Blight Isariopsis Leaf Spot",
+      "Grape / Yellow Leaf Spot",
+      "Grape / healthy"
+    ]
+  },
+  {
+    "crop": "grape",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\grape\\disease\\final_model.pt",
+    "key": "class_to_idx",
+    "value": [
+      "Grape / Bacterial Leaf Spot",
+      "Grape / Black Rot",
+      "Grape / Downy Mildew",
+      "Grape / Esca Black Measles",
+      "Grape / Leaf Blight Isariopsis Leaf Spot",
+      "Grape / Yellow Leaf Spot",
+      "Grape / healthy"
+    ]
+  },
+  {
+    "crop": "grape",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\grape\\severity\\severity_model_mobilenet_v3_Grape.pt",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "mango",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\mango\\disease\\disease_model_efficientnet_b0_Mango.pt",
+    "key": "class_to_idx",
+    "value": [
+      "Mango / Anthracnose",
+      "Mango / Bacterial Canker",
+      "Mango / Cutting Weevil",
+      "Mango / Die Back",
+      "Mango / Gall Midge",
+      "Mango / Powdery Mildew",
+      "Mango / Sooty Mould",
+      "Mango / healthy",
+      "Mango / senescence or dry"
+    ]
+  },
+  {
+    "crop": "mango",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\mango\\severity\\final_model.pt",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "mango",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\mango\\severity\\severity_model_resnet50_Mango.pt",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "peas",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\peas\\disease\\Peas_Disease_ResNet50_FROZEN.pth",
+    "key": "class_to_idx",
+    "value": [
+      "Ascochyta Blight",
+      "Botrytis Blight",
+      "Fusarium Wilt",
+      "Pod Borer Damage",
+      "healthy"
+    ]
+  },
+  {
+    "crop": "peas",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\peas\\severity\\Peas_Severity_ResNet50_FROZEN.pth",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "rice",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\rice\\disease\\disease_model_resnet50_Rice.pt",
+    "key": "class_to_idx",
+    "value": [
+      "Rice / Bacterial Leaf Blight",
+      "Rice / Brown Spot",
+      "Rice / Leaf Scald",
+      "Rice / Narrow Brown Leaf Spot",
+      "Rice / Rice Blast",
+      "Rice / Rice Hispa",
+      "Rice / Rice Leaffolder",
+      "Rice / Rice Stripes",
+      "Rice / Rice Tungro",
+      "Rice / Sheath Blight",
+      "Rice / healthy"
+    ]
+  },
+  {
+    "crop": "rice",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\rice\\disease\\severity_model_efficientnet_b0_Rice.pt",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "rice",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\rice\\severity\\final_model.pt",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "rice",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\rice\\severity\\severity_model_efficientnet_b0_Rice.pt",
+    "key": "class_to_idx",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "tomato",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\tomato\\severity\\TOMATO_SEVERITY_V2_FINAL_DEVELOPMENT_WINNER.pt",
+    "key": "severity_classes",
+    "value": [
+      "MILD",
+      "MODERATE",
+      "SEVERE"
+    ]
+  },
+  {
+    "crop": "tomato",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\tomato\\disease\\efficientnet_b0\\checkpoint_manifest.json",
+    "key": "classes",
+    "value": [
+      "Bacterial Spot",
+      "Cercospora Leaf Mold",
+      "Early Blight",
+      "General Pest Damage",
+      "Late Blight",
+      "Leaf Miner",
+      "Leaf Mold",
+      "Septoria Leaf Spot",
+      "Shot Hole Disease",
+      "Spider Mites",
+      "Target Spot",
+      "Tomato Leaf Curl Virus",
+      "Tomato Mosaic Virus",
+      "Tomato Yellow Leaf Curl Virus",
+      "healthy"
+    ]
+  },
+  {
+    "crop": "tomato",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\tomato\\disease\\ensemble\\frozen_agreement_gate_contract.json",
+    "key": "official_test.classes",
+    "value": 15
+  },
+  {
+    "crop": "tomato",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\tomato\\disease\\mobilenet_v3_large\\checkpoint_manifest.json",
+    "key": "classes",
+    "value": [
+      "Bacterial Spot",
+      "Cercospora Leaf Mold",
+      "Early Blight",
+      "General Pest Damage",
+      "Late Blight",
+      "Leaf Miner",
+      "Leaf Mold",
+      "Septoria Leaf Spot",
+      "Shot Hole Disease",
+      "Spider Mites",
+      "Target Spot",
+      "Tomato Leaf Curl Virus",
+      "Tomato Mosaic Virus",
+      "Tomato Yellow Leaf Curl Virus",
+      "healthy"
+    ]
+  },
+  {
+    "crop": "tomato",
+    "source": "D:\\hacathon\\website deployment\\plant_health_ai_professional_v6_mint_12crops_model_runtime\\models\\tomato\\disease\\resnet50\\checkpoint_manifest.json",
+    "key": "classes",
+    "value": [
+      "Bacterial Spot",
+      "Cercospora Leaf Mold",
+      "Early Blight",
+      "General Pest Damage",
+      "Late Blight",
+      "Leaf Miner",
+      "Leaf Mold",
+      "Septoria Leaf Spot",
+      "Shot Hole Disease",
+      "Spider Mites",
+      "Target Spot",
+      "Tomato Leaf Curl Virus",
+      "Tomato Mosaic Virus",
+      "Tomato Yellow Leaf Curl Virus",
+      "healthy"
+    ]
+  }
+]
