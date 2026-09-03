@@ -8,7 +8,8 @@
     "healthy_skips_severity": true,
     "uncertain_disease_skips_severity": true,
     "missing_disease_model_fails_closed": true,
-    "missing_severity_model_preserves_disease_and_returns_na": true
+    "missing_severity_model_preserves_disease_and_returns_na": true,
+    "confidence_heverity_fallback": true
   },
   "crops": {
     "corn": {

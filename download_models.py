@@ -9,7 +9,7 @@ import os
 import tarfile
 from pathlib import Path
 
-FILE_ID = "1FxI1eeinaTsRDAqmRa6doQrX7IrnEKgy"
+FILE_ID = "1-paulafZwj8obchN2kGiTRTfVQAfkwSl"
 
 ROOT = Path(__file__).resolve().parent
 MODELS_DIR = ROOT / "models"

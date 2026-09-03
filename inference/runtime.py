@@ -83,6 +83,13 @@ class ModelRuntime:
         if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
         probs=F.softmax(logits,dim=1)[0]; conf,idx=torch.max(probs,dim=0)
         idx=int(idx.item()); return loaded['classes'][idx],float(conf.item())
+    @staticmethod
+    def _confidence_to_severity(conf: float) -> str:
+        if conf >= 0.85:
+            return 'SEVERE'
+        if conf >= 0.65:
+            return 'MODERATE'
+        return 'MILD'
     def diagnose(self,crop:str,payload:bytes,language:str='en')->dict:
         crop=canonical_crop(crop); image=decode_rgb(payload)
         label,conf=self.predict_task(crop,'disease',image)
@@ -96,10 +103,24 @@ class ModelRuntime:
             out['reason']='disease_uncertain_skips_severity'; return out
         sev_spec=self.registry.task(crop,'severity')
         if not sev_spec.get('enabled') or not self.registry.checkpoint_path(sev_spec).is_file():
+            use_heuristic = self.registry.data.get('rules', {}).get('confidence_heverity_fallback', False)
+            if use_heuristic:
+                out['severity'] = self._confidence_to_severity(conf)
+                out['severity_confidence'] = round(conf, 6)
+                out['severity_source'] = 'confidence_heuristic'
+                out['reason'] = 'severity_heuristic_fallback'
+                return out
             out['severity_unavailable']=True; out['reason']='severity_model_unavailable'; return out
         try:
             sev_label,sev_conf=self.predict_task(crop,'severity',image)
         except ModelUnavailable:
+            use_heuristic = self.registry.data.get('rules', {}).get('confidence_heverity_fallback', False)
+            if use_heuristic:
+                out['severity'] = self._confidence_to_severity(conf)
+                out['severity_confidence'] = round(conf, 6)
+                out['severity_source'] = 'confidence_heuristic'
+                out['reason'] = 'severity_heuristic_fallback'
+                return out
             out['severity_unavailable']=True; out['reason']='severity_runtime_unavailable'; return out
         out['severity_confidence']=round(sev_conf,6)
         sev_threshold=float(self.registry.data.get('severity_abstain_threshold',0.40))
