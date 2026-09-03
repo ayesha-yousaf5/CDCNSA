@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: CDCNSA
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python download_models.py
+    startCommand: python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: GROQ_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
