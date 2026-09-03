@@ -3,7 +3,6 @@
 
 # Model weights (too large for GitHub)
 models/
-inference/
 
 # Python
 __pycache__/
