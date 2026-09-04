@@ -172,8 +172,8 @@ def _message_language(message: str) -> str:
 def _photo_advice(message: str) -> str | None:
     """Answer the common photo-help prompt directly and consistently."""
     text = message.lower()
-    photo_terms = ("photo", "photograph", "picture", "image", "تصویر")
-    quality_terms = ("better", "clear", "good", "improve", "lighting", "صاف", "اچھی")
+    photo_terms = ("photo", "photograph", "picture", "image", "tasveer", "تصویر")
+    quality_terms = ("better", "clear", "good", "improve", "lighting", "behtar", "saaf", "صاف", "اچھی")
     if not any(term in text for term in photo_terms) or not any(term in text for term in quality_terms):
         return None
     if _message_language(message) == 'ur':
