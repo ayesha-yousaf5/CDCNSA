@@ -633,6 +633,14 @@ def generate_answer(user_question, retrieved_results, urdu_match=None, kb_record
             "Use correct Urdu spellings for all agricultural terms. "
             "Do not mix languages.\n"
         )
+    else:
+        lang_instruction = (
+            "\nCRITICAL LANGUAGE SETTING: The farmer asked in English. "
+            "Write the ENTIRE response in clear, natural English. "
+            "Do not use Urdu, Arabic, or transliterated Urdu. "
+            "Use English for headings, explanations, and bullet points. "
+            "Product and scientific names may remain unchanged.\n"
+        )
 
     user_prompt = f"""Farmer's question: {resolved_question}
 {severity_note}
@@ -770,6 +778,14 @@ async def generate_answer_stream(user_question, retrieved_results, urdu_match=No
             "Do not use English words except for product/brand names. "
             "Use correct Urdu spellings for all agricultural terms. "
             "Do not mix languages.\n"
+        )
+    else:
+        lang_instruction = (
+            "\nCRITICAL LANGUAGE SETTING: The farmer asked in English. "
+            "Write the ENTIRE response in clear, natural English. "
+            "Do not use Urdu, Arabic, or transliterated Urdu. "
+            "Use English for headings, explanations, and bullet points. "
+            "Product and scientific names may remain unchanged.\n"
         )
 
     user_prompt = f"""Farmer's question: {resolved_question}
