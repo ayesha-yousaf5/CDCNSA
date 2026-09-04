@@ -180,8 +180,8 @@ def _initialize():
     from sklearn.feature_extraction.text import TfidfVectorizer as _TfidfVectorizer
 
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    # Keep generation lightweight; retrieval supplies the factual content.
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    # Retrieval supplies the factual content; this deployed Groq model is verified.
+    GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
     api_key = GROQ_API_KEY
     if not api_key:
