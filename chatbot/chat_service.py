@@ -169,6 +169,30 @@ def _message_language(message: str) -> str:
     return 'ur' if _is_urdu(message) or _is_roman_urdu(message) else 'en'
 
 
+def _photo_advice(message: str) -> str | None:
+    """Answer the common photo-help prompt directly and consistently."""
+    text = message.lower()
+    photo_terms = ("photo", "photograph", "picture", "image", "tasveer", "تصویر")
+    quality_terms = ("better", "clear", "good", "improve", "lighting", "behtar", "saaf", "صاف", "اچھی")
+    if not any(term in text for term in photo_terms) or not any(term in text for term in quality_terms):
+        return None
+    if _message_language(message) == 'ur':
+        return (
+            "**بہتر تصویر کے لیے**\n\n"
+            "اچھی قدرتی روشنی میں متاثرہ پتے کی صاف تصویر لیں۔\n"
+            "• پتے کو فوکس میں رکھیں اور تصویر دھندلی نہ ہو۔\n"
+            "• سادہ پس منظر رکھیں اور بہت زیادہ زوم نہ کریں۔\n"
+            "• ایک قریب سے اور ایک پورے پودے کی تصویر بھیجیں۔"
+        )
+    return (
+        "**For a better photo**\n\n"
+        "Use good natural lighting and keep the affected leaf sharply in focus.\n"
+        "• Use a clear, simple background.\n"
+        "• Avoid blur, glare, and extreme zoom.\n"
+        "• If possible, include one close-up and one whole-plant photo."
+    )
+
+
 def _initialize():
     global _initialized, client, data, questions, question_vectors, vectorizer
     global GROQ_API_KEY, GROQ_MODEL
@@ -180,8 +204,8 @@ def _initialize():
     from sklearn.feature_extraction.text import TfidfVectorizer as _TfidfVectorizer
 
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    # Keep generation lightweight; retrieval supplies the factual content.
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+    # Retrieval supplies the factual content; this deployed Groq model is verified.
+    GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
     api_key = GROQ_API_KEY
     if not api_key:
@@ -902,6 +926,10 @@ def ask(message: str, context: dict = None) -> str:
                 return english_resp
             break
 
+    photo_answer = _photo_advice(message)
+    if photo_answer:
+        return photo_answer
+
     _initialize()
 
     interface_lang = _message_language(message)
@@ -991,6 +1019,11 @@ async def ask_stream(message: str, context: dict = None):
                     yield english_resp
                 return
             break
+
+    photo_answer = _photo_advice(message)
+    if photo_answer:
+        yield photo_answer
+        return
 
     _initialize()
 
