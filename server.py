@@ -10,6 +10,7 @@ Models are loaded lazily on first use and validated against model_registry.json.
 from __future__ import annotations
 from pathlib import Path
 from typing import Any
+import os
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -24,12 +25,13 @@ from chatbot import chat_service
 from chatbot import voice_service
 
 ROOT=Path(__file__).resolve().parent
+MODEL_ROOT=Path(os.getenv("CDCNSA_MODEL_ROOT", str(ROOT))).expanduser().resolve()
 app=FastAPI(title='CDCNSA')
-runtime=ModelRuntime(ROOT)
+runtime=ModelRuntime(MODEL_ROOT)
 
 @app.get('/api/health')
 def health()->dict[str,Any]:
-    return {'status':'ok','device':str(runtime.device),'diagnosis_mode':'real_model_runtime','demo_fallback':False}
+    return {'status':'ok','device':str(runtime.device),'model_root':str(MODEL_ROOT),'diagnosis_mode':'real_model_runtime','demo_fallback':False}
 
 @app.get('/api/models/status')
 def model_status(deep:bool=Query(False,description='When true, deserialize and contract-check every enabled checkpoint.'))->dict[str,Any]:

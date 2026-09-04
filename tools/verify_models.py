@@ -1,12 +1,13 @@
 from __future__ import annotations
-import json, sys
+import json, os, sys
 from pathlib import Path
 import torch
 ROOT=Path(__file__).resolve().parents[1]
+MODEL_ROOT=Path(os.getenv("CDCNSA_MODEL_ROOT", str(ROOT))).expanduser().resolve()
 sys.path.insert(0,str(ROOT))
 from inference.runtime import ModelRuntime
 
-rt=ModelRuntime(ROOT)
+rt=ModelRuntime(MODEL_ROOT)
 print(f'Device: {rt.device}')
 status=rt.status(deep=True)
 print(json.dumps(status,indent=2,ensure_ascii=False))

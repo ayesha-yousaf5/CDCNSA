@@ -29,7 +29,17 @@ Open `http://127.0.0.1:8000`.
 
 ## Production integration
 
-The included FastAPI backend remains the integration point for the frozen crop disease/severity models and crop-conditioned RAG + Qwen assistant. Demo responses are still placeholders until the model registry and actual checkpoints are wired in.
+The included FastAPI backend is the integration point for the frozen crop disease/severity models and crop-conditioned RAG + Qwen assistant. Run `python tools/verify_models.py` (or check `/api/models/status?deep=true`) before launch; missing or invalid checkpoints fail closed with `model_unavailable` or `model_contract_error`. Chat errors are surfaced to the interface instead of being replaced with demo answers.
+
+The checked-in `Plant_Health_AI_Knowledge_Base_Final/rag/plant_health_rag_knowledge.jsonl` is the structured JSONL export of the farmer knowledge documents (186 records). The chatbot searches this local knowledge first and sends the selected context to a lightweight Groq model (`llama-3.1-8b-instant` by default). Set `GROQ_MODEL` only when a different deployed model is required.
+
+If model files are stored outside this checkout, set `CDCNSA_MODEL_ROOT` to the directory containing `model_registry.json` and `models/` before starting or verifying:
+
+```powershell
+$env:CDCNSA_MODEL_ROOT='D:\hacathon\website deployment\CDCNSA'
+python tools\verify_models.py
+python server.py
+```
 
 ## Photography
 
