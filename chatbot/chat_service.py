@@ -52,6 +52,32 @@ FOLLOW_UP_WORDS = [
 ]
 
 
+def _update_context_from_request(context: dict | None) -> None:
+    """Apply diagnosis context without turning abstentions into diseases."""
+    if not context:
+        return
+
+    if context.get("crop"):
+        conversation_context["crop"] = str(context["crop"])
+
+    raw_disease = str(context.get("disease") or "").strip()
+    normalized_disease = raw_disease.lower().replace("_", " ")
+    abstained = (
+        bool(context.get("healthy"))
+        or bool(context.get("uncertainty"))
+        or normalized_disease in {"healthy", "uncertain"}
+    )
+    if abstained:
+        conversation_context["disease"] = None
+        conversation_context["severity"] = None
+    elif raw_disease:
+        conversation_context["disease"] = raw_disease
+
+    severity = context.get("severity")
+    if not abstained and severity and str(severity).upper() != "N/A":
+        conversation_context["severity"] = str(severity)
+
+
 def _resolve_pronouns(message: str) -> str:
     """Replace vague pronouns with the disease/crop from conversation context
     so that dataset searches target the right entity."""
@@ -138,6 +164,11 @@ def _is_roman_urdu(text: str) -> bool:
     return total_words > 0 and (roman_urdu_count / total_words) > 0.3
 
 
+def _message_language(message: str) -> str:
+    """Choose reply language from the farmer's message, not the UI toggle."""
+    return 'ur' if _is_urdu(message) or _is_roman_urdu(message) else 'en'
+
+
 def _initialize():
     global _initialized, client, data, questions, question_vectors, vectorizer
     global GROQ_API_KEY, GROQ_MODEL
@@ -149,7 +180,8 @@ def _initialize():
     from sklearn.feature_extraction.text import TfidfVectorizer as _TfidfVectorizer
 
     GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-    GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+    # Keep generation lightweight; retrieval supplies the factual content.
+    GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
     api_key = GROQ_API_KEY
     if not api_key:
@@ -259,17 +291,18 @@ def search_dataset(user_question, top_k=3):
 
     previous_disease = conversation_context.get("disease")
     previous_crop = conversation_context.get("crop")
+    is_follow_up = any(word in user_question.lower() for word in FOLLOW_UP_WORDS)
 
     search_question = user_question
-    if previous_disease:
+    if previous_disease and is_follow_up:
         search_question += " " + str(previous_disease)
-    if previous_crop:
+    if previous_crop and is_follow_up:
         search_question += " " + str(previous_crop)
 
     user_vector = vectorizer.transform([search_question])
     similarities = cosine_similarity(user_vector, question_vectors)[0]
 
-    if previous_disease:
+    if previous_disease and is_follow_up:
         for i in range(len(similarities)):
             disease_name = str(data["disease"][i]).lower()
             if previous_disease.lower() in disease_name:
@@ -570,7 +603,7 @@ def generate_answer(user_question, retrieved_results, urdu_match=None, kb_record
     lang_instruction = ""
     if urdu_mode:
         lang_instruction = (
-            "\nCRITICAL LANGUAGE SETTING: The user interface is set to Urdu. "
+            "\nCRITICAL LANGUAGE SETTING: The farmer asked in Urdu. "
             "You MUST write your ENTIRE response in Urdu script (Nastaliq). "
             "Do not use English words except for product/brand names. "
             "Use correct Urdu spellings for all agricultural terms. "
@@ -708,7 +741,7 @@ async def generate_answer_stream(user_question, retrieved_results, urdu_match=No
     lang_instruction = ""
     if urdu_mode:
         lang_instruction = (
-            "\nCRITICAL LANGUAGE SETTING: The user interface is set to Urdu. "
+            "\nCRITICAL LANGUAGE SETTING: The farmer asked in Urdu. "
             "You MUST write your ENTIRE response in Urdu script (Nastaliq). "
             "Do not use English words except for product/brand names. "
             "Use correct Urdu spellings for all agricultural terms. "
@@ -864,30 +897,20 @@ def ask(message: str, context: dict = None) -> str:
     for keyword, (urdu_resp, english_resp) in greeting_responses.items():
         if keyword in words:
             if len(words) <= 5:
-                if context and context.get("language") == 'ur':
+                if _message_language(message) == 'ur':
                     return urdu_resp
                 return english_resp
             break
 
     _initialize()
 
-    interface_lang = 'en'
+    interface_lang = _message_language(message)
     if context:
-        if context.get("disease"):
-            conversation_context["disease"] = context["disease"]
-        if context.get("crop"):
-            conversation_context["crop"] = context["crop"]
-        if context.get("severity"):
-            conversation_context["severity"] = context["severity"]
-        if context.get("language") in ('ur', 'en'):
-            interface_lang = context["language"]
+        _update_context_from_request(context)
 
     urdu_match = None
     is_urdu_input = _is_urdu(message)
     is_roman_urdu_input = _is_roman_urdu(message)
-
-    if is_urdu_input or is_roman_urdu_input:
-        interface_lang = 'ur'
 
     if is_urdu_input:
         urdu_match = match_urdu_to_knowledge(message)
@@ -962,7 +985,7 @@ async def ask_stream(message: str, context: dict = None):
     for keyword, (urdu_resp, english_resp) in greeting_responses.items():
         if keyword in words:
             if len(words) <= 5:
-                if context and context.get("language") == 'ur':
+                if _message_language(message) == 'ur':
                     yield urdu_resp
                 else:
                     yield english_resp
@@ -971,23 +994,13 @@ async def ask_stream(message: str, context: dict = None):
 
     _initialize()
 
-    interface_lang = 'en'
+    interface_lang = _message_language(message)
     if context:
-        if context.get("disease"):
-            conversation_context["disease"] = context["disease"]
-        if context.get("crop"):
-            conversation_context["crop"] = context["crop"]
-        if context.get("severity"):
-            conversation_context["severity"] = context["severity"]
-        if context.get("language") in ('ur', 'en'):
-            interface_lang = context["language"]
+        _update_context_from_request(context)
 
     urdu_match = None
     is_urdu_input = _is_urdu(message)
     is_roman_urdu_input = _is_roman_urdu(message)
-
-    if is_urdu_input or is_roman_urdu_input:
-        interface_lang = 'ur'
 
     if is_urdu_input:
         urdu_match = match_urdu_to_knowledge(message)
