@@ -4,7 +4,9 @@ import os
 import threading
 from collections import OrderedDict
 from pathlib import Path
+import numpy as np
 import torch
+from PIL import Image
 from PIL import ImageStat
 from torch.nn import functional as F
 from .architectures import build_classifier
@@ -117,15 +119,24 @@ class ModelRuntime:
             x=transform_for(spec)(image).unsqueeze(0).to(self.device)
             logits=loaded['model'](x)
             if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
-            probs=F.softmax(logits,dim=1)[0]; conf,idx=torch.max(probs,dim=0)
-            idx=int(idx.item()); return loaded['classes'][idx],float(conf.item())
+            probs=F.softmax(logits,dim=1)[0]
+            values,indices=torch.topk(probs,min(2,len(probs)))
+            idx=int(indices[0].item())
+            confidence=float(values[0].item())
+            margin=confidence-float(values[1].item()) if len(values)>1 else confidence
+            return loaded['classes'][idx],confidence,margin
     @staticmethod
     def _image_quality_reason(image):
-        # Reject only degenerate inputs here. A true leaf/crop OOD detector must
-        # be calibrated separately on representative field and negative images.
+        # This is a conservative content gate, not a substitute for a trained OOD model.
         if min(image.size)<32:return 'image_too_small'
         gray=image.resize((64,64)).convert('L')
         if float(ImageStat.Stat(gray).stddev[0])<2.0:return 'image_too_uniform'
+        sample=np.asarray(image.resize((64,64)).convert('RGB'))
+        quantized=(sample//32).reshape(-1,3)
+        unique_colors=len(np.unique(quantized,axis=0))
+        dark_fraction=float(np.mean(np.max(sample,axis=2)<35))
+        if dark_fraction>0.58 and unique_colors<90:
+            return 'image_not_crop_like'
         return None
     def diagnose(self,crop:str,payload:bytes,language:str='en')->dict:
         with self._inference_lock:
@@ -135,23 +146,28 @@ class ModelRuntime:
         quality_reason=self._image_quality_reason(image)
         if quality_reason:
             return {'crop':crop,'disease':'Uncertain','candidate_disease':None,'confidence':0.0,'healthy':False,'candidate_healthy':False,'uncertain':True,'severity':'N/A','severity_confidence':None,'severity_unavailable':False,'severity_abstained':False,'language':language,'runtime_device':str(self.device),'demo':False,'reason':quality_reason}
-        label,conf=self.predict_task(crop,'disease',image)
+        label,conf,margin=self.predict_task(crop,'disease',image)
         disease=display_label(label); healthy=is_healthy(label)
-        threshold=float(self.registry.data.get('disease_confidence_threshold',0.55))
-        uncertain=conf<threshold
+        thresholds=self.registry.data.get('disease_thresholds',{})
+        threshold=float(thresholds.get(crop,self.registry.data.get('disease_confidence_threshold',0.55)))
+        margins=self.registry.data.get('disease_margins',{})
+        margin_threshold=float(margins.get(crop,self.registry.data.get('disease_margin_threshold',0.08)))
+        uncertain=conf<threshold or margin<margin_threshold
         out={'crop':crop,'disease':disease,'candidate_disease':None,'confidence':round(conf,6),'healthy':healthy,'candidate_healthy':healthy,'uncertain':uncertain,'severity':'N/A','severity_confidence':None,'severity_unavailable':False,'severity_abstained':False,'language':language,'runtime_device':str(self.device),'demo':False}
         if uncertain:
             out['candidate_disease']=disease
             out['disease']='Uncertain'
             out['healthy']=False
-            out['reason']='disease_uncertain_skips_severity'; return out
+            out['reason']='disease_uncertain_skips_severity'
+            out['margin']=round(margin,6)
+            return out
         if healthy:
             out['reason']='healthy_skips_severity'; return out
         sev_spec=self.registry.task(crop,'severity')
         if not sev_spec.get('enabled') or not self.registry.checkpoint_path(sev_spec).is_file():
             out['severity_unavailable']=True; out['reason']='severity_model_unavailable'; return out
         try:
-            sev_label,sev_conf=self.predict_task(crop,'severity',image)
+            sev_label,sev_conf,_=self.predict_task(crop,'severity',image)
         except ModelUnavailable:
             out['severity_unavailable']=True; out['reason']='severity_runtime_unavailable'; return out
         out['severity_confidence']=round(sev_conf,6)

@@ -3,6 +3,31 @@
   "project": "CDCNSA",
   "device_policy": "cuda_if_available_else_cpu",
   "disease_confidence_threshold": 0.55,
+  "disease_margin_threshold": 0.08,
+  "disease_thresholds": {
+    "corn": 0.55,
+    "cotton": 0.55,
+    "tomato": 0.55,
+    "apple": 0.55,
+    "rice": 0.6,
+    "mango": 0.55,
+    "grape": 0.55,
+    "eggplant": 0.6,
+    "cucumber": 0.6,
+    "peas": 0.6
+  },
+  "disease_margins": {
+    "corn": 0.08,
+    "cotton": 0.08,
+    "tomato": 0.08,
+    "apple": 0.08,
+    "rice": 0.1,
+    "mango": 0.08,
+    "grape": 0.08,
+    "eggplant": 0.1,
+    "cucumber": 0.1,
+    "peas": 0.1
+  },
   "severity_abstain_threshold": 0.4,
   "rules": {
     "healthy_skips_severity": true,
