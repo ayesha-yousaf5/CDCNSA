@@ -12,6 +12,9 @@ This build uses the approved polished 12-crop website codebase. The current diag
 - Healthy predictions skip severity and return `N/A`.
 - Low-confidence disease predictions return `Uncertain`, hide the candidate label, and skip severity. A low-confidence `healthy` candidate cannot override uncertainty.
 - Degenerate, near-uniform images fail closed before model inference.
+- Obvious non-crop graphics (such as dark, low-color logos) fail closed before model inference.
+- Disease predictions now require both a crop-specific confidence threshold and a top-1/top-2 probability margin.
+- Crops whose checkpoints do not contain a healthy class cannot claim healthy; unknown/uncertain handling still requires a separately trained OOD or healthy classifier.
 - Low-confidence severity can abstain to `N/A`.
 - `/api/models/status?deep=true` performs a deserialization/contract load check.
 
