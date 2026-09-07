@@ -35,6 +35,31 @@
     "missing_disease_model_fails_closed": true,
     "missing_severity_model_preserves_disease_and_returns_na": true
   },
+  "combined_models": {
+    "disease": {
+      "runtime_kind": "combined_classification",
+      "architecture": "resnet50",
+      "checkpoint": "models/combined/disease_model.pt",
+      "image_size": 224,
+      "normalization_mean": [0.485, 0.456, 0.406],
+      "normalization_std": [0.229, 0.224, 0.225],
+      "enabled": true,
+      "crops": ["apple", "corn", "cotton", "grape", "mango", "peas", "pepper", "potato", "rice", "sunflower", "tomato"],
+      "source": "PlantDis combined disease checkpoint"
+    },
+    "severity": {
+      "runtime_kind": "combined_classification",
+      "architecture": "efficientnet_b0",
+      "checkpoint": "models/combined/severity_model.pt",
+      "image_size": 224,
+      "class_to_idx": {"MILD": 0, "MODERATE": 1, "SEVERE": 2},
+      "normalization_mean": [0.485, 0.456, 0.406],
+      "normalization_std": [0.229, 0.224, 0.225],
+      "enabled": true,
+      "crops": ["apple", "corn", "cotton", "grape", "mango", "peas", "pepper", "potato", "rice", "sunflower", "tomato"],
+      "source": "PlantDis combined severity checkpoint"
+    }
+  },
   "crops": {
     "corn": {
       "disease": {

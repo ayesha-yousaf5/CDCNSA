@@ -22,6 +22,7 @@ def canonical_crop(value:str)->str:
 
 def display_label(label:str)->str:
     # Member-2 checkpoints retain 'Crop / class' prefixes; the UI ontology does not need them.
+    if '|' in label: label=label.split('|',1)[1]
     if ' / ' in label: label=label.split(' / ',1)[1]
     return label.replace('_',' ').strip().title() if '_' in label else label.strip()
 
@@ -74,14 +75,22 @@ class ModelRuntime:
     @staticmethod
     def _strip_module(sd):
         return {k[7:] if k.startswith('module.') else k:v for k,v in sd.items()}
+    def _combined_spec(self,crop:str,task:str):
+        combined=self.registry.data.get('combined_models',{}).get(task)
+        if not combined or crop not in combined.get('crops',[]): return None
+        if not self.registry.checkpoint_path(combined).is_file(): return None
+        return combined
+    def _spec_for(self,crop:str,task:str):
+        return self._combined_spec(crop,task) or self.registry.task(crop,task)
     def load(self,crop:str,task:str):
         crop=canonical_crop(crop); key=(crop,task)
         with self._cache_lock:
             loaded=self._cached(key)
             if loaded is not None:return loaded
-            spec=self.registry.task(crop,task)
+            spec=self._spec_for(crop,task)
             if not spec.get('enabled'): raise ModelUnavailable(f'{crop} {task} model is not enabled in this build.')
-            if spec.get('runtime_kind')!='classification': raise ModelUnavailable(f'{crop} {task} uses {spec.get("runtime_kind")}; its dedicated runtime is not attached yet.')
+            if spec.get('runtime_kind') not in ('classification','combined_classification'):
+                raise ModelUnavailable(f'{crop} {task} uses {spec.get("runtime_kind")}; its dedicated runtime is not attached yet.')
             p=self.registry.checkpoint_path(spec)
             if not p.is_file(): raise ModelUnavailable(f'{crop} {task} checkpoint is missing: {spec.get("checkpoint")}')
             self._make_cache_room()
@@ -105,7 +114,7 @@ class ModelRuntime:
             ordered=[c for c,_ in sorted(class_to_idx.items(),key=lambda kv:kv[1])]
             if sorted(class_to_idx.values())!=list(range(len(ordered))): raise ModelContractError(f'{crop} {task} class indices are not contiguous from zero.')
             arch=(meta.get('backbone') or meta.get('architecture') or meta.get('model_name') or spec.get('architecture') or '').lower().replace('-','_')
-            aliases={'efficientnet_b0':'efficientnet_b0','efficientnet_b0_':'efficientnet_b0','densenet121':'densenet121','resnet50':'resnet50','resnet18':'resnet18','mobilenetv3_large':'mobilenet_v3_large','mobilenet_v3_large':'mobilenet_v3_large','mobilenet_v3':'mobilenet_v3_large','mobilenetv3':'mobilenet_v3_large'}
+            aliases={'efficientnet_b0':'efficientnet_b0','efficientnet_b0_':'efficientnet_b0','efficientnetb0':'efficientnet_b0','densenet121':'densenet121','resnet50':'resnet50','resnet18':'resnet18','mobilenetv3_large':'mobilenet_v3_large','mobilenet_v3_large':'mobilenet_v3_large','mobilenet_v3':'mobilenet_v3_large','mobilenetv3':'mobilenet_v3_large'}
             arch=aliases.get(arch,arch)
             model=build_classifier(arch,len(ordered))
             try: model.load_state_dict(sd,strict=True,assign=True)
@@ -113,7 +122,8 @@ class ModelRuntime:
             model.eval().to(self.device)
             del sd,meta,obj
             gc.collect()
-            loaded={'model':model,'classes':ordered,'spec':spec,'architecture':arch,'meta':runtime_meta}
+            loaded={'model':model,'classes':ordered,'spec':spec,'architecture':arch,'meta':runtime_meta,
+                    'combined':spec.get('runtime_kind')=='combined_classification'}
             self._models[key]=loaded
             return loaded
     @torch.inference_mode()
@@ -124,11 +134,20 @@ class ModelRuntime:
             logits=loaded['model'](x)
             if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
             probs=F.softmax(logits,dim=1)[0]
+            if loaded.get('combined') and task=='disease':
+                prefix={'corn':'Corn|','pepper':'Pepper Chilli|'}.get(crop,f'{crop.title()}|')
+                indices=[i for i,label in enumerate(loaded['classes']) if label.startswith(prefix)]
+                if not indices: raise ModelContractError(f'Combined disease model has no classes for {crop}.')
+                probs=probs[indices]
+                probs=probs/probs.sum()
+                classes=[loaded['classes'][i] for i in indices]
+            else:
+                classes=loaded['classes']
             values,indices=torch.topk(probs,min(2,len(probs)))
             idx=int(indices[0].item())
             confidence=float(values[0].item())
             margin=confidence-float(values[1].item()) if len(values)>1 else confidence
-            return loaded['classes'][idx],confidence,margin
+            return classes[idx],confidence,margin
     @staticmethod
     def _image_quality_reason(image):
         # This is a conservative content gate, not a substitute for a trained OOD model.
@@ -167,7 +186,7 @@ class ModelRuntime:
             return out
         if healthy:
             out['reason']='healthy_skips_severity'; return out
-        sev_spec=self.registry.task(crop,'severity')
+        sev_spec=self._spec_for(crop,'severity')
         if not sev_spec.get('enabled') or not self.registry.checkpoint_path(sev_spec).is_file():
             out['severity_unavailable']=True; out['reason']='severity_model_unavailable'; return out
         try:
@@ -186,7 +205,9 @@ class ModelRuntime:
         for crop,tasks in self.registry.crops.items():
             result['crops'][crop]={}
             for task,spec in tasks.items():
-                st=self.registry.file_status(spec); st['loadable']=None; st['load_error']=None
+                effective=self._spec_for(crop,task)
+                st=self.registry.file_status(effective); st['loadable']=None; st['load_error']=None
+                st['source_spec']=spec.get('checkpoint') != effective.get('checkpoint')
                 if deep and st['enabled'] and st['present']:
                     try: self.load(crop,task); st['loadable']=True
                     except Exception as exc: st['loadable']=False; st['load_error']=str(exc)
