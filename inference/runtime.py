@@ -121,6 +121,7 @@ class ModelRuntime:
             arch=aliases.get(arch,arch)
             model=build_classifier(arch,len(ordered))
             if self.device.type=='cpu' and self.cpu_half:
+                model=model.to_empty(device='meta')
                 sd={k:(v.half() if torch.is_floating_point(v) else v) for k,v in sd.items()}
             try: model.load_state_dict(sd,strict=True,assign=True)
             except RuntimeError as exc: raise ModelContractError(f'{crop} {task} state_dict does not match {arch}/{len(ordered)} classes: {exc}') from exc
