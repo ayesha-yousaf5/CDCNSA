@@ -40,6 +40,10 @@ class ModelRuntime:
         self.root=Path(root)
         self.registry=ModelRegistry(self.root)
         self.device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        try:
+            torch.set_num_threads(max(1,int(os.getenv('CDCNSA_TORCH_THREADS','1'))))
+        except ValueError:
+            torch.set_num_threads(1)
         # Render's smaller instances cannot safely retain multiple CNNs. Keep the
         # limit configurable, but default to one model so disease is released
         # before severity is loaded.
@@ -104,7 +108,7 @@ class ModelRuntime:
             aliases={'efficientnet_b0':'efficientnet_b0','efficientnet_b0_':'efficientnet_b0','densenet121':'densenet121','resnet50':'resnet50','resnet18':'resnet18','mobilenetv3_large':'mobilenet_v3_large','mobilenet_v3_large':'mobilenet_v3_large','mobilenet_v3':'mobilenet_v3_large','mobilenetv3':'mobilenet_v3_large'}
             arch=aliases.get(arch,arch)
             model=build_classifier(arch,len(ordered))
-            try: model.load_state_dict(sd,strict=True)
+            try: model.load_state_dict(sd,strict=True,assign=True)
             except RuntimeError as exc: raise ModelContractError(f'{crop} {task} state_dict does not match {arch}/{len(ordered)} classes: {exc}') from exc
             model.eval().to(self.device)
             del sd,meta,obj
