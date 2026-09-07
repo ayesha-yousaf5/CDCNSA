@@ -100,7 +100,10 @@ class ModelRuntime:
             if spec.get('expected_sha256'):
                 actual=self.registry.sha256(p)
                 if actual!=spec['expected_sha256']: raise ModelContractError(f'{crop} {task} checkpoint SHA256 mismatch.')
-            obj=torch.load(p,map_location='cpu',weights_only=False)
+            load_kwargs={'map_location':'cpu','weights_only':False}
+            if self.device.type=='cpu':
+                load_kwargs['mmap']=True
+            obj=torch.load(p,**load_kwargs)
             sd,meta=self._extract(obj); sd=self._strip_module(sd)
             # Never retain the checkpoint/state_dict as "metadata" alongside the
             # instantiated model. Several checkpoints embed model_state_dict in
@@ -122,7 +125,9 @@ class ModelRuntime:
             model=build_classifier(arch,len(ordered))
             if self.device.type=='cpu' and self.cpu_half:
                 model=model.to_empty(device='meta')
-                sd={k:(v.half() if torch.is_floating_point(v) else v) for k,v in sd.items()}
+                for name,value in sd.items():
+                    if torch.is_floating_point(value):
+                        sd[name]=value.half()
             try: model.load_state_dict(sd,strict=True,assign=True)
             except RuntimeError as exc: raise ModelContractError(f'{crop} {task} state_dict does not match {arch}/{len(ordered)} classes: {exc}') from exc
             model.eval().to(self.device)
