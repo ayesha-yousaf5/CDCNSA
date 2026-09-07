@@ -186,7 +186,7 @@ verify:
 - The image rejection gate is not a trained OOD classifier.
 - Confidence thresholds need calibration with field data.
 - Some severity classifiers require further validation.
-- The chatbot response time depends partly on the external language-model service.
+
 
 ## Recommended validation before release
 
