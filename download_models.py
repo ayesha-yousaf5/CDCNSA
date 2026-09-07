@@ -15,6 +15,10 @@ import tarfile
 from pathlib import Path
 
 FILE_ID = "1-paulafZwj8obchN2kGiTRTfVQAfkwSl"
+COMBINED_FILE_IDS = {
+    "disease_model.pt": "1OGIp67N5JGP890su0KYXjSKTV4kZ8MYI",
+    "severity_model.pt": "14FShPAXWs7H7IzTBkliX6HrZhDhPsf7o",
+}
 
 ROOT = Path(__file__).resolve().parent
 MODELS_DIR = ROOT / "models"
@@ -62,9 +66,28 @@ def extract_archive_safely(archive_path: Path) -> None:
 
 
 def main():
+    combined_dir = MODELS_DIR / "combined"
+    combined_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        import gdown
+    except ImportError:
+        print("[download_models] gdown not installed, installing now...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown", "-q"])
+        import gdown
+    for filename, file_id in COMBINED_FILE_IDS.items():
+        target = combined_dir / filename
+        if not target.is_file():
+            print(f"[download_models] Downloading combined {filename}...")
+            result = gdown.download(
+                f"https://drive.google.com/uc?id={file_id}",
+                str(target), quiet=False, use_cookies=False, resume=True,
+            )
+            if not result:
+                raise SystemExit(f"[download_models] Combined checkpoint download failed: {filename}")
+
     issues_before = checkpoint_issues()
     if not issues_before:
-        print("[download_models] All enabled classification checkpoints are present and protected hashes match; skipping download")
+        print("[download_models] Combined and legacy checkpoints are ready; skipping legacy archive download")
         return
 
     print(
@@ -73,13 +96,6 @@ def main():
     )
     for path, reason in issues_before:
         print(f"  {path.relative_to(ROOT)}: {reason}")
-
-    try:
-        import gdown
-    except ImportError:
-        print("[download_models] gdown not installed, installing now...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown", "-q"])
-        import gdown
 
     url = f"https://drive.google.com/uc?id={FILE_ID}"
     result = gdown.download(

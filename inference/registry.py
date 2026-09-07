@@ -1,5 +1,5 @@
 from __future__ import annotations
-import hashlib, json
+import hashlib, json, os
 from pathlib import Path
 from .errors import ModelContractError
 
@@ -15,6 +15,10 @@ class ModelRegistry:
     def task(self,crop_id:str,task:str)->dict:
         return self.crop(crop_id)[task]
     def checkpoint_path(self,spec:dict)->Path:
+        if spec.get('runtime_kind')=='combined_classification':
+            external=os.environ.get('CDCNSA_COMBINED_MODEL_ROOT')
+            if external:
+                return Path(external)/Path(spec['checkpoint']).name
         return self.root/spec['checkpoint']
     @staticmethod
     def sha256(path:Path)->str:

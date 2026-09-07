@@ -22,6 +22,12 @@ This build uses the approved polished 12-crop website codebase. The current diag
 
 Model binaries are intentionally excluded from Git. `download_models.py` downloads the shared Google Drive `models.tar.gz` archive during deployment and then verifies that every enabled classification checkpoint is present and every protected hash matches.
 
+The PlantDis combined checkpoints are also downloaded to `models/combined/`. When
+present, the runtime uses the shared 81-class disease model (filtered to the
+selected crop, including healthy classes) and shared three-class severity model
+for their supported crops. Crops outside that combined model's class mapping
+continue using their existing crop-specific runtime.
+
 | Crop | Task | Architecture | Status |
 |---|---|---|---|
 | Corn | Disease | EfficientNet-B0 | enabled |
