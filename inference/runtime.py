@@ -52,6 +52,7 @@ class ModelRuntime:
             self.max_cached_models=max(1,int(os.getenv('CDCNSA_MAX_CACHED_MODELS','1')))
         except ValueError:
             self.max_cached_models=1
+        self.cpu_half=os.getenv('CDCNSA_CPU_HALF','0').lower() in ('1','true','yes')
         self._models=OrderedDict(); self._cache_lock=threading.RLock()
         self._inference_lock=threading.RLock(); self._errors={}
     def _cached(self,key):
@@ -119,6 +120,8 @@ class ModelRuntime:
             aliases={'efficientnet_b0':'efficientnet_b0','efficientnet_b0_':'efficientnet_b0','efficientnetb0':'efficientnet_b0','densenet121':'densenet121','resnet50':'resnet50','resnet18':'resnet18','mobilenetv3_large':'mobilenet_v3_large','mobilenet_v3_large':'mobilenet_v3_large','mobilenet_v3':'mobilenet_v3_large','mobilenetv3':'mobilenet_v3_large'}
             arch=aliases.get(arch,arch)
             model=build_classifier(arch,len(ordered))
+            if self.device.type=='cpu' and self.cpu_half:
+                sd={k:(v.half() if torch.is_floating_point(v) else v) for k,v in sd.items()}
             try: model.load_state_dict(sd,strict=True,assign=True)
             except RuntimeError as exc: raise ModelContractError(f'{crop} {task} state_dict does not match {arch}/{len(ordered)} classes: {exc}') from exc
             model.eval().to(self.device)
@@ -133,6 +136,8 @@ class ModelRuntime:
         with self._inference_lock:
             loaded=self.load(crop,task); spec=loaded['spec']
             x=transform_for(spec)(image).unsqueeze(0).to(self.device)
+            if self.device.type=='cpu' and self.cpu_half:
+                x=x.half()
             logits=loaded['model'](x)
             if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
             probs=F.softmax(logits,dim=1)[0]
