@@ -84,10 +84,12 @@ class ModelRuntime:
         return self._combined_spec(crop,task) or self.registry.task(crop,task)
     def load(self,crop:str,task:str):
         crop=canonical_crop(crop); key=(crop,task)
+        spec=self._spec_for(crop,task)
+        if spec.get('runtime_kind')=='combined_classification':
+            key=('combined',task)
         with self._cache_lock:
             loaded=self._cached(key)
             if loaded is not None:return loaded
-            spec=self._spec_for(crop,task)
             if not spec.get('enabled'): raise ModelUnavailable(f'{crop} {task} model is not enabled in this build.')
             if spec.get('runtime_kind') not in ('classification','combined_classification'):
                 raise ModelUnavailable(f'{crop} {task} uses {spec.get("runtime_kind")}; its dedicated runtime is not attached yet.')
