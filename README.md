@@ -1,95 +1,197 @@
-# Plant Health AI — Professional V6
+# CDCNSA — Crop Disease Classification and Severity Analysis
 
-This build preserves the crop-health product architecture from the earlier interface while rebuilding the presentation layer around a restrained, professional agricultural design system.
+CDCNSA is a crop-health assistant for farmers and agriculture users in Pakistan.
+It analyzes crop images, identifies possible diseases, estimates severity when
+available, and provides practical guidance in English and Urdu.
 
-## Run locally
+## Features
 
-```bash
-pip install -r requirements.txt
-python server.py
-```
+- Crop disease classification from uploaded or camera images
+- Disease severity analysis
+- English and Urdu interface with Urdu RTL support
+- AI farmer chatbot for crop-health questions
+- English, Urdu, and Roman Urdu chatbot input
+- Voice input and text-to-speech support
+- Disease reference library with symptoms, management, prevention, and sources
+- Diagnosis history and mobile-friendly interface
+- Safe uncertainty handling instead of fabricated predictions
 
-Open `http://127.0.0.1:8000`.
+## Supported crops
 
-## What changed
+The current interface provides these ten crop diagnosis cards:
 
-- collapsible desktop sidebar, persisted in local storage;
-- deliberately designed deep-forest top navigation;
-- cinematic Pakistan-agriculture hero imagery;
-- Libre Caslon Display + Manrope typography system;
-- warm mineral / parchment canvas with restrained brass accent;
-- 2–4px corner geometry rather than rounded SaaS cards;
-- photography-first crop gallery;
-- sequential looping four-step process stage;
-- professional floating AI assistant and restrained message treatment;
-- consistent diagnosis, result, disease library and history styling;
-- English / Urdu RTL remains supported;
-- no initial language gate;
-- scientific backend contract remains unchanged.
+1. Corn/Maize
+2. Cotton
+3. Tomato
+4. Apple
+5. Rice
+6. Mango
+7. Grape
+8. Eggplant/Brinjal
+9. Cucumber
+10. Peas
 
-## Production integration
+## Models
 
-The included FastAPI backend is the integration point for the frozen crop disease/severity models and crop-conditioned RAG + Qwen assistant. Run `python tools/verify_models.py` (or check `/api/models/status?deep=true`) before launch; missing or invalid checkpoints fail closed with `model_unavailable` or `model_contract_error`. Chat errors are surfaced to the interface instead of being replaced with demo answers.
+The project uses crop-specific disease and severity classifiers. The supported
+architectures include:
 
-The checked-in `Plant_Health_AI_Knowledge_Base_Final/rag/plant_health_rag_knowledge.jsonl` is the structured JSONL export of the farmer knowledge documents (186 records). The chatbot searches this local knowledge first and sends the selected context to a lightweight Groq model (`llama-3.1-8b-instant` by default). Set `GROQ_MODEL` only when a different deployed model is required.
+- **ResNet50**
+- **EfficientNet-B0**
+- **MobileNetV3-Large**
+- **DenseNet121**
 
-If model files are stored outside this checkout, set `CDCNSA_MODEL_ROOT` to the directory containing `model_registry.json` and `models/` before starting or verifying:
+Each model is configured through [model_registry.json](model_registry.json),
+which defines its crop, task, architecture, image size, class mapping,
+normalization, confidence thresholds, and checkpoint path.
+
+Model files are kept outside Git because of their size. During deployment,
+`download_models.py` downloads the required model archives from Google Drive and
+validates the extracted checkpoints.
+
+## Local setup
+
+### Requirements
+
+- Python 3.10+
+- PyTorch and torchvision
+- A Windows, Linux, or macOS environment
+
+Install dependencies:
 
 ```powershell
-$env:CDCNSA_MODEL_ROOT='D:\hacathon\website deployment\CDCNSA'
-python tools\verify_models.py
+pip install -r requirements.txt
+```
+
+Start the local server:
+
+```powershell
 python server.py
 ```
 
-## Photography
+Open the application:
 
-The hero uses free Unsplash agricultural photography including documented Pakistan locations (Punjab, Bahawalpur, Layyah). Crop imagery continues to use Unsplash photography.
-
-
-## 12-crop mint update
-
-This build is a direct derivative of Professional V6. The layout, component styling, typography, sidebar, topbar, diagnosis flow, camera, disease library, history and chatbot are unchanged. Only the global V6 canvas/background was changed to muted mint green `#E1F0E6`, the visible crop count was updated to 12, and Lemon + Soybean were added to the crop router/library/demo endpoints.
-
-New crop image sources:
-- Lemon: https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?auto=format&fit=crop&w=1200&q=84
-- Soybean: https://strapi.myplantin.com/large_Depositphotos_309360300_XL_1_866356fe8b.webp
-
-
-## Verified disease library extension
-
-This build adds 75 model-class disease/condition cards across 12 crops. Opening a card shows a disease reference image, appearance, immediate field action, prevention/IPM, fertilizer/nutrition guidance, Pakistan pesticide/chemical guidance, thresholds where available, and source links. See `DISEASE_LIBRARY_VERIFICATION.md`.
-
-## Verified disease-detail extension (2026-09-01)
-The Disease Library now contains 75 model disease/condition cards. Each card opens a verified detail drawer with disease appearance, disease-specific reference imagery when a sufficiently matched Wikimedia Commons image is available, IPM/treatment, nutrition guidance, conservative Pakistan pesticide guidance, and source links. Generic crop photos are never substituted as disease evidence. See `DISEASE_LIBRARY_VERIFICATION.md`.
-
-
-## Deep verified disease library + Urdu fix
-
-This build deepens all 75 disease/condition detail cards, reduces repetitive source/chemical text, strengthens disease-image matching, and fixes disease-card opening in Urdu/RTL mode. A DOM interaction audit opened all 75 cards successfully in English and all 75 in Urdu. See `DEEP_DISEASE_LIBRARY_VERIFICATION_PK.md` and `URDU_DISEASE_CARD_TEST.json`.
-
-Pakistan chemical guidance is intentionally conservative: IPM first, no pesticide dose/PHI/REI/tank-mix instructions, current DPP crop/target label required, and banned pesticides excluded. Healthy predictions always force severity to N/A.
-
-
-## Reference-image update
-Disease drawers now use curated exact Wikimedia Commons files when available and a stricter disease/pathogen-specific Commons resolver for every remaining model class. The matching algorithm now uses the full scientific image query rather than only the short UI label. See `REFERENCE_IMAGE_POLICY.md`.
-
-
-## Real model runtime integration
-
-See `MODEL_INTEGRATION_STATUS.md`. Run `python tools/verify_models.py` before launch. The diagnosis endpoint no longer generates demo/fallback predictions.
-
-## Runtime parity audit
-
-`tools/verify_models.py` verifies that checkpoint files load and have the expected output shape. It does not measure semantic accuracy. Use the parity auditor for checkpoint metadata, out-of-distribution behavior, labeled external images, and local-vs-deployed website comparisons:
-
-```bash
-python tools/runtime_parity_auditor.py --crops apple corn cotton tomato peas
-python tools/runtime_parity_auditor.py \
-  --samples-csv tools/parity_samples.example.csv \
-  --endpoint http://127.0.0.1:8000 \
-  --json-out parity_report.json
+```text
+http://127.0.0.1:8000
 ```
 
-Copy `tools/parity_samples.example.csv`, replace its example rows with real labeled image paths, and keep those images outside all training, validation, and official test populations.
+If models are stored outside the repository, configure the model root:
 
-The runtime defaults to a one-model LRU cache (`CDCNSA_MAX_CACHED_MODELS=1`) because small Render instances cannot retain multiple CNN checkpoints safely. Disease and severity inference are serialized, and checkpoint tensor payloads are discarded immediately after their weights are copied into the model.
+```powershell
+$env:CDCNSA_MODEL_ROOT="D:\hacathon\website deployment\CDCNSA"
+python server.py
+```
+
+## Model verification
+
+Run the deep model contract check before deployment:
+
+```powershell
+python tools\verify_models.py
+```
+
+The check verifies checkpoint presence, architecture compatibility, class
+mapping, state-dict loading, and output shape. A successful contract check does
+not replace accuracy testing on independent real crop images.
+
+The same check is available through the API:
+
+```text
+http://127.0.0.1:8000/api/models/status?deep=true
+```
+
+## API endpoints
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/health` | Check server health |
+| GET | `/api/models/status` | Show model availability |
+| GET | `/api/models/status?deep=true` | Load and validate enabled models |
+| POST | `/api/diagnose` | Classify a crop image |
+| POST | `/api/chat` | Ask the farmer assistant |
+| POST | `/api/chat/stream` | Stream an assistant response |
+| POST | `/api/tts` | Generate voice output |
+| POST | `/api/chat/reset` | Reset chatbot context |
+
+## Diagnosis safety
+
+The backend:
+
+- rejects empty, tiny, near-uniform, and obvious non-crop images;
+- uses crop-specific confidence and top-1/top-2 margin thresholds;
+- returns `Uncertain` when a prediction is ambiguous;
+- skips severity when disease confidence is insufficient;
+- skips severity for healthy results;
+- returns `N/A` when severity is unavailable or abstained;
+- fails closed when a required model is missing or invalid.
+
+The image gate is a conservative heuristic, not a trained crop/leaf
+out-of-distribution detector. Real labeled field images are required to measure
+disease accuracy and calibrate thresholds.
+
+## Chatbot and knowledge base
+
+The chatbot combines local retrieval with a hosted language model. The checked-in
+knowledge base is:
+
+```text
+Plant_Health_AI_Knowledge_Base_Final/rag/plant_health_rag_knowledge.jsonl
+```
+
+It contains structured crop-health knowledge used for disease explanations,
+prevention, management, and farmer guidance. Chat responses are instructed to
+follow the language of the user:
+
+- English question → English answer
+- Urdu question → Urdu answer
+- Roman Urdu question → Urdu answer
+
+## Deployment
+
+The project is deployed as a FastAPI application on Render. Model binaries are
+downloaded during the Render build rather than committed to GitHub.
+
+The deployment downloader:
+
+1. Downloads the project disease/severity model archive.
+2. Downloads the Eggplant/Brinjal and Cucumber model archive.
+3. Extracts both archives using safe path validation.
+4. Verifies that required checkpoints exist.
+5. Verifies protected SHA256 hashes where configured.
+
+After changing model archive links or deployment logic, redeploy Render and
+verify:
+
+```text
+/api/health
+/api/models/status?deep=true
+```
+
+## Important project files
+
+- [server.py](server.py) — FastAPI application and API routes
+- [app.js](app.js) — frontend behavior and API integration
+- [model_registry.json](model_registry.json) — model contracts and routing
+- [inference/runtime.py](inference/runtime.py) — inference and safety logic
+- [inference/preprocess.py](inference/preprocess.py) — image decoding and transforms
+- [inference/registry.py](inference/registry.py) — checkpoint lookup and hashing
+- [download_models.py](download_models.py) — deployment model download
+- [tools/verify_models.py](tools/verify_models.py) — deep model verification
+- [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) — detailed project history and status
+
+## Current limitations
+
+- Model loading proves structural compatibility, not real-world accuracy.
+- Accuracy still requires independent labeled images for every crop and disease.
+- The image rejection gate is not a trained OOD classifier.
+- Confidence thresholds need calibration with field data.
+- Some severity classifiers require further validation.
+- The chatbot response time depends partly on the external language-model service.
+
+## Recommended validation before release
+
+1. Run the deep model verification locally.
+2. Test real labeled images for every supported crop.
+3. Test logos, documents, screenshots, people, and unrelated objects.
+4. Record disease correctness, severity correctness, confidence, and response time.
+5. Redeploy Render only after local and deployment checks pass.
