@@ -3083,13 +3083,38 @@ function normalizeDiagnosis(r){
     severity:(healthy||uncertain)?'N/A':(r.severity||'N/A'),
     severityConfidence:(healthy||uncertain)?null:(rawSeverityConfidence==null?null:Number(rawSeverityConfidence)),
     uncertain,
-    healthy
+    healthy,
+    source:r.diagnosis_source||'cnn',
+    vlmModel:r.vlm_model||null,
+    symptoms:r.visible_symptoms||null,
+    symptomsUr:r.visible_symptoms_ur||null,
+    cnnDisease:r.cnn_disease||null,
+    modelsAgree:r.models_agree??null,
+    reason:r.reason||null
   };
+}
+function renderDiagnosisSource(r){
+  let box=document.getElementById('resultSource');
+  const guidance=document.getElementById('resultGuidance');
+  if(!box&&guidance){box=document.createElement('div');box.id='resultSource';box.style.cssText='margin-top:10px;font-size:.82em;opacity:.8;line-height:1.55';guidance.insertAdjacentElement('afterend',box);}
+  if(!box)return;
+  const ur=state.lang==='ur';const parts=[];
+  const reasons={image_not_a_plant:[ 'This photo does not look like a plant. Please take a clear photo of the affected leaf.','یہ تصویر پودے کی نہیں لگتی۔ براہ کرم متاثرہ پتے کی واضح تصویر لیں۔'],
+    image_does_not_match_selected_crop:['This photo does not seem to match the selected crop. Please check the crop selection.','یہ تصویر منتخب فصل سے میل نہیں کھاتی۔ براہ کرم فصل کا انتخاب چیک کریں۔'],
+    disease_not_recognised:['The problem is not one of the diseases this app covers for this crop. Please consult a local agriculture expert.','یہ مسئلہ اس فصل کی شامل بیماریوں میں نہیں۔ براہ کرم مقامی زرعی ماہر سے رجوع کریں۔']};
+  if(r.reason&&reasons[r.reason])parts.push(reasons[r.reason][ur?1:0]);
+  const sym=ur?(r.symptomsUr||r.symptoms):r.symptoms;
+  if(sym)parts.push((ur?'تصویر میں نظر آنے والی علامات: ':'What we see: ')+sym);
+  if(r.source==='qwen_vl'){
+    const agreeTxt=r.modelsAgree===true?(ur?'CNN ماڈل بھی متفق ہے':'CNN model agrees'):(r.cnnDisease?(ur?`CNN ماڈل کا اندازہ: ${displayDisease(r.cnnDisease)}`:`CNN model suggested: ${displayDisease(r.cnnDisease)}`):'');
+    parts.push((ur?'تشخیص: Qwen-VL بصری ماڈل':'Diagnosed by Qwen-VL vision model')+(agreeTxt?' · '+agreeTxt:''));
+  }
+  box.textContent=parts.join('\n');box.style.whiteSpace='pre-line';box.classList.toggle('hidden',!parts.length);
 }
 function showResult(r,demo){
   $('#resultSection').classList.remove('hidden');$('#resultDisease').textContent=r.uncertain?t('uncertain'):displayDisease(r.disease);$('#resultConfidence').textContent=`${Math.round(r.confidence*100)}%`;$('#confidenceFill').style.width=`${Math.round(r.confidence*100)}%`;$('#resultCrop').textContent=state.lang==='ur'?activeCrop().ur:activeCrop().en;$('#resultSeverity').textContent=(r.healthy||r.uncertain)?t('severityNA'):translateSeverity(r.severity);$('#severityConfidence').textContent=(r.healthy||r.uncertain)?t('severityNA'):(r.severityConfidence?`${Math.round(r.severityConfidence*100)}%`:'—');
   const status=$('.result-status');status.classList.remove('healthy','uncertain'); if(r.uncertain){status.classList.add('uncertain');$('#resultStatusLabel').textContent=t('uncertain');$('#resultStatusIcon').textContent='!'}else if(r.healthy){status.classList.add('healthy');$('#resultStatusLabel').textContent=t('healthy');$('#resultStatusIcon').textContent='✓'}else{$('#resultStatusLabel').textContent=t('detected');$('#resultStatusIcon').textContent='✦'}
-  $('#uncertaintyNote').classList.toggle('hidden',!r.uncertain); const entry=r.uncertain?null:findDisease(r.disease); $('#resultGuidance').textContent=entry?(state.lang==='ur'?entry.urduSymptoms:entry.management):t('defaultGuidance');$('#demoNotice').textContent=t('demoNoticeText');$('#demoNotice').classList.toggle('hidden',!demo);$('#resultSection').scrollIntoView({behavior:'smooth',block:'start'});
+  $('#uncertaintyNote').classList.toggle('hidden',!r.uncertain); const entry=r.uncertain?null:findDisease(r.disease); $('#resultGuidance').textContent=entry?(state.lang==='ur'?entry.urduSymptoms:entry.management):t('defaultGuidance');$('#demoNotice').textContent=t('demoNoticeText');$('#demoNotice').classList.toggle('hidden',!demo);renderDiagnosisSource(r);$('#resultSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function translateSeverity(s){const x=String(s).toUpperCase();if(state.lang==='en')return x;return({MILD:'ہلکی',MODERATE:'درمیانی',SEVERE:'شدید','N/A':t('severityNA')})[x]||s}
 function displayDisease(name){const entry=findDisease(name);return entry?(state.lang==='ur'?entry.ur:entry.en):name}
