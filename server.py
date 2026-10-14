@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 import uvicorn
 from inference.errors import ImageDecodeError, ModelContractError, ModelRuntimeError, ModelUnavailable
 from inference.runtime import ModelRuntime
+from inference import vlm
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -31,7 +32,7 @@ runtime=ModelRuntime(MODEL_ROOT)
 
 @app.get('/api/health')
 def health()->dict[str,Any]:
-    return {'status':'ok','device':str(runtime.device),'model_root':str(MODEL_ROOT),'diagnosis_mode':'real_model_runtime','demo_fallback':False}
+    return {'status':'ok','device':str(runtime.device),'model_root':str(MODEL_ROOT),'diagnosis_mode':'qwen_vl_hybrid' if vlm.available() else 'cnn_only','vlm_model':os.getenv('QWEN_VL_MODEL','qwen3-vl-plus') if vlm.available() else None,'demo_fallback':False}
 
 @app.get('/api/models/status')
 def model_status(deep:bool=Query(False,description='When true, deserialize and contract-check every enabled checkpoint.'))->dict[str,Any]:

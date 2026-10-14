@@ -13,6 +13,7 @@ from .architectures import build_classifier
 from .errors import ModelContractError, ModelUnavailable
 from .preprocess import decode_rgb, transform_for
 from .registry import ModelRegistry
+from . import vlm
 
 ALIASES={'maize':'corn','corn / maize':'corn','brinjal':'eggplant','eggplant / brinjal':'eggplant'}  # lemon/citrus aliases hidden for now
 
@@ -181,9 +182,59 @@ class ModelRuntime:
             return 'image_not_crop_like'
         return None
     def diagnose(self,crop:str,payload:bytes,language:str='en')->dict:
-        with self._inference_lock:
-            return self._diagnose(crop,payload,language)
-    def _diagnose(self,crop:str,payload:bytes,language:str='en')->dict:
+        use_vlm=vlm.available()
+        try:
+            with self._inference_lock:
+                cnn=self._diagnose(crop,payload,language,run_severity=not use_vlm)
+        except Exception as exc:
+            # In hybrid mode a broken/missing CNN must not block the visual diagnosis.
+            if not use_vlm: raise
+            cnn={'crop':canonical_crop(crop),'cnn_error':str(exc)}
+        if not use_vlm or cnn.get('reason') in ('image_too_small','image_too_uniform'):
+            if use_vlm: cnn['diagnosis_source']='cnn'
+            return cnn
+        try:
+            return self._merge_vlm(cnn,crop,payload,language)
+        except Exception as exc:  # network/API problem -> keep the CNN answer (fail safe)
+            if 'cnn_error' in cnn: raise ModelUnavailable(f'Visual model failed ({exc}) and CNN unavailable ({cnn["cnn_error"]}).') from exc
+            cnn['diagnosis_source']='cnn'; cnn['vlm_error']=str(exc)[:300]
+            return cnn
+    def _merge_vlm(self,cnn:dict,crop:str,payload:bytes,language:str)->dict:
+        crop=canonical_crop(crop); image=decode_rgb(payload)
+        v=vlm.diagnose(image,crop)
+        cnn_label=cnn.get('candidate_disease') or cnn.get('disease')
+        cnn_conf=float(cnn.get('confidence') or 0.0)
+        agree=bool(v['diagnosis']) and cnn_label not in (None,'Uncertain') and \
+            vlm._norm(cnn_label)==vlm._norm(v['diagnosis'])
+        out={'crop':crop,'language':language,'demo':False,'runtime_device':str(self.device),
+             'diagnosis_source':'qwen_vl','vlm_model':v['model'],
+             'cnn_disease':cnn_label,'cnn_confidence':round(cnn_conf,6),'cnn_uncertain':bool(cnn.get('uncertain',True)),
+             'models_agree':agree,'visible_symptoms':v['visible_symptoms'],'visible_symptoms_ur':v['visible_symptoms_ur'],
+             'affected_area_percent':v['affected_area_percent'],'severity_unavailable':False,'severity_abstained':False,
+             'candidate_disease':None,'margin':None}
+        reason=None
+        if not v['is_plant_photo']: reason='image_not_a_plant'
+        elif not v['matches_selected_crop']: reason='image_does_not_match_selected_crop'
+        elif not v['diagnosis']: reason='disease_not_recognised'
+        conf=v['confidence']
+        if agree and not cnn.get('uncertain',True): conf=max(conf,cnn_conf)
+        else: conf=min(conf,0.9)
+        if reason is None and conf<float(self.registry.data.get('vlm_confidence_threshold',0.55)):
+            reason='disease_uncertain_skips_severity'
+        if reason:
+            out.update({'disease':'Uncertain','candidate_disease':v['diagnosis'] or v['raw_diagnosis'],'confidence':round(conf,6),
+                        'healthy':False,'candidate_healthy':v['diagnosis']=='Healthy','uncertain':True,'severity':'N/A',
+                        'severity_confidence':None,'reason':reason})
+            return out
+        healthy=v['diagnosis']=='Healthy'
+        out.update({'disease':'healthy' if healthy else v['diagnosis'],'confidence':round(conf,6),'healthy':healthy,
+                    'candidate_healthy':healthy,'uncertain':False,
+                    'severity':'N/A' if healthy or v['severity']=='N/A' else v['severity'],
+                    'severity_confidence':None if healthy or v['severity']=='N/A' else round(conf,6),
+                    'severity_abstained':(not healthy and v['severity']=='N/A'),
+                    'reason':'healthy_skips_severity' if healthy else 'ok'})
+        return out
+    def _diagnose(self,crop:str,payload:bytes,language:str='en',run_severity:bool=True)->dict:
         crop=canonical_crop(crop); image=decode_rgb(payload)
         quality_reason=self._image_quality_reason(image)
         if quality_reason:
@@ -209,6 +260,8 @@ class ModelRuntime:
             return out
         if healthy:
             out['reason']='healthy_skips_severity'; return out
+        if not run_severity:
+            out['reason']='ok'; return out
         sev_spec=self._spec_for(crop,'severity')
         if not sev_spec.get('enabled') or not self.registry.checkpoint_path(sev_spec).is_file():
             out['severity_unavailable']=True; out['reason']='severity_model_unavailable'; return out
