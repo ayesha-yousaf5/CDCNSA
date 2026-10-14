@@ -16,6 +16,8 @@
 #    uncertainty threshold, and exports a checkpoint that drops straight into the CDCNSA app (`model_registry.json`).
 #
 # **At the end, copy the printed "FINAL REPORT" block and send it back.**
+#
+# __KAGGLE_HINT__
 
 # %%
 # ============================== CONFIG (edit only if told to) ==============================
@@ -32,6 +34,8 @@ BATCH = 48
 SEED = 42
 TARGET_PRECISION = 0.85           # uncertainty gate: accepted predictions should be >=85% correct on ood_val
 PRETRAINED = True                 # ImageNet weights (needs Internet on)
+AUTO_KAGGLE_INPUTS = True         # every dataset you attach with "+ Add Input" becomes an extra TRAIN source
+ARCHS = ["efficientnet_b0", "resnet50", "densenet121", "dinov2_vits14"]  # slides' 3 backbones + DINOv2 (robust to new photo styles)
 EXTRA_TEST_DIR = None             # optional: path to your own labelled test photos, e.g. "/kaggle/input/cdcnsa-test-photos/__CROP__"
 
 # %%
@@ -398,6 +402,13 @@ def reload_done(spec):
         kept.append(r); per_src[r["src"]][r["cls"]] += 1
     return True
 
+if AUTO_KAGGLE_INPUTS and Path("/kaggle/input").exists():
+    used = {s.get("path") for s in SOURCES}
+    for d in sorted(Path("/kaggle/input").iterdir()):
+        if d.is_dir() and str(d) not in used:
+            SOURCES.append({"name": "kaggle_" + d.name[:20], "kind": "kaggle_input", "role": "train", "path": str(d)})
+            print("Attached Kaggle dataset added as training source:", d.name)
+
 for s in SOURCES:
     name = s["name"]
     if reload_done(s):
@@ -533,9 +544,26 @@ def build(arch, n):
         m = models.densenet121(weights=models.DenseNet121_Weights.IMAGENET1K_V1 if PRETRAINED else None); m.classifier = nn.Linear(m.classifier.in_features, n); head = m.classifier
     elif arch == "efficientnet_b0":
         m = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1 if PRETRAINED else None); m.classifier[1] = nn.Linear(m.classifier[1].in_features, n); head = m.classifier
+    elif arch == "dinov2_vits14":
+        m = DinoClassifier(n); head = m.head
     else:
         raise ValueError(arch)
     return m, head
+
+class DinoClassifier(nn.Module):
+    """DINOv2 ViT-S/14 (self-supervised on 142M curated images) + linear head. Exported as TorchScript."""
+    def __init__(self, n):
+        super().__init__()
+        try:
+            self.backbone = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14", pretrained=PRETRAINED)
+        except Exception as e:   # hub API unreachable -> use a plain git clone of the same code
+            repo = WORK / "dinov2_src"
+            if not repo.exists():
+                subprocess.run(["git", "clone", "-q", "--depth", "1", "https://github.com/facebookresearch/dinov2", str(repo)], check=True)
+            self.backbone = torch.hub.load(str(repo), "dinov2_vits14", source="local", pretrained=PRETRAINED)
+        self.head = nn.Linear(self.backbone.embed_dim, n)
+    def forward(self, x):
+        return self.head(self.backbone(x))
 
 @torch.no_grad()
 def predict(model, dl):
@@ -581,15 +609,18 @@ def train_arch(arch):
     run(EPOCHS_HEAD, list(head.parameters()), 1e-3)
     for p in model.parameters(): p.requires_grad = True
     patience = 0
-    run(EPOCHS_FULL, model.parameters(), 3e-4 if arch == "efficientnet_b0" else 1.5e-4)
+    run(EPOCHS_FULL, model.parameters(), {"efficientnet_b0": 3e-4, "dinov2_vits14": 2e-5}.get(arch, 1.5e-4))
     model.load_state_dict(best_state)
     return model, best
 
 results = {}
 trained = {}
-for arch in ["efficientnet_b0", "resnet50", "densenet121"]:
+for arch in ARCHS:
     t0 = time.time()
-    m, f = train_arch(arch)
+    try:
+        m, f = train_arch(arch)
+    except Exception as e:
+        print(f"{arch} skipped: {e}"); continue
     results[arch] = {"select_macroF1": round(f, 4), "minutes": round((time.time() - t0) / 60, 1)}
     trained[arch] = m.cpu(); torch.cuda.empty_cache()
     print(arch, results[arch])
@@ -611,17 +642,18 @@ def _closure():
 opt.step(_closure)
 TEMP = float(T.detach().clamp(min=0.05))
 # bake temperature into the final layer so the app needs no code change
-lin = model.fc if best_arch == "resnet50" else (model.classifier if best_arch == "densenet121" else model.classifier[1])
+lin = {"resnet50": lambda: model.fc, "densenet121": lambda: model.classifier,
+       "efficientnet_b0": lambda: model.classifier[1], "dinov2_vits14": lambda: model.head}[best_arch]()
 with torch.no_grad():
     lin.weight /= TEMP; lin.bias /= TEMP
 
 def gate_threshold(lg, y, target=TARGET_PRECISION):
     p = F.softmax(lg / TEMP, 1); conf, pred = p.max(1)
-    for t in np.arange(0.30, 0.96, 0.01):
+    for t in np.arange(0.50, 0.96, 0.01):   # never below 0.50
         keep = conf >= t
         if keep.sum() >= max(5, 0.2 * len(y)) and (pred[keep] == y[keep]).float().mean() >= target:
             return float(round(t, 2)), float(keep.float().mean())
-    return 0.60, float((conf >= 0.60).float().mean())
+    return 0.60, float((conf >= 0.60).float().mean())  # target not reachable -> conservative default
 THRESH, COVER = gate_threshold(lg_sel, y_sel)
 
 def report(name, dl):
@@ -653,8 +685,18 @@ ckpt = {"model_state_dict": {k: v.cpu() for k, v in model.state_dict().items()},
         "class_to_idx": C2I, "architecture": best_arch, "image_size": 224,
         "normalization_mean": MEAN, "normalization_std": STD, "temperature_baked": TEMP,
         "threshold": THRESH, "report": final}
-torch.save(ckpt, EXPORT / fname)
-registry_entry = {"runtime_kind": "classification", "architecture": best_arch,
+if best_arch == "dinov2_vits14":
+    fname = f"{CROP}_disease_dinov2_srcsplit.ts"
+    model.eval().cpu()
+    traced = torch.jit.trace(model, torch.zeros(1, 3, 224, 224), check_trace=False)
+    x_chk = torch.randn(2, 3, 224, 224)
+    assert torch.allclose(traced(x_chk), model(x_chk), atol=1e-3), "TorchScript export mismatch"
+    traced.save(str(EXPORT / fname))
+    runtime_kind = "torchscript"
+else:
+    torch.save(ckpt, EXPORT / fname)
+    runtime_kind = "classification"
+registry_entry = {"runtime_kind": runtime_kind, "architecture": best_arch,
                   "checkpoint": f"models/{CROP}/disease/{fname}", "image_size": 224,
                   "normalization_mean": MEAN, "normalization_std": STD, "class_to_idx": C2I, "enabled": True,
                   "note": f"source-held-out training {time.strftime('%Y-%m-%d')}; ood_test macroF1="

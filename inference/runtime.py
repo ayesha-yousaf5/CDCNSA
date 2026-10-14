@@ -93,6 +93,17 @@ class ModelRuntime:
             loaded=self._cached(key)
             if loaded is not None:return loaded
             if not spec.get('enabled'): raise ModelUnavailable(f'{crop} {task} model is not enabled in this build.')
+            if spec.get('runtime_kind')=='torchscript':
+                p=self.registry.checkpoint_path(spec)
+                if not p.is_file(): raise ModelUnavailable(f'{crop} {task} checkpoint is missing: {spec.get("checkpoint")}')
+                self._make_cache_room()
+                c2i=spec.get('class_to_idx') or {}
+                ordered=[c for c,_ in sorted(c2i.items(),key=lambda kv:kv[1])]
+                if not ordered: raise ModelContractError(f'{crop} {task} TorchScript model needs class_to_idx in the registry.')
+                model=torch.jit.load(str(p),map_location='cpu').eval().to(self.device)
+                loaded={'model':model,'classes':ordered,'spec':spec,'architecture':spec.get('architecture'),'meta':{},'combined':False}
+                self._models[key]=loaded
+                return loaded
             if spec.get('runtime_kind') not in ('classification','combined_classification'):
                 raise ModelUnavailable(f'{crop} {task} uses {spec.get("runtime_kind")}; its dedicated runtime is not attached yet.')
             p=self.registry.checkpoint_path(spec)
@@ -143,7 +154,7 @@ class ModelRuntime:
         with self._inference_lock:
             loaded=self.load(crop,task); spec=loaded['spec']
             x=transform_for(spec)(image).unsqueeze(0).to(self.device)
-            if self.device.type=='cpu' and self.cpu_half:
+            if self.device.type=='cpu' and self.cpu_half and spec.get('runtime_kind')!='torchscript':
                 x=x.half()
             logits=loaded['model'](x)
             if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')

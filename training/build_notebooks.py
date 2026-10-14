@@ -31,7 +31,7 @@ tmpl = (HERE / "disease_template.py").read_text()
 order = ["corn", "cotton", "rice", "tomato", "apple", "mango", "grape", "eggplant", "cucumber", "peas"]
 for i, crop in enumerate(order, 1):
     c = CROPS[crop]
-    src = (tmpl.replace("__CROP_TITLE__", c["title"]).replace("__CROP__", crop)
+    src = (tmpl.replace("__KAGGLE_HINT__", ("**Extra data tip:** " + c["kaggle_hint"]) if c.get("kaggle_hint") else "").replace("__CROP_TITLE__", c["title"]).replace("__CROP__", crop)
                .replace("__CLASSES__", pprint.pformat(c["classes"], width=110))
                .replace("__ALIASES__", pprint.pformat(c["aliases"], width=110))
                .replace("__SOURCES__", pprint.pformat(c["sources"], width=110, sort_dicts=False)))

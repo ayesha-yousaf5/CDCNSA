@@ -18,7 +18,7 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 | # | Notebook | Train sources | Held-out test source |
 |---|---|---|---|
 | 01 | Corn | Tanzania maize (Dataverse), Bangladesh corn (Mendeley), PlantVillage (capped) | South Africa field maize (Figshare) + PlantDoc |
-| 02 | Cotton | SAR-CLD-2024, Cotton national set (Mendeley) | Cotton severity-levels set (Mendeley) |
+| 02 | Cotton | SAR-CLD-2024 + EWU 2025 cotton set (Mendeley; Alternaria, Bacterial Blight, Fusarium, Verticillium, Healthy) + any attached Kaggle cotton set | Cotton severity-levels set (Mendeley) |
 | 03 | Rice | RiceLeafBD, Rice 10-class (Mendeley) | Dhan-Shomadhan field photos (Mendeley) |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
 | 04 | Tomato | Bangladesh field tomato (Mendeley), PlantVillage (capped) | PlantDoc |
@@ -35,7 +35,8 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 - **Split by source**: the model is chosen, calibrated and scored on a dataset it never trained on. The "OOD TEST" number is the honest one; the "val (same sources)" number is shown only for comparison.
 - Strong on-the-fly augmentation, class-balanced sampling, label smoothing, early stopping on the held-out source.
 - Lab-only PlantVillage is capped at 400 per class so it cannot dominate field photos.
-- Three backbones (ResNet50, DenseNet121, EfficientNet-B0) compared fairly, as in the slides; the best is exported.
+- Four backbones compared fairly: the slides' ResNet50, DenseNet121, EfficientNet-B0 **plus DINOv2 ViT-S/14** (self-supervised on 142M varied images — the most robust to new photo styles). The best on the held-out source is exported (DINOv2 as TorchScript; the app supports it).
+- **Extra data:** anything you attach with **+ Add Input** is automatically used as an additional training source (e.g. for cotton: search Kaggle for *cotton plant disease* — Aphids / Army worm / Bacterial blight / Healthy / Powdery mildew / Target spot).
 - Confidence is calibrated and the uncertainty threshold is chosen so answered predictions are ≥85% correct on the held-out source.
 
 ## Reading the result
