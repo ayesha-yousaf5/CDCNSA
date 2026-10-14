@@ -146,13 +146,18 @@ class ModelRuntime:
                 x=x.half()
             logits=loaded['model'](x)
             if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
-            probs=F.softmax(logits,dim=1)[0]
+            probs=F.softmax(logits.float(),dim=1)[0]
+            crop_mass=1.0
             if loaded.get('combined') and task=='disease':
                 prefix={'corn':'Corn|','pepper':'Pepper Chilli|'}.get(crop,f'{crop.title()}|')
                 indices=[i for i,label in enumerate(loaded['classes']) if label.startswith(prefix)]
                 if not indices: raise ModelContractError(f'Combined disease model has no classes for {crop}.')
                 probs=probs[indices]
-                probs=probs/probs.sum()
+                # Probability the shared model gives to ANY class of the selected crop.
+                # Renormalising without checking this turned a near-zero guess into a
+                # "100% confident" diagnosis whenever the model saw a different crop.
+                crop_mass=float(probs.sum().item())
+                probs=probs/max(crop_mass,1e-12)
                 classes=[loaded['classes'][i] for i in indices]
             else:
                 classes=loaded['classes']
@@ -160,6 +165,7 @@ class ModelRuntime:
             idx=int(indices[0].item())
             confidence=float(values[0].item())
             margin=confidence-float(values[1].item()) if len(values)>1 else confidence
+            self._last_crop_mass=crop_mass
             return classes[idx],confidence,margin
     @staticmethod
     def _image_quality_reason(image):
@@ -188,14 +194,18 @@ class ModelRuntime:
         threshold=float(thresholds.get(crop,self.registry.data.get('disease_confidence_threshold',0.55)))
         margins=self.registry.data.get('disease_margins',{})
         margin_threshold=float(margins.get(crop,self.registry.data.get('disease_margin_threshold',0.08)))
-        uncertain=conf<threshold or margin<margin_threshold
+        crop_mass=float(getattr(self,'_last_crop_mass',1.0))
+        min_crop_mass=float(self.registry.data.get('combined_min_crop_mass',0.5))
+        crop_mismatch=crop_mass<min_crop_mass
+        uncertain=conf<threshold or margin<margin_threshold or crop_mismatch
         out={'crop':crop,'disease':disease,'candidate_disease':None,'confidence':round(conf,6),'healthy':healthy,'candidate_healthy':healthy,'uncertain':uncertain,'severity':'N/A','severity_confidence':None,'severity_unavailable':False,'severity_abstained':False,'language':language,'runtime_device':str(self.device),'demo':False}
         if uncertain:
             out['candidate_disease']=disease
             out['disease']='Uncertain'
             out['healthy']=False
-            out['reason']='disease_uncertain_skips_severity'
+            out['reason']='image_does_not_match_selected_crop' if crop_mismatch else 'disease_uncertain_skips_severity'
             out['margin']=round(margin,6)
+            out['crop_match']=round(crop_mass,6)
             return out
         if healthy:
             out['reason']='healthy_skips_severity'; return out
