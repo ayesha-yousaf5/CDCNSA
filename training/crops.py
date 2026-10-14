@@ -1,0 +1,209 @@
+"""Per-crop configuration for the CDCNSA Kaggle notebooks.
+
+Alias rules are regexes matched against folder/file names (lower-case, _ - . replaced by spaces).
+First match wins, so specific rules come before general ones. Target None = drop those images.
+"""
+HEALTHY = (r"healthy|normal|fresh", "healthy")
+
+PV = lambda *folders: {"name": "plantvillage", "kind": "plantvillage", "role": "train", "cap": 400, "folders": list(folders)}
+PD = lambda require: {"name": "plantdoc", "kind": "plantdoc", "role": "heldout", "require": require}
+
+CROPS = {
+    "corn": {
+        "title": "Corn / Maize",
+        "classes": ["Bacterial Leaf Streak", "Common Rust", "Gray Leaf Spot", "Maize Lethal Necrosis",
+                    "Maize Streak Virus", "Northern Leaf Blight", "healthy"],
+        "aliases": [
+            (r"southern|phaeosphaeria|chlorotic|mottle|\bmcmv\b", None),
+            (r"\bmln\b|lethal|necrosis", "Maize Lethal Necrosis"),
+            (r"\bmsv\b|streak virus|maize streak|^streak$", "Maize Streak Virus"),
+            (r"bacterial leaf streak|bacterial streak|\bbls\b", "Bacterial Leaf Streak"),
+            (r"gr[ae]y leaf spot|\bgls\b|cercospora", "Gray Leaf Spot"),
+            (r"common rust|\brust\b|\bcr\b", "Common Rust"),
+            (r"northern|\bn?clb\b|\bnlb\b|leaf blight|\bblight\b", "Northern Leaf Blight"),
+            HEALTHY,
+        ],
+        "sources": [
+            {"name": "tanzania_maize", "kind": "dataverse", "role": "train", "doi": "doi:10.7910/DVN/GDON8Q"},
+            {"name": "bangladesh_corn", "kind": "mendeley", "role": "train", "id": "vy629dngm8", "version": 1},
+            PV("Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot", "Corn_(maize)___Common_rust_",
+               "Corn_(maize)___Northern_Leaf_Blight", "Corn_(maize)___healthy"),
+            {"name": "pretoria_field", "kind": "figshare", "role": "heldout", "id": 20237613},
+            PD(r"corn"),
+        ],
+    },
+    "cotton": {
+        "title": "Cotton",
+        "classes": ["Bacterial Blight", "Leaf Curl", "Herbicide Growth Damage", "Leaf Hopper Jassids",
+                    "Leaf Reddening", "Leaf Variegation", "healthy"],
+        "aliases": [
+            (r"fusarium|alternaria|verticillium|aphid|army|powdery|target", None),
+            (r"bacterial|blight", "Bacterial Blight"),
+            (r"curl", "Leaf Curl"),
+            (r"herbicide", "Herbicide Growth Damage"),
+            (r"jass|hopper", "Leaf Hopper Jassids"),
+            (r"redd|red leaf|reddening", "Leaf Reddening"),
+            (r"variegat", "Leaf Variegation"),
+            HEALTHY,
+        ],
+        "sources": [
+            {"name": "sar_cld_2024", "kind": "mendeley", "role": "train", "id": "b3jy2p6k8w", "version": 2},
+            {"name": "cotton_national", "kind": "mendeley", "role": "train", "id": "533j2mzd4s", "version": 1},
+            {"name": "cotton_severity_set", "kind": "mendeley", "role": "heldout", "id": "74jsdxtmx2", "version": 2},
+        ],
+    },
+    "rice": {
+        "title": "Rice",
+        "classes": ["Bacterial Leaf Blight", "Brown Spot", "Leaf Scald", "Narrow Brown Leaf Spot", "Rice Blast",
+                    "Rice Hispa", "Rice Tungro", "Sheath Blight", "healthy"],
+        "aliases": [
+            (r"neck|panicle|leaf ?folder|stripe|smut|false|white background|white bg", None),
+            (r"narrow", "Narrow Brown Leaf Spot"),
+            (r"brown ?spot", "Brown Spot"),
+            (r"sheath|steath", "Sheath Blight"),
+            (r"bacterial|\bblb\b|leaf ?blight|^blight$", "Bacterial Leaf Blight"),
+            (r"scald|scaled", "Leaf Scald"),
+            (r"blast", "Rice Blast"),
+            (r"hispa", "Rice Hispa"),
+            (r"tungro|turngo", "Rice Tungro"),
+            HEALTHY,
+        ],
+        "sources": [
+            {"name": "riceleafbd", "kind": "mendeley", "role": "train", "id": "sjkptpgv79", "version": 1},
+            {"name": "rice_10class", "kind": "mendeley", "role": "train", "id": "zfwkkdj6dk", "version": 2},
+            {"name": "dhan_shomadhan", "kind": "mendeley", "role": "heldout", "id": "znsxdctwtt", "version": 1,
+             "exclude": r"white"},
+        ],
+    },
+    "apple": {
+        "title": "Apple",
+        "classes": ["Apple Scab", "Cedar Apple Rust", "Apple Powdery Mildew", "Black Rot", "healthy"],
+        "aliases": [
+            (r"complex|alternaria|mosaic|brown spot|grey spot|gray spot", None),
+            (r"scab", "Apple Scab"),
+            (r"rust", "Cedar Apple Rust"),
+            (r"powdery", "Apple Powdery Mildew"),
+            (r"black ?rot|frog", "Black Rot"),
+            (r"healthy|^apple leaf$", "healthy"),
+        ],
+        "sources": [
+            {"name": "plant_pathology_2021", "kind": "hf", "role": "train", "repo": "timm/plant-pathology-2021",
+             "split": "train", "single_label_only": True, "space_separated_labels": True, "cap": 900},
+            PV("Apple___Apple_scab", "Apple___Black_rot", "Apple___Cedar_apple_rust", "Apple___healthy"),
+            PD(r"apple"),
+        ],
+    },
+    "tomato": {
+        "title": "Tomato",
+        "classes": ["Bacterial Spot", "Early Blight", "Late Blight", "Leaf Mold", "Septoria Leaf Spot",
+                    "Spider Mites", "Target Spot", "Tomato Yellow Leaf Curl Virus", "Tomato Mosaic Virus", "healthy"],
+        "aliases": [
+            (r"black spot|shot hole|miner|cercospora|powdery", None),
+            (r"yellow|curl", "Tomato Yellow Leaf Curl Virus"),
+            (r"mosaic", "Tomato Mosaic Virus"),
+            (r"spider|mite", "Spider Mites"),
+            (r"target", "Target Spot"),
+            (r"septoria", "Septoria Leaf Spot"),
+            (r"mold|mould", "Leaf Mold"),
+            (r"late", "Late Blight"),
+            (r"early", "Early Blight"),
+            (r"bacterial", "Bacterial Spot"),
+            (r"healthy|^tomato leaf$", "healthy"),
+        ],
+        "sources": [
+            {"name": "tomato_bd_field", "kind": "mendeley", "role": "train", "id": "bpfd9cns5g", "version": 2},
+            PV("Tomato___Bacterial_spot", "Tomato___Early_blight", "Tomato___Late_blight", "Tomato___Leaf_Mold",
+               "Tomato___Septoria_leaf_spot", "Tomato___Spider_mites Two-spotted_spider_mite", "Tomato___Target_Spot",
+               "Tomato___Tomato_Yellow_Leaf_Curl_Virus", "Tomato___Tomato_mosaic_virus", "Tomato___healthy"),
+            PD(r"tomato"),
+        ],
+    },
+    "mango": {
+        "title": "Mango",
+        "classes": ["Anthracnose", "Bacterial Canker", "Cutting Weevil", "Die Back", "Gall Midge",
+                    "Powdery Mildew", "Sooty Mould", "healthy"],
+        "aliases": [
+            (r"anthrac", "Anthracnose"),
+            (r"canker", "Bacterial Canker"),
+            (r"weevil", "Cutting Weevil"),
+            (r"die ?back", "Die Back"),
+            (r"gall", "Gall Midge"),
+            (r"powdery", "Powdery Mildew"),
+            (r"sooty", "Sooty Mould"),
+            HEALTHY,
+        ],
+        "sources": [
+            {"name": "mangoleafbd", "kind": "hf", "role": "train", "repo": "Project-AgML/MangoLeafBD_disease_classification", "split": "train"},
+            {"name": "mld24", "kind": "mendeley", "role": "heldout", "id": "6dvpywm2m2", "version": 1},
+        ],
+    },
+    "grape": {
+        "title": "Grape",
+        "classes": ["Black Rot", "Downy Mildew", "Esca Black Measles", "Leaf Blight / Isariopsis Leaf Spot", "healthy"],
+        "aliases": [
+            (r"brown spot|mite|powdery|anthrac|alternaria", None),
+            (r"black ?rot", "Black Rot"),
+            (r"downy", "Downy Mildew"),
+            (r"esca|measles", "Esca Black Measles"),
+            (r"isariopsis|leaf blight", "Leaf Blight / Isariopsis Leaf Spot"),
+            (r"healthy|^grape leaf$", "healthy"),
+        ],
+        "sources": [
+            {"name": "grape_field", "kind": "mendeley", "role": "train", "id": "378c69nwk5", "version": 1},
+            PV("Grape___Black_rot", "Grape___Esca_(Black_Measles)", "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)", "Grape___healthy"),
+            PD(r"grape"),
+        ],
+    },
+    "eggplant": {
+        "title": "Eggplant / Brinjal",
+        "classes": ["General Pest Damage", "Leaf Spot", "Mosaic Virus", "White Mold", "Wilt", "healthy"],
+        "aliases": [
+            (r"small ?leaf|phomopsis", None),
+            (r"insect|pest", "General Pest Damage"),
+            (r"spot", "Leaf Spot"),
+            (r"mosaic", "Mosaic Virus"),
+            (r"white ?mo", "White Mold"),
+            (r"wilt", "Wilt"),
+            HEALTHY,
+        ],
+        "sources": [
+            {"name": "eggplant_bd", "kind": "mendeley", "role": "train", "id": "r3tb5mzn4d", "version": 2},
+            {"name": "eggplant_curated", "kind": "mendeley", "role": "heldout", "id": "jv6tnm4t5c", "version": 1},
+        ],
+    },
+    "cucumber": {
+        "title": "Cucumber",
+        "classes": ["Anthracnose", "Bacterial Wilt", "Belly Rot", "Downy Mildew", "Gummy Stem Blight",
+                    "Pythium Fruit Rot", "healthy"],
+        "aliases": [
+            (r"anthrac", "Anthracnose"),
+            (r"bacterial", "Bacterial Wilt"),
+            (r"belly", "Belly Rot"),
+            (r"downy", "Downy Mildew"),
+            (r"gummy", "Gummy Stem Blight"),
+            (r"pythium", "Pythium Fruit Rot"),
+            HEALTHY,
+        ],
+        "sources": [
+            {"name": "cucumber_hf", "kind": "hf", "role": "train", "repo": "Project-AgML/cucumber_disease_classification", "split": "train"},
+        ],
+    },
+    "peas": {
+        "title": "Peas",
+        "classes": ["Ascochyta Blight", "Botrytis Blight", "Fusarium Wilt", "Pod Borer Damage",
+                    "Powdery Mildew", "Downy Mildew", "healthy"],
+        "aliases": [
+            (r"leaf ?roll|stem ?rot|anthrac", None),
+            (r"ascochyta", "Ascochyta Blight"),
+            (r"botrytis", "Botrytis Blight"),
+            (r"fusarium", "Fusarium Wilt"),
+            (r"borer", "Pod Borer Damage"),
+            (r"powdery", "Powdery Mildew"),
+            (r"downy", "Downy Mildew"),
+            HEALTHY,
+        ],
+        "sources": [
+            {"name": "pisum_sativum", "kind": "mendeley", "role": "train", "id": "nnv3k3m94k", "version": 1},
+        ],
+    },
+}

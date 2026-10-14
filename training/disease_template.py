@@ -1,0 +1,573 @@
+# %% [markdown]
+# # CDCNSA — __CROP_TITLE__ disease classifier (overfit-safe training)
+#
+# **Before you press Run All** (right-hand panel → *Session options*):
+# 1. **Accelerator → GPU T4 x2** (or P100)
+# 2. **Internet → On** (needs a phone-verified Kaggle account)
+# 3. Then **Run All**. Expected time: 30–90 min (downloads + 3 backbones).
+#
+# What this notebook does:
+# 1. Downloads every source dataset for __CROP_TITLE__ (Mendeley / Dataverse / Figshare / Hugging Face / GitHub).
+# 2. Uses **original images only** (skips any `augmented` folders), resizes them, removes **near-duplicates** (incl. flipped/rotated copies).
+# 3. Splits **by source**: training sources vs. a **held-out source** the model never sees. The held-out source is cut into
+#    `ood_val` (model selection, early stopping, calibration) and `ood_test` (the number you report).
+# 4. Trains **ResNet50, DenseNet121, EfficientNet-B0** (torchvision, ImageNet-pretrained) — the same three backbones as the slides.
+# 5. Picks the best by held-out-source macro-F1, calibrates confidence (temperature baked into the final layer), picks the
+#    uncertainty threshold, and exports a checkpoint that drops straight into the CDCNSA app (`model_registry.json`).
+#
+# **At the end, copy the printed "FINAL REPORT" block and send it back.**
+
+# %%
+# ============================== CONFIG (edit only if told to) ==============================
+CROP = "__CROP__"
+CLASSES = __CLASSES__          # canonical names = names used by the website
+# Ordered alias rules: first match wins. Target None = drop images in that folder.
+ALIASES = __ALIASES__
+# Sources. role: "train" or "heldout". kind: mendeley | dataverse | figshare | zenodo | hf | plantdoc | plantvillage | kaggle_input
+SOURCES = __SOURCES__
+CAP_PER_CLASS_PER_SOURCE = 1500   # max original images per class per source (keeps lab sets from dominating)
+IMG_SIDE = 320                    # stored shorter side; training crops 224
+EPOCHS_HEAD, EPOCHS_FULL = 3, 14
+BATCH = 48
+SEED = 42
+TARGET_PRECISION = 0.85           # uncertainty gate: accepted predictions should be >=85% correct on ood_val
+PRETRAINED = True                 # ImageNet weights (needs Internet on)
+EXTRA_TEST_DIR = None             # optional: path to your own labelled test photos, e.g. "/kaggle/input/cdcnsa-test-photos/__CROP__"
+
+# %%
+import subprocess, sys
+subprocess.run([sys.executable, "-m", "pip", "install", "-q", "imagehash", "rarfile"], check=False)
+import os, re, io, json, glob, math, time, random, shutil, zipfile, tarfile, hashlib, urllib.request, urllib.parse
+from collections import Counter, defaultdict
+from pathlib import Path
+import numpy as np
+from PIL import Image, ImageOps, ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+Image.MAX_IMAGE_PIXELS = None
+import imagehash
+import torch, torch.nn as nn, torch.nn.functional as F
+from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
+from torchvision import transforms, models
+from sklearn.metrics import f1_score, classification_report, confusion_matrix
+
+random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+print("Device:", DEVICE, torch.cuda.get_device_name(0) if DEVICE == "cuda" else "")
+if DEVICE != "cuda":
+    print("WARNING: no GPU. Turn on Accelerator -> GPU in Session options, then restart.")
+WORK = Path(os.environ.get("CDCNSA_WORK", "/kaggle/working"))
+RAW = WORK / "raw" / CROP; PROC = WORK / "proc" / CROP; EXPORT = WORK / "export" / CROP
+for p in (RAW, PROC, EXPORT): p.mkdir(parents=True, exist_ok=True)
+IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff", ".jfif"}
+UA = {"User-Agent": "Mozilla/5.0 (CDCNSA research notebook)"}
+
+# %% [markdown]
+# ## 1. Download helpers
+
+# %%
+def http_get(url, dest=None, timeout=120):
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        if dest is None:
+            return r.read()
+        tmp = str(dest) + ".part"
+        with open(tmp, "wb") as f:
+            shutil.copyfileobj(r, f, length=1 << 20)
+        os.replace(tmp, dest)
+        return dest
+
+def http_json(url):
+    return json.loads(http_get(url).decode("utf-8"))
+
+def extract_all(folder):
+    """Extract every archive under folder (repeatedly, for nested archives)."""
+    for _ in range(4):
+        found = False
+        for p in list(Path(folder).rglob("*")):
+            if not p.is_file():
+                continue
+            name = p.name.lower()
+            out = p.with_name(p.name + "_x")
+            try:
+                if name.endswith(".zip"):
+                    with zipfile.ZipFile(p) as z: z.extractall(out)
+                elif name.endswith((".tar", ".tar.gz", ".tgz")):
+                    with tarfile.open(p) as t: t.extractall(out)
+                elif name.endswith((".rar", ".7z")):
+                    r = subprocess.run(["7z", "x", "-y", f"-o{out}", str(p)], capture_output=True)
+                    if r.returncode != 0:
+                        print("  could not extract", p.name, "(install p7zip?)"); continue
+                else:
+                    continue
+                p.unlink(); found = True
+            except Exception as e:
+                print("  extract failed:", p.name, e)
+        if not found:
+            break
+
+def dl_mendeley(spec, dest):
+    ds, ver = spec["id"], spec.get("version", 1)
+    zip_url = f"https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/{ds}-{ver}.zip"
+    try:
+        print("  trying Mendeley bulk zip ...")
+        http_get(zip_url, dest / f"{ds}-{ver}.zip", timeout=600)
+        return True
+    except Exception as e:
+        print("  bulk zip failed:", e)
+    # fallback: public API, walk folders
+    try:
+        base = f"https://data.mendeley.com/public-api/datasets/{ds}"
+        files = http_json(f"{base}/files?folder_id=root&version={ver}")
+        folders = http_json(f"{base}/folders/{ver}") if True else []
+        todo = list(files)
+        for fo in folders if isinstance(folders, list) else []:
+            try:
+                todo += http_json(f"{base}/files?folder_id={fo['id']}&version={ver}")
+            except Exception:
+                pass
+        n = 0
+        for f in todo:
+            url = (f.get("content_details") or {}).get("download_url")
+            if not url: continue
+            http_get(url, dest / f["filename"], timeout=600); n += 1
+        print(f"  downloaded {n} files via Mendeley API")
+        return n > 0
+    except Exception as e:
+        print("  Mendeley API failed:", e)
+    return False
+
+def dl_dataverse(spec, dest, cap_files=None):
+    doi = spec["doi"]
+    meta = http_json(f"https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId={urllib.parse.quote(doi)}")
+    files = meta["data"]["latestVersion"]["files"]
+    total = sum(f["dataFile"].get("filesize", 0) for f in files)
+    print(f"  Dataverse: {len(files)} files, {total/1e9:.2f} GB")
+    per_dir = Counter()
+    for f in files:
+        df = f["dataFile"]; d = f.get("directoryLabel", "")
+        name = df.get("filename") or df.get("label")
+        is_img = Path(name).suffix.lower() in IMG_EXT
+        if is_img and per_dir[d] >= CAP_PER_CLASS_PER_SOURCE:  # sample instead of downloading thousands of photos
+            continue
+        sub = dest / d; sub.mkdir(parents=True, exist_ok=True)
+        try:
+            http_get(f"https://dataverse.harvard.edu/api/access/datafile/{df['id']}", sub / name, timeout=900)
+            per_dir[d] += 1
+        except Exception as e:
+            print("   failed", name, e)
+    return True
+
+def dl_figshare(spec, dest):
+    art = http_json(f"https://api.figshare.com/v2/articles/{spec['id']}")
+    for f in art.get("files", []):
+        print(f"  figshare file {f['name']} {f.get('size',0)/1e6:.0f} MB")
+        http_get(f["download_url"], dest / f["name"], timeout=1800)
+    return True
+
+def dl_zenodo(spec, dest):
+    rec = http_json(f"https://zenodo.org/api/records/{spec['id']}")
+    for f in rec["files"]:
+        name = f.get("key") or f.get("filename")
+        http_get(f["links"]["self"], dest / name, timeout=3600)
+    return True
+
+def dl_plantdoc(spec, dest):
+    if not (dest / "PlantDoc-Dataset").exists():
+        subprocess.run(["git", "clone", "--depth", "1", "https://github.com/pratikkayal/PlantDoc-Dataset", str(dest / "PlantDoc-Dataset")], check=True)
+    return True
+
+def dl_plantvillage(spec, dest):
+    repo = dest / "PlantVillage-Dataset"
+    if not repo.exists():
+        subprocess.run(["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse",
+                        "https://github.com/spMohanty/PlantVillage-Dataset", str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "sparse-checkout", "set"] + [f"raw/color/{d}" for d in spec["folders"]], check=True)
+    return True
+
+def dl_hf(spec, dest):
+    from datasets import load_dataset
+    ds = load_dataset(spec["repo"], split=spec.get("split", "train"), streaming=True)
+    feats = ds.features or {}
+    label_col = spec.get("label_col")
+    img_col = spec.get("image_col", "image")
+    if label_col is None:
+        for k, v in feats.items():
+            if k != img_col and k.lower() in ("label", "labels", "class", "category"):
+                label_col = k; break
+    names = None
+    try:
+        names = feats[label_col].names
+    except Exception:
+        try: names = feats[label_col].feature.names
+        except Exception: pass
+    per = Counter(); n = 0
+    for row in ds:
+        lab = row[label_col]
+        if isinstance(lab, list):
+            if spec.get("single_label_only", True) and len(lab) != 1: continue
+            lab = lab[0]
+        if isinstance(lab, str) and " " in lab.strip() and spec.get("space_separated_labels"):
+            parts = lab.split()
+            if len(parts) != 1: continue
+            lab = parts[0]
+        lab = names[lab] if (names and isinstance(lab, int)) else str(lab)
+        if per[lab] >= CAP_PER_CLASS_PER_SOURCE: continue
+        img = row[img_col]
+        if not isinstance(img, Image.Image):
+            img = Image.open(io.BytesIO(img["bytes"]))
+        d = dest / re.sub(r"[^\w\- ]", "_", lab); d.mkdir(parents=True, exist_ok=True)
+        img = img.convert("RGB"); img.thumbnail((1024, 1024))
+        img.save(d / f"{n:06d}.jpg", quality=92); per[lab] += 1; n += 1
+    print("  HF labels:", dict(per))
+    return True
+
+def dl_kaggle_input(spec, dest):
+    src = Path(spec["path"])
+    if not src.exists():
+        print("  Kaggle input not attached:", src); return False
+    return True   # files are read in place from /kaggle/input
+
+DL = {"mendeley": dl_mendeley, "dataverse": dl_dataverse, "figshare": dl_figshare, "zenodo": dl_zenodo,
+      "plantdoc": dl_plantdoc, "plantvillage": dl_plantvillage, "hf": dl_hf, "kaggle_input": dl_kaggle_input}
+
+# %% [markdown]
+# ## 2. Download all sources (status printed per source)
+
+# %%
+status = {}
+for s in SOURCES:
+    d = RAW / s["name"]; d.mkdir(parents=True, exist_ok=True)
+    if (d / ".done").exists():
+        status[s["name"]] = "cached"; continue
+    print(f"[{s['name']}] ({s['kind']}, role={s['role']}) downloading ...")
+    t0 = time.time()
+    try:
+        ok = DL[s["kind"]](s, d)
+        if ok:
+            extract_all(d); (d / ".done").write_text("ok")
+        status[s["name"]] = "ok" if ok else "FAILED"
+    except Exception as e:
+        status[s["name"]] = f"FAILED: {e}"
+    print(f"   -> {status[s['name']]} ({time.time()-t0:.0f}s)")
+print("\nDOWNLOAD STATUS:", json.dumps(status, indent=1))
+# If a Mendeley source FAILED: open its page, click "Download All", copy the link, then in Kaggle use
+# "+ Add Input -> Datasets -> New dataset -> Link" and change that source to kind="kaggle_input" with its /kaggle/input path.
+
+# %% [markdown]
+# ## 3. Map folders → classes, keep originals only, resize, de-duplicate
+
+# %%
+DROP_PATH = re.compile(r"augment|\baug\b|_aug|synthetic|generated|__macosx", re.I)
+COMPILED = [(re.compile(p, re.I), t) for p, t in ALIASES]
+
+def norm_part(s):
+    return re.sub(r"[_\-\.\(\)]+", " ", s).strip().lower()
+
+def class_for(rel_parts, require=None, exclude=None):
+    path_txt = " / ".join(norm_part(p) for p in rel_parts)
+    if DROP_PATH.search(path_txt): return "SKIP_AUG"
+    if require and not re.search(require, path_txt, re.I): return None
+    if exclude and re.search(exclude, path_txt, re.I): return None
+    for part in reversed([norm_part(p) for p in rel_parts[:-1]] + [norm_part(Path(rel_parts[-1]).stem)]):
+        # dataset-title folders (long, or containing "dataset") must not decide the class
+        if "dataset" in part or len(part.split()) > 6 or part.endswith(" zip x"):
+            continue
+        for rx, target in COMPILED:
+            if rx.search(part):
+                return target if target is not None else "DROP"
+    return None
+
+records = []        # dicts: src, role, cls, path
+unmapped = Counter(); skipped_aug = Counter()
+for s in SOURCES:
+    root = Path(s["path"]) if s["kind"] == "kaggle_input" else RAW / s["name"]
+    if not status.get(s["name"], "").startswith(("ok", "cached")): continue
+    per = Counter()
+    files = [p for p in root.rglob("*") if p.suffix.lower() in IMG_EXT]
+    random.shuffle(files)
+    for p in files:
+        rel = p.relative_to(root).parts
+        c = class_for(rel, s.get("require"), s.get("exclude"))
+        if c == "SKIP_AUG": skipped_aug[s["name"]] += 1; continue
+        if c is None:
+            unmapped[(s["name"], "/".join(rel[-3:-1]))] += 1; continue
+        if c == "DROP" or c not in CLASSES: continue
+        cap = s.get("cap", CAP_PER_CLASS_PER_SOURCE)
+        if per[c] >= cap: continue
+        per[c] += 1
+        records.append({"src": s["name"], "role": s["role"], "cls": c, "raw": str(p)})
+print("Skipped augmented-folder images:", dict(skipped_aug))
+print("Top unmapped folders (check these!):")
+for (src, fol), n in unmapped.most_common(25): print(f"  {src:28s} {fol:60s} {n}")
+
+def load_resized(path):
+    im = Image.open(path); im = ImageOps.exif_transpose(im).convert("RGB")
+    w, h = im.size
+    if min(w, h) < 64: return None
+    sc = IMG_SIDE / min(w, h)
+    if sc < 1: im = im.resize((max(1, round(w*sc)), max(1, round(h*sc))), Image.BILINEAR)
+    return im
+
+def hashes(im):
+    small = im.copy(); small.thumbnail((256, 256))
+    vs = [small, ImageOps.mirror(small), ImageOps.flip(small), small.rotate(90, expand=True), small.rotate(180), small.rotate(270, expand=True)]
+    return [imagehash.phash(v) for v in vs]
+
+kept, dup = [], Counter()
+seen = []                      # canonical pHash of every kept image
+bands = defaultdict(list)      # (band index, 2-hex-chars) -> kept ids; <=4 differing bits leave >=4 of 8 bands identical
+def band_keys(h):
+    s = str(h); return [(b, s[2*b:2*b+2]) for b in range(8)]
+for i, r in enumerate(records):
+    try:
+        im = load_resized(r["raw"])
+    except Exception:
+        continue
+    if im is None: continue
+    hs = hashes(im)
+    cand = set()
+    for h in hs:
+        for k in band_keys(h): cand.update(bands.get(k, ()))
+    if any(min(seen[j] - h for h in hs) <= 4 for j in cand):
+        dup[r["src"]] += 1; continue
+    seen.append(hs[0])
+    for k in band_keys(hs[0]): bands[k].append(len(seen) - 1)
+    out = PROC / r["src"] / r["cls"].replace("/", "-") / f"{i:07d}.jpg"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    im.save(out, quality=90)
+    r["path"] = str(out); kept.append(r)
+print("Near-duplicates removed per source:", dict(dup))
+
+table = defaultdict(Counter)
+for r in kept: table[r["src"]][r["cls"]] += 1
+print("\nORIGINAL, DE-DUPLICATED IMAGES PER SOURCE x CLASS")
+print(f"{'class':38s}" + "".join(f"{s['name'][:16]:>18s}" for s in SOURCES))
+for c in CLASSES:
+    print(f"{c:38s}" + "".join(f"{table[s['name']][c]:>18d}" for s in SOURCES))
+
+# %% [markdown]
+# ## 4. Source-based split (the anti-overfitting step)
+
+# %%
+train_pool = [r for r in kept if r["role"] == "train"]
+held = [r for r in kept if r["role"] == "heldout"]
+present = [c for c in CLASSES if any(r["cls"] == c for r in train_pool)]
+missing = [c for c in CLASSES if c not in present]
+if missing: print("Classes with NO training images (will be excluded):", missing)
+if len(present) < 2:
+    raise SystemExit("STOP: fewer than 2 classes have training images. Check DOWNLOAD STATUS and the "
+                     "'unmapped folders' list above, then send that output back.")
+CLS = present; C2I = {c: i for i, c in enumerate(CLS)}
+train_pool = [r for r in train_pool if r["cls"] in C2I]
+held = [r for r in held if r["cls"] in C2I]
+
+def stratified_split(rows, frac, seed=SEED):
+    by = defaultdict(list)
+    for r in rows: by[r["cls"]].append(r)
+    a, b = [], []
+    rng = random.Random(seed)
+    for c, lst in by.items():
+        rng.shuffle(lst); k = max(1, int(round(len(lst) * frac))) if len(lst) > 1 else 0
+        b += lst[:k]; a += lst[k:]
+    return a, b
+
+train, val_id = stratified_split(train_pool, 0.12)       # in-distribution val (sanity only)
+if len(held) >= 40:
+    ood_val, ood_test = stratified_split(held, 0.5)
+    SELECT_ON = "ood_val"
+else:
+    ood_val, ood_test = [], held
+    SELECT_ON = "val_id"
+    print("WARNING: held-out source too small/absent -> selecting on in-distribution val. "
+          "Scores for this crop are NOT proof of generalisation.")
+if EXTRA_TEST_DIR and Path(EXTRA_TEST_DIR).exists():
+    extra = []
+    for p in Path(EXTRA_TEST_DIR).rglob("*"):
+        if p.suffix.lower() in IMG_EXT:
+            c = class_for(p.relative_to(EXTRA_TEST_DIR).parts)
+            if c in C2I: extra.append({"src": "extra", "role": "extra", "cls": c, "path": str(p)})
+    print("Extra test photos:", len(extra))
+else:
+    extra = []
+for name, rows in [("train", train), ("val_id", val_id), ("ood_val", ood_val), ("ood_test", ood_test), ("extra", extra)]:
+    print(f"{name:9s} {len(rows):6d}  {dict(Counter(r['cls'] for r in rows))}")
+
+# %% [markdown]
+# ## 5. Training: ResNet50 · DenseNet121 · EfficientNet-B0 (same constructors as the app)
+
+# %%
+MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
+T_TRAIN = transforms.Compose([
+    transforms.RandomResizedCrop(224, scale=(0.35, 1.0), ratio=(0.75, 1.33)),
+    transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(),
+    transforms.RandomRotation(25),
+    transforms.ColorJitter(0.35, 0.35, 0.3, 0.04),
+    transforms.RandomGrayscale(0.05),
+    transforms.RandomApply([transforms.GaussianBlur(5, (0.1, 2.0))], p=0.25),
+    transforms.ToTensor(), transforms.Normalize(MEAN, STD),
+    transforms.RandomErasing(p=0.25, scale=(0.02, 0.12)),
+])
+T_EVAL = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(), transforms.Normalize(MEAN, STD)])  # = app runtime
+
+class DS(Dataset):
+    def __init__(self, rows, tf): self.rows, self.tf = rows, tf
+    def __len__(self): return len(self.rows)
+    def __getitem__(self, i):
+        r = self.rows[i]
+        im = Image.open(r["path"]).convert("RGB")
+        return self.tf(im), C2I[r["cls"]]
+
+def loader(rows, train_mode):
+    if not rows: return None
+    ds = DS(rows, T_TRAIN if train_mode else T_EVAL)
+    if train_mode:
+        cnt = Counter(r["cls"] for r in rows)
+        w = [1.0 / cnt[r["cls"]] for r in rows]
+        return DataLoader(ds, batch_size=BATCH, sampler=WeightedRandomSampler(w, len(rows), replacement=True),
+                          num_workers=4, pin_memory=True, drop_last=True)
+    return DataLoader(ds, batch_size=BATCH * 2, shuffle=False, num_workers=4, pin_memory=True)
+
+def build(arch, n):
+    # identical to inference/architectures.py in the app, so checkpoints load with strict=True
+    if arch == "resnet50":
+        m = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2 if PRETRAINED else None); m.fc = nn.Linear(m.fc.in_features, n); head = m.fc
+    elif arch == "densenet121":
+        m = models.densenet121(weights=models.DenseNet121_Weights.IMAGENET1K_V1 if PRETRAINED else None); m.classifier = nn.Linear(m.classifier.in_features, n); head = m.classifier
+    elif arch == "efficientnet_b0":
+        m = models.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1 if PRETRAINED else None); m.classifier[1] = nn.Linear(m.classifier[1].in_features, n); head = m.classifier
+    else:
+        raise ValueError(arch)
+    return m, head
+
+@torch.no_grad()
+def predict(model, dl):
+    model.eval(); L, Y = [], []
+    for x, y in dl:
+        with torch.autocast(device_type="cuda", enabled=DEVICE == "cuda"):
+            L.append(model(x.to(DEVICE, non_blocking=True)).float().cpu())
+        Y.append(y)
+    return torch.cat(L), torch.cat(Y)
+
+def macro_f1(logits, y):
+    return f1_score(y.numpy(), logits.argmax(1).numpy(), average="macro", labels=sorted(set(y.numpy().tolist())))
+
+def train_arch(arch):
+    model, head = build(arch, len(CLS)); model.to(DEVICE)
+    dl_tr = loader(train, True)
+    dl_sel = loader(ood_val if SELECT_ON == "ood_val" else val_id, False)
+    crit = nn.CrossEntropyLoss(label_smoothing=0.1)
+    scaler = torch.amp.GradScaler("cuda", enabled=DEVICE == "cuda")
+    best, best_state, patience = -1, None, 0
+    def run(epochs, params, lr):
+        nonlocal best, best_state, patience
+        opt = torch.optim.AdamW(params, lr=lr, weight_decay=0.05)
+        sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=lr, total_steps=max(1, epochs * len(dl_tr)), pct_start=0.15)
+        for ep in range(epochs):
+            model.train(); tl = 0
+            for x, y in dl_tr:
+                x, y = x.to(DEVICE, non_blocking=True), y.to(DEVICE, non_blocking=True)
+                opt.zero_grad(set_to_none=True)
+                with torch.autocast(device_type="cuda", enabled=DEVICE == "cuda"):
+                    loss = crit(model(x), y)
+                scaler.scale(loss).backward(); scaler.step(opt); scaler.update(); sched.step(); tl += loss.item()
+            lg, yy = predict(model, dl_sel); f = macro_f1(lg, yy)
+            print(f"  {arch} ep{ep+1}/{epochs} loss {tl/len(dl_tr):.3f}  {SELECT_ON} macroF1 {f:.3f}")
+            if f > best + 1e-4:
+                best, patience = f, 0
+                best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+            else:
+                patience += 1
+            if patience >= 4: print("  early stop"); return
+    for p in model.parameters(): p.requires_grad = False
+    for p in head.parameters(): p.requires_grad = True
+    run(EPOCHS_HEAD, list(head.parameters()), 1e-3)
+    for p in model.parameters(): p.requires_grad = True
+    patience = 0
+    run(EPOCHS_FULL, model.parameters(), 3e-4 if arch == "efficientnet_b0" else 1.5e-4)
+    model.load_state_dict(best_state)
+    return model, best
+
+results = {}
+trained = {}
+for arch in ["efficientnet_b0", "resnet50", "densenet121"]:
+    t0 = time.time()
+    m, f = train_arch(arch)
+    results[arch] = {"select_macroF1": round(f, 4), "minutes": round((time.time() - t0) / 60, 1)}
+    trained[arch] = m.cpu(); torch.cuda.empty_cache()
+    print(arch, results[arch])
+
+# %% [markdown]
+# ## 6. Pick best backbone, calibrate, set uncertainty threshold, report
+
+# %%
+dl_sel = loader(ood_val if SELECT_ON == "ood_val" else val_id, False)
+dl_test = loader(ood_test, False); dl_vid = loader(val_id, False); dl_extra = loader(extra, False)
+best_arch = max(results, key=lambda a: results[a]["select_macroF1"])
+model = trained[best_arch].to(DEVICE)
+
+lg_sel, y_sel = predict(model, dl_sel)
+T = torch.ones(1, requires_grad=True)
+opt = torch.optim.LBFGS([T], lr=0.05, max_iter=100)
+def _closure():
+    opt.zero_grad(); l = F.cross_entropy(lg_sel / T.clamp(min=0.05), y_sel); l.backward(); return l
+opt.step(_closure)
+TEMP = float(T.detach().clamp(min=0.05))
+# bake temperature into the final layer so the app needs no code change
+lin = model.fc if best_arch == "resnet50" else (model.classifier if best_arch == "densenet121" else model.classifier[1])
+with torch.no_grad():
+    lin.weight /= TEMP; lin.bias /= TEMP
+
+def gate_threshold(lg, y, target=TARGET_PRECISION):
+    p = F.softmax(lg / TEMP, 1); conf, pred = p.max(1)
+    for t in np.arange(0.30, 0.96, 0.01):
+        keep = conf >= t
+        if keep.sum() >= max(5, 0.2 * len(y)) and (pred[keep] == y[keep]).float().mean() >= target:
+            return float(round(t, 2)), float(keep.float().mean())
+    return 0.60, float((conf >= 0.60).float().mean())
+THRESH, COVER = gate_threshold(lg_sel, y_sel)
+
+def report(name, dl):
+    if dl is None: return None
+    lg, y = predict(model, dl)          # temperature already baked in
+    p = F.softmax(lg, 1); conf, pred = p.max(1)
+    labs = sorted(set(y.numpy().tolist()))
+    f1 = f1_score(y.numpy(), pred.numpy(), average="macro", labels=labs)
+    acc = float((pred == y).float().mean())
+    keep = conf >= THRESH
+    acc_kept = float((pred[keep] == y[keep]).float().mean()) if keep.any() else float("nan")
+    print(f"\n=== {name}: n={len(y)} acc={acc:.3f} macroF1={f1:.3f} | gate@{THRESH}: answered {keep.float().mean():.0%}, accuracy on answered {acc_kept:.3f}")
+    print(classification_report(y.numpy(), pred.numpy(), labels=labs, target_names=[CLS[i] for i in labs], digits=3, zero_division=0))
+    return {"n": int(len(y)), "acc": round(acc, 4), "macroF1": round(f1, 4), "answered": round(float(keep.float().mean()), 3), "acc_answered": round(acc_kept, 4)}
+
+final = {"crop": CROP, "best_arch": best_arch, "selected_on": SELECT_ON, "backbones": results,
+         "temperature": round(TEMP, 3), "threshold": THRESH, "classes": CLS,
+         "counts": {k: dict(v) for k, v in table.items()}, "download_status": status}
+final["val_in_distribution"] = report("val (same sources as training — optimistic)", dl_vid)
+final["ood_test"] = report("OOD TEST (held-out source — the honest number)", dl_test)
+final["extra_test"] = report("EXTRA (your own photos)", dl_extra)
+
+# %% [markdown]
+# ## 7. Export for the CDCNSA app
+
+# %%
+fname = f"{CROP}_disease_{best_arch}_srcsplit.pt"
+ckpt = {"model_state_dict": {k: v.cpu() for k, v in model.state_dict().items()},
+        "class_to_idx": C2I, "architecture": best_arch, "image_size": 224,
+        "normalization_mean": MEAN, "normalization_std": STD, "temperature_baked": TEMP,
+        "threshold": THRESH, "report": final}
+torch.save(ckpt, EXPORT / fname)
+registry_entry = {"runtime_kind": "classification", "architecture": best_arch,
+                  "checkpoint": f"models/{CROP}/disease/{fname}", "image_size": 224,
+                  "normalization_mean": MEAN, "normalization_std": STD, "class_to_idx": C2I, "enabled": True,
+                  "note": f"source-held-out training {time.strftime('%Y-%m-%d')}; ood_test macroF1="
+                          f"{(final['ood_test'] or {}).get('macroF1')}"}
+snippet = {"crop": CROP, "disease": registry_entry, "disease_threshold": THRESH}
+(EXPORT / "registry_snippet.json").write_text(json.dumps(snippet, indent=2))
+(EXPORT / "final_report.json").write_text(json.dumps(final, indent=2))
+shutil.make_archive(str(WORK / f"cdcnsa_{CROP}_export"), "zip", EXPORT)
+ok = (final["ood_test"] or {}).get("macroF1") or 0
+verdict = "PASS (ship it)" if (SELECT_ON == "ood_val" and ok >= 0.70) else ("WEAK - keep Qwen as primary" if ok >= 0.5 else "FAIL - hide crop or rely on Qwen")
+print("\n" + "=" * 30 + " FINAL REPORT (copy everything below) " + "=" * 30)
+print(json.dumps({k: final[k] for k in ("crop", "best_arch", "selected_on", "backbones", "threshold", "classes", "ood_test", "val_in_distribution", "extra_test")}, indent=1))
+print("VERDICT:", verdict)
+print("Download from the Output panel:", f"cdcnsa_{CROP}_export.zip")
