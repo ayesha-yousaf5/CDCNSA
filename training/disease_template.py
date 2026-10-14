@@ -56,8 +56,10 @@ print("Device:", DEVICE, torch.cuda.get_device_name(0) if DEVICE == "cuda" else 
 if DEVICE != "cuda":
     print("WARNING: no GPU. Turn on Accelerator -> GPU in Session options, then restart.")
 WORK = Path(os.environ.get("CDCNSA_WORK", "/kaggle/working"))
-RAW = WORK / "raw" / CROP; PROC = WORK / "proc" / CROP; EXPORT = WORK / "export" / CROP
-for p in (RAW, PROC, EXPORT): p.mkdir(parents=True, exist_ok=True)
+PROC = WORK / "proc" / CROP; EXPORT = WORK / "export" / CROP
+for p in (PROC, EXPORT): p.mkdir(parents=True, exist_ok=True)
+# clean leftovers from the first (disk-filling) version of this notebook
+shutil.rmtree(WORK / "raw", ignore_errors=True)
 IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp", ".tif", ".tiff", ".jfif"}
 UA = {"User-Agent": "Mozilla/5.0 (CDCNSA research notebook)"}
 
@@ -211,15 +213,15 @@ def dl_hf(spec, dest):
             if len(parts) != 1: continue
             lab = parts[0]
         lab = names[lab] if (names and isinstance(lab, int)) else str(lab)
-        if per[lab] >= CAP_PER_CLASS_PER_SOURCE: continue
+        if per[lab] >= spec.get("cap", CAP_PER_CLASS_PER_SOURCE) * 2: continue
         img = row[img_col]
         if not isinstance(img, Image.Image):
             img = Image.open(io.BytesIO(img["bytes"]))
-        d = dest / re.sub(r"[^\w\- ]", "_", lab); d.mkdir(parents=True, exist_ok=True)
-        img = img.convert("RGB"); img.thumbnail((1024, 1024))
-        img.save(d / f"{n:06d}.jpg", quality=92); per[lab] += 1; n += 1
-    print("  HF labels:", dict(per))
-    return True
+        before = len(kept)
+        add_image(spec, (re.sub(r"[^\w\- ]", "_", lab), f"{n:06d}.jpg"), lambda img=img: img)
+        per[lab] += 1; n += 1
+    print("  HF labels seen:", dict(per))
+    return True   # images were ingested directly (nothing left on disk)
 
 def dl_kaggle_input(spec, dest):
     src = Path(spec["path"])
@@ -231,34 +233,27 @@ DL = {"mendeley": dl_mendeley, "dataverse": dl_dataverse, "figshare": dl_figshar
       "plantdoc": dl_plantdoc, "plantvillage": dl_plantvillage, "hf": dl_hf, "kaggle_input": dl_kaggle_input}
 
 # %% [markdown]
-# ## 2. Download all sources (status printed per source)
+# ## 2. Download → keep originals only → resize → de-duplicate, ONE SOURCE AT A TIME
+# Raw downloads go to the biggest scratch disk and are deleted as soon as a source is processed, so the
+# 20 GB `/kaggle/working` limit is never hit. Images inside .zip files are read straight from the archive.
+# Re-running this cell skips sources that are already finished.
 
 # %%
-status = {}
-for s in SOURCES:
-    d = RAW / s["name"]; d.mkdir(parents=True, exist_ok=True)
-    if (d / ".done").exists():
-        status[s["name"]] = "cached"; continue
-    print(f"[{s['name']}] ({s['kind']}, role={s['role']}) downloading ...")
-    t0 = time.time()
-    try:
-        ok = DL[s["kind"]](s, d)
-        if ok:
-            extract_all(d); (d / ".done").write_text("ok")
-        status[s["name"]] = "ok" if ok else "FAILED"
-    except Exception as e:
-        status[s["name"]] = f"FAILED: {e}"
-    print(f"   -> {status[s['name']]} ({time.time()-t0:.0f}s)")
-print("\nDOWNLOAD STATUS:", json.dumps(status, indent=1))
-# If a Mendeley source FAILED: open its page, click "Download All", copy the link, then in Kaggle use
-# "+ Add Input -> Datasets -> New dataset -> Link" and change that source to kind="kaggle_input" with its /kaggle/input path.
+def pick_scratch():
+    best, free = None, -1
+    for c in ("/kaggle/temp", "/tmp", str(WORK)):
+        try:
+            Path(c).mkdir(parents=True, exist_ok=True); f = shutil.disk_usage(c).free
+            if f > free: best, free = c, f
+        except Exception:
+            pass
+    print(f"Scratch disk: {best} ({free/1e9:.0f} GB free) | working: {shutil.disk_usage(str(WORK)).free/1e9:.0f} GB free")
+    return Path(best) / "cdcnsa_raw" / CROP
+SCRATCH = pick_scratch()
 
-# %% [markdown]
-# ## 3. Map folders → classes, keep originals only, resize, de-duplicate
-
-# %%
 DROP_PATH = re.compile(r"augment|\baug\b|_aug|synthetic|generated|__macosx", re.I)
 COMPILED = [(re.compile(p, re.I), t) for p, t in ALIASES]
+ARCHIVES = (".zip", ".rar", ".7z", ".tar", ".tar.gz", ".tgz")
 
 def norm_part(s):
     return re.sub(r"[_\-\.\(\)]+", " ", s).strip().lower()
@@ -277,31 +272,8 @@ def class_for(rel_parts, require=None, exclude=None):
                 return target if target is not None else "DROP"
     return None
 
-records = []        # dicts: src, role, cls, path
-unmapped = Counter(); skipped_aug = Counter()
-for s in SOURCES:
-    root = Path(s["path"]) if s["kind"] == "kaggle_input" else RAW / s["name"]
-    if not status.get(s["name"], "").startswith(("ok", "cached")): continue
-    per = Counter()
-    files = [p for p in root.rglob("*") if p.suffix.lower() in IMG_EXT]
-    random.shuffle(files)
-    for p in files:
-        rel = p.relative_to(root).parts
-        c = class_for(rel, s.get("require"), s.get("exclude"))
-        if c == "SKIP_AUG": skipped_aug[s["name"]] += 1; continue
-        if c is None:
-            unmapped[(s["name"], "/".join(rel[-3:-1]))] += 1; continue
-        if c == "DROP" or c not in CLASSES: continue
-        cap = s.get("cap", CAP_PER_CLASS_PER_SOURCE)
-        if per[c] >= cap: continue
-        per[c] += 1
-        records.append({"src": s["name"], "role": s["role"], "cls": c, "raw": str(p)})
-print("Skipped augmented-folder images:", dict(skipped_aug))
-print("Top unmapped folders (check these!):")
-for (src, fol), n in unmapped.most_common(25): print(f"  {src:28s} {fol:60s} {n}")
-
-def load_resized(path):
-    im = Image.open(path); im = ImageOps.exif_transpose(im).convert("RGB")
+def to_rgb_resized(im):
+    im = ImageOps.exif_transpose(im).convert("RGB")
     w, h = im.size
     if min(w, h) < 64: return None
     sc = IMG_SIDE / min(w, h)
@@ -312,31 +284,157 @@ def hashes(im):
     small = im.copy(); small.thumbnail((256, 256))
     vs = [small, ImageOps.mirror(small), ImageOps.flip(small), small.rotate(90, expand=True), small.rotate(180), small.rotate(270, expand=True)]
     return [imagehash.phash(v) for v in vs]
-
-kept, dup = [], Counter()
-seen = []                      # canonical pHash of every kept image
-bands = defaultdict(list)      # (band index, 2-hex-chars) -> kept ids; <=4 differing bits leave >=4 of 8 bands identical
 def band_keys(h):
     s = str(h); return [(b, s[2*b:2*b+2]) for b in range(8)]
-for i, r in enumerate(records):
+
+kept, status = [], {}
+dup, skipped_aug, unmapped, per_src = Counter(), Counter(), Counter(), defaultdict(Counter)
+seen, bands = [], defaultdict(list)   # global de-dup index (across ALL sources of this crop)
+_counter = [0]
+
+def remember(hs0):
+    seen.append(hs0)
+    for k in band_keys(hs0): bands[k].append(len(seen) - 1)
+
+def add_image(spec, rel_parts, opener):
+    """Map -> cap -> resize -> de-dup -> save. opener() returns a PIL image."""
+    name = spec["name"]
+    c = class_for(rel_parts, spec.get("require"), spec.get("exclude"))
+    if c == "SKIP_AUG": skipped_aug[name] += 1; return
+    if c is None: unmapped[(name, "/".join(rel_parts[-3:-1]))] += 1; return
+    if c == "DROP" or c not in CLASSES: return
+    if per_src[name][c] >= spec.get("cap", CAP_PER_CLASS_PER_SOURCE): return
     try:
-        im = load_resized(r["raw"])
+        im = to_rgb_resized(opener())
     except Exception:
-        continue
-    if im is None: continue
+        return
+    if im is None: return
     hs = hashes(im)
     cand = set()
     for h in hs:
         for k in band_keys(h): cand.update(bands.get(k, ()))
     if any(min(seen[j] - h for h in hs) <= 4 for j in cand):
-        dup[r["src"]] += 1; continue
-    seen.append(hs[0])
-    for k in band_keys(hs[0]): bands[k].append(len(seen) - 1)
-    out = PROC / r["src"] / r["cls"].replace("/", "-") / f"{i:07d}.jpg"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    im.save(out, quality=90)
-    r["path"] = str(out); kept.append(r)
+        dup[name] += 1; return
+    remember(hs[0])
+    _counter[0] += 1
+    out = PROC / name / c.replace("/", "-") / f"{_counter[0]:07d}.jpg"
+    out.parent.mkdir(parents=True, exist_ok=True); im.save(out, quality=90)
+    per_src[name][c] += 1
+    kept.append({"src": name, "role": spec["role"], "cls": c, "path": str(out)})
+
+def ingest_zip(spec, zpath, prefix):
+    with zipfile.ZipFile(zpath) as z:
+        infos = [i for i in z.infolist() if not i.is_dir()]
+        random.shuffle(infos)
+        for info in infos:
+            parts = prefix + tuple(Path(info.filename).parts)
+            low = info.filename.lower()
+            if Path(low).suffix in IMG_EXT:
+                add_image(spec, parts, lambda info=info: Image.open(io.BytesIO(z.read(info))))
+            elif low.endswith(ARCHIVES):
+                tmp = SCRATCH / f"_nested_{_counter[0]}_{Path(low).name}"
+                with z.open(info) as src_f, open(tmp, "wb") as dst: shutil.copyfileobj(src_f, dst, 1 << 20)
+                ingest_path(spec, tmp, parts[:-1] + (Path(info.filename).stem,))
+                tmp.unlink(missing_ok=True)
+
+def ingest_path(spec, path, prefix=()):
+    path = Path(path)
+    if path.is_file():
+        low = path.name.lower()
+        if low.endswith(".zip"):
+            ingest_zip(spec, path, prefix)
+        elif low.endswith(ARCHIVES):
+            out = path.with_name(path.name + "_x")
+            if low.endswith((".rar", ".7z")):
+                subprocess.run(["7z", "x", "-y", f"-o{out}", str(path)], capture_output=True)
+            else:
+                with tarfile.open(path) as t: t.extractall(out)
+            ingest_path(spec, out, prefix); shutil.rmtree(out, ignore_errors=True)
+        elif Path(low).suffix in IMG_EXT:
+            add_image(spec, prefix + (path.name,), lambda: Image.open(path))
+        return
+    files = [p for p in path.rglob("*") if p.is_file()]
+    random.shuffle(files)
+    for p in files:
+        rel = tuple(p.relative_to(path).parts)
+        if p.name.lower().endswith(ARCHIVES):
+            ingest_path(spec, p, prefix + rel[:-1] + (p.name.split(".")[0],))
+        elif p.suffix.lower() in IMG_EXT:
+            add_image(spec, prefix + rel, lambda p=p: Image.open(p))
+
+def ingest_dataverse(spec, dest):
+    """Per file: download -> ingest -> delete (the Tanzania set is many GB of 13 MP photos)."""
+    meta = http_json(f"https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId={urllib.parse.quote(spec['doi'])}")
+    files = meta["data"]["latestVersion"]["files"]; random.shuffle(files)
+    print(f"  Dataverse: {len(files)} files, {sum(f['dataFile'].get('filesize', 0) for f in files)/1e9:.2f} GB listed")
+    cap = spec.get("cap", CAP_PER_CLASS_PER_SOURCE)
+    for f in files:
+        df = f["dataFile"]; dlab = f.get("directoryLabel", "")
+        name = df.get("filename") or df.get("label")
+        parts = tuple(Path(dlab).parts) + (name,)
+        if Path(name).suffix.lower() in IMG_EXT:
+            c = class_for(parts, spec.get("require"), spec.get("exclude"))
+            if c in CLASSES and per_src[spec["name"]][c] >= cap: continue   # don't even download
+            if c is None or c in ("DROP", "SKIP_AUG"): continue
+        tmp = dest / name
+        try:
+            http_get(f"https://dataverse.harvard.edu/api/access/datafile/{df['id']}", tmp, timeout=1800)
+            ingest_path(spec, tmp, tuple(Path(dlab).parts))
+        except Exception as e:
+            print("   failed", name, e)
+        finally:
+            if tmp.exists(): tmp.unlink()
+    return True
+
+def reload_done(spec):
+    meta = PROC / spec["name"] / "_records.json"
+    if not meta.exists(): return False
+    rows = json.loads(meta.read_text())
+    for r in rows:
+        try:
+            im = Image.open(r["path"]); remember(hashes(im)[0])
+        except Exception:
+            continue
+        kept.append(r); per_src[r["src"]][r["cls"]] += 1
+    return True
+
+for s in SOURCES:
+    name = s["name"]
+    if reload_done(s):
+        status[name] = "cached"; print(f"[{name}] already processed -> reused"); continue
+    d = SCRATCH / name; d.mkdir(parents=True, exist_ok=True)
+    print(f"[{name}] ({s['kind']}, role={s['role']}) ...")
+    t0 = time.time(); before = len(kept)
+    try:
+        if s["kind"] == "dataverse":
+            ok = ingest_dataverse(s, d)
+        elif s["kind"] == "hf":
+            ok = dl_hf(s, d)
+        elif s["kind"] == "kaggle_input":
+            ok = dl_kaggle_input(s, d)
+            if ok: ingest_path(s, Path(s["path"]))
+        else:
+            ok = DL[s["kind"]](s, d)
+            if ok: ingest_path(s, d)
+        status[name] = "ok" if ok else "FAILED"
+    except Exception as e:
+        status[name] = f"FAILED: {e}"
+    finally:
+        shutil.rmtree(d, ignore_errors=True)          # free the disk immediately
+    mine = [r for r in kept[before:] if r["src"] == name]
+    if status[name] == "ok":
+        (PROC / name).mkdir(parents=True, exist_ok=True)
+        (PROC / name / "_records.json").write_text(json.dumps(mine))
+    print(f"   -> {status[name]}: kept {len(mine)} images {dict(per_src[name])} "
+          f"({time.time()-t0:.0f}s, working disk free {shutil.disk_usage(str(WORK)).free/1e9:.1f} GB)")
+
+print("\nDOWNLOAD STATUS:", json.dumps(status, indent=1))
+print("Skipped augmented-folder images:", dict(skipped_aug))
 print("Near-duplicates removed per source:", dict(dup))
+print("Top unmapped folders (send these if real disease folders appear here):")
+for (src, fol), n in unmapped.most_common(25): print(f"  {src:28s} {fol:60s} {n}")
+# If a source FAILED: open its page, click "Download All", copy the link, then in Kaggle use
+# "+ Add Input -> Datasets -> New dataset -> Link" and change that source to kind="kaggle_input" with its /kaggle/input path.
 
 table = defaultdict(Counter)
 for r in kept: table[r["src"]][r["cls"]] += 1

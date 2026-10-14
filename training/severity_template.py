@@ -40,7 +40,15 @@ random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device:", DEVICE)
 WORK = Path(os.environ.get("CDCNSA_WORK", "/kaggle/working"))
-RAW = WORK / "raw_sev"; EXPORT = WORK / "export" / "severity"
+def _scratch():
+    best, free = str(WORK), -1
+    for c in ("/kaggle/temp", "/tmp", str(WORK)):
+        try:
+            Path(c).mkdir(parents=True, exist_ok=True); f = shutil.disk_usage(c).free
+            if f > free: best, free = c, f
+        except Exception: pass
+    return Path(best)
+RAW = (WORK / "raw_sev") if os.environ.get("CDCNSA_WORK") else (_scratch() / "raw_sev"); EXPORT = WORK / "export" / "severity"
 RAW.mkdir(parents=True, exist_ok=True); EXPORT.mkdir(parents=True, exist_ok=True)
 UA = {"User-Agent": "Mozilla/5.0 (CDCNSA research notebook)"}
 IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
