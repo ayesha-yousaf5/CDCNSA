@@ -7,12 +7,13 @@ disease names the website's Disease Library uses (plus "Healthy"), and to grade
 severity from the visible affected leaf area. It never invents new disease names:
 anything outside the list is returned as Unknown -> "Uncertain" in the UI.
 
-Configuration (environment / .env):
-    DASHSCOPE_API_KEY   required to enable this path
-    QWEN_VL_MODEL       default "qwen3-vl-plus"
-    QWEN_VL_BASE_URL    default "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
-                        (use https://dashscope.aliyuncs.com/compatible-mode/v1 for a China-region key)
-    QWEN_VL_TIMEOUT     seconds, default 45
+Configuration (environment / .env). Provider is chosen automatically:
+    1. DASHSCOPE_API_KEY set -> Alibaba Model Studio, model qwen3-vl-plus
+         QWEN_VL_BASE_URL default https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+    2. otherwise GROQ_API_KEY (the chatbot key) -> Groq, model qwen/qwen3.8-27b (Qwen with vision)
+         QWEN_VL_BASE_URL default https://api.groq.com/openai/v1
+    QWEN_VL_MODEL / QWEN_VL_BASE_URL override either default.
+    QWEN_VL_TIMEOUT seconds, default 45. CDCNSA_DIAGNOSIS_MODE=cnn switches this off.
 """
 from __future__ import annotations
 
@@ -56,8 +57,25 @@ SYSTEM_PROMPT = (
 )
 
 
+def _provider() -> dict | None:
+    if os.getenv('DASHSCOPE_API_KEY'):
+        return {'name': 'alibaba', 'key': os.environ['DASHSCOPE_API_KEY'],
+                'base': os.getenv('QWEN_VL_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'),
+                'model': os.getenv('QWEN_VL_MODEL', 'qwen3-vl-plus')}
+    if os.getenv('GROQ_API_KEY'):
+        return {'name': 'groq', 'key': os.environ['GROQ_API_KEY'],
+                'base': os.getenv('QWEN_VL_BASE_URL', 'https://api.groq.com/openai/v1'),
+                'model': os.getenv('QWEN_VL_MODEL', 'qwen/qwen3.8-27b')}
+    return None
+
+
 def available() -> bool:
-    return bool(os.getenv('DASHSCOPE_API_KEY')) and os.getenv('CDCNSA_DIAGNOSIS_MODE', 'hybrid').lower() != 'cnn'
+    return _provider() is not None and os.getenv('CDCNSA_DIAGNOSIS_MODE', 'hybrid').lower() != 'cnn'
+
+
+def model_name() -> str | None:
+    p = _provider()
+    return f"{p['model']} ({p['name']})" if p else None
 
 
 def _norm(text: str) -> str:
@@ -99,11 +117,12 @@ def _parse_json(text: str) -> dict:
 
 
 def _call(image: Image.Image, crop: str, labels: list[str]) -> dict:
-    base = os.getenv('QWEN_VL_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1').rstrip('/')
+    prov = _provider()
+    base = prov['base'].rstrip('/')
     body = {
-        'model': os.getenv('QWEN_VL_MODEL', 'qwen3-vl-plus'),
+        'model': prov['model'],
         'temperature': 0.1,
-        'max_tokens': 400,
+        'max_tokens': 1500,
         'messages': [
             {'role': 'system', 'content': SYSTEM_PROMPT},
             {'role': 'user', 'content': [
@@ -112,17 +131,30 @@ def _call(image: Image.Image, crop: str, labels: list[str]) -> dict:
             ]},
         ],
     }
-    req = urllib.request.Request(
-        base + '/chat/completions',
-        data=json.dumps(body).encode('utf-8'),
-        headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {os.environ["DASHSCOPE_API_KEY"]}'},
-        method='POST',
-    )
-    try:
+    if prov['name'] == 'groq':
+        body['response_format'] = {'type': 'json_object'}
+
+    def post(b: dict) -> dict:
+        req = urllib.request.Request(
+            base + '/chat/completions',
+            data=json.dumps(b).encode('utf-8'),
+            headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {prov["key"]}'},
+            method='POST',
+        )
         with urllib.request.urlopen(req, timeout=float(os.getenv('QWEN_VL_TIMEOUT', '45'))) as resp:
-            payload = json.loads(resp.read().decode('utf-8'))
+            return json.loads(resp.read().decode('utf-8'))
+
+    try:
+        try:
+            payload = post(body)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 400 and 'response_format' in body:  # JSON mode rejected -> plain text, we parse it
+                body.pop('response_format')
+                payload = post(body)
+            else:
+                raise
     except urllib.error.HTTPError as exc:
-        raise RuntimeError(f'Qwen-VL HTTP {exc.code}: {exc.read()[:300]!r}') from exc
+        raise RuntimeError(f'Vision model HTTP {exc.code}: {exc.read()[:300]!r}') from exc
     content = payload['choices'][0]['message']['content']
     if isinstance(content, list):  # some SDK versions return content parts
         content = ''.join(part.get('text', '') for part in content if isinstance(part, dict))
@@ -155,5 +187,5 @@ def diagnose(image: Image.Image, crop: str) -> dict:
         'affected_area_percent': raw.get('affected_area_percent'),
         'visible_symptoms': raw.get('visible_symptoms'),
         'visible_symptoms_ur': raw.get('visible_symptoms_ur'),
-        'model': os.getenv('QWEN_VL_MODEL', 'qwen3-vl-plus'),
+        'model': model_name(),
     }

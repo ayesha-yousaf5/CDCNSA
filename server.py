@@ -32,7 +32,7 @@ runtime=ModelRuntime(MODEL_ROOT)
 
 @app.get('/api/health')
 def health()->dict[str,Any]:
-    return {'status':'ok','device':str(runtime.device),'model_root':str(MODEL_ROOT),'diagnosis_mode':'qwen_vl_hybrid' if vlm.available() else 'cnn_only','vlm_model':os.getenv('QWEN_VL_MODEL','qwen3-vl-plus') if vlm.available() else None,'demo_fallback':False}
+    return {'status':'ok','device':str(runtime.device),'model_root':str(MODEL_ROOT),'diagnosis_mode':'qwen_vl_hybrid' if vlm.available() else 'cnn_only','vlm_model':vlm.model_name() if vlm.available() else None,'demo_fallback':False}
 
 @app.get('/api/models/status')
 def model_status(deep:bool=Query(False,description='When true, deserialize and contract-check every enabled checkpoint.'))->dict[str,Any]:

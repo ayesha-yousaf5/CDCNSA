@@ -9,12 +9,8 @@ services:
         value: 3.11.0
       - key: GROQ_API_KEY
         sync: false
-      - key: DASHSCOPE_API_KEY
-        sync: false
-      - key: QWEN_VL_MODEL
-        value: qwen3-vl-plus
-      - key: QWEN_VL_BASE_URL
-        value: https://dashscope-intl.aliyuncs.com/compatible-mode/v1
+      - key: CDCNSA_DIAGNOSIS_MODE
+        value: hybrid
       - key: PORT
         value: 10000
       - key: CDCNSA_MAX_CACHED_MODELS
