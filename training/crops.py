@@ -14,9 +14,9 @@ CROPS = {
         "classes": ["Bacterial Leaf Streak", "Common Rust", "Gray Leaf Spot", "Maize Lethal Necrosis",
                     "Maize Streak Virus", "Northern Leaf Blight", "healthy"],
         "aliases": [
-            (r"southern|phaeosphaeria|chlorotic|mottle|\bmcmv\b", None),
+            (r"southern|phaeosphaeria|chlorotic|mottle|\bmcmv\b|eyespot|curvularia|^leaf blight$", None),
             (r"\bmln\b|lethal|necrosis", "Maize Lethal Necrosis"),
-            (r"\bmsv\b|streak virus|maize streak|^streak$", "Maize Streak Virus"),
+            (r"\bmsv\b|streak virus|maize streak|streak disease|^streak$", "Maize Streak Virus"),
             (r"bacterial leaf streak|bacterial streak|\bbls\b", "Bacterial Leaf Streak"),
             (r"gr[ae]y leaf spot|\bgls\b|cercospora", "Gray Leaf Spot"),
             (r"common rust|\brust\b|\bcr\b", "Common Rust"),
@@ -26,6 +26,7 @@ CROPS = {
         "sources": [
             {"name": "tanzania_maize", "kind": "dataverse", "role": "train", "doi": "doi:10.7910/DVN/GDON8Q"},
             {"name": "bangladesh_corn", "kind": "mendeley", "role": "train", "id": "vy629dngm8", "version": 1},
+            {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1},
             PV("Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot", "Corn_(maize)___Common_rust_",
                "Corn_(maize)___Northern_Leaf_Blight", "Corn_(maize)___healthy"),
             {"name": "pretoria_field", "kind": "figshare", "role": "heldout", "id": 20237613},
@@ -65,9 +66,10 @@ CROPS = {
     "rice": {
         "title": "Rice",
         "classes": ["Bacterial Leaf Blight", "Brown Spot", "Leaf Scald", "Narrow Brown Leaf Spot", "Rice Blast",
-                    "Rice Hispa", "Rice Tungro", "Sheath Blight", "healthy"],
+                    "Rice Hispa", "Rice Leaffolder", "Rice Tungro", "Sheath Blight", "healthy"],
         "aliases": [
-            (r"neck|panicle|leaf ?folder|stripe|smut|false|white background|white bg", None),
+            (r"neck|panicle|stripe|smut|false|white background|white bg|^insect$|^rice$", None),
+            (r"leaf ?folder", "Rice Leaffolder"),
             (r"narrow", "Narrow Brown Leaf Spot"),
             (r"brown ?spot", "Brown Spot"),
             (r"sheath|steath", "Sheath Blight"),
@@ -81,6 +83,9 @@ CROPS = {
         "sources": [
             {"name": "riceleafbd", "kind": "mendeley", "role": "train", "id": "sjkptpgv79", "version": 1},
             {"name": "rice_10class", "kind": "mendeley", "role": "train", "id": "zfwkkdj6dk", "version": 2},
+            {"name": "rice_sambalpur", "kind": "mendeley", "role": "train", "id": "fwcj7stb8r", "version": 2},
+            {"name": "rice_diu_5class", "kind": "mendeley", "role": "train", "id": "g7tcwvshff", "version": 1},
+            {"name": "rice_diu_pest", "kind": "mendeley", "role": "train", "id": "vwv3nry3wr", "version": 1},
             {"name": "dhan_shomadhan", "kind": "mendeley", "role": "heldout", "id": "znsxdctwtt", "version": 1,
              "exclude": r"white"},
         ],
@@ -99,6 +104,7 @@ CROPS = {
         "sources": [
             {"name": "plant_pathology_2021", "kind": "hf", "role": "train", "repo": "timm/plant-pathology-2021",
              "split": "train", "single_label_only": True, "space_separated_labels": True, "cap": 900},
+            {"name": "apple_indonesia_orchard", "kind": "mendeley", "role": "train", "id": "9zgkwwv9j8", "version": 1},
             PV("Apple___Apple_scab", "Apple___Black_rot", "Apple___Cedar_apple_rust", "Apple___healthy"),
             PD(r"apple"),
         ],
@@ -106,9 +112,9 @@ CROPS = {
     "tomato": {
         "title": "Tomato",
         "classes": ["Bacterial Spot", "Early Blight", "Late Blight", "Leaf Mold", "Septoria Leaf Spot",
-                    "Spider Mites", "Target Spot", "Tomato Yellow Leaf Curl Virus", "Tomato Mosaic Virus", "healthy"],
+                    "Target Spot", "Tomato Yellow Leaf Curl Virus", "healthy"],
         "aliases": [
-            (r"black spot|shot hole|miner|cercospora|powdery", None),
+            (r"black spot|shot hole|miner|cercospora|powdery|mosaic|spider|mite", None),
             (r"yellow|curl", "Tomato Yellow Leaf Curl Virus"),
             (r"mosaic", "Tomato Mosaic Virus"),
             (r"spider|mite", "Spider Mites"),
@@ -121,10 +127,11 @@ CROPS = {
             (r"healthy|^tomato leaf$", "healthy"),
         ],
         "sources": [
+            {"name": "tomato_pakistan_field", "kind": "mendeley", "role": "train", "id": "3mbnb82mxd", "version": 1},
             {"name": "tomato_bd_field", "kind": "mendeley", "role": "train", "id": "bpfd9cns5g", "version": 2},
             PV("Tomato___Bacterial_spot", "Tomato___Early_blight", "Tomato___Late_blight", "Tomato___Leaf_Mold",
-               "Tomato___Septoria_leaf_spot", "Tomato___Spider_mites Two-spotted_spider_mite", "Tomato___Target_Spot",
-               "Tomato___Tomato_Yellow_Leaf_Curl_Virus", "Tomato___Tomato_mosaic_virus", "Tomato___healthy"),
+               "Tomato___Septoria_leaf_spot", "Tomato___Target_Spot",
+               "Tomato___Tomato_Yellow_Leaf_Curl_Virus", "Tomato___healthy"),
             PD(r"tomato"),
         ],
     },
@@ -143,8 +150,9 @@ CROPS = {
             HEALTHY,
         ],
         "sources": [
-            {"name": "mangoleafbd", "kind": "hf", "role": "train", "repo": "Project-AgML/MangoLeafBD_disease_classification", "split": "train"},
-            {"name": "mld24", "kind": "mendeley", "role": "heldout", "id": "6dvpywm2m2", "version": 1},
+            {"name": "mld24", "kind": "mendeley", "role": "train", "id": "6dvpywm2m2", "version": 1},
+            {"name": "mango_mldid", "kind": "mendeley", "role": "train", "id": "jpwtpv2c4s", "version": 1},
+            {"name": "mangoleafbd", "kind": "hf", "role": "heldout", "repo": "Project-AgML/MangoLeafBD_disease_classification", "split": "train"},
         ],
     },
     "grape": {
@@ -178,6 +186,8 @@ CROPS = {
         ],
         "sources": [
             {"name": "eggplant_bd", "kind": "mendeley", "role": "train", "id": "r3tb5mzn4d", "version": 2},
+            {"name": "eggplant_hires", "kind": "mendeley", "role": "train", "id": "ss63ftnjnh", "version": 6},
+            {"name": "eggplant_detect", "kind": "mendeley", "role": "train", "id": "d3ypkphghb", "version": 1},
             {"name": "eggplant_curated", "kind": "mendeley", "role": "heldout", "id": "jv6tnm4t5c", "version": 1},
         ],
     },

@@ -45,7 +45,7 @@ import os, re, io, json, glob, math, time, random, shutil, zipfile, tarfile, has
 from collections import Counter, defaultdict
 from pathlib import Path
 import numpy as np
-from PIL import Image, ImageOps, ImageFile
+from PIL import Image, ImageOps, ImageFile, ImageFilter
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 Image.MAX_IMAGE_PIXELS = None
 import imagehash
@@ -509,7 +509,9 @@ MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 T_TRAIN = transforms.Compose([
     transforms.RandomResizedCrop(224, scale=(0.35, 1.0), ratio=(0.75, 1.33)),
     transforms.RandomHorizontalFlip(), transforms.RandomVerticalFlip(),
+    transforms.RandomApply([transforms.RandomPerspective(0.25, p=1.0)], p=0.3),
     transforms.RandomRotation(25),
+    transforms.TrivialAugmentWide(),
     transforms.ColorJitter(0.35, 0.35, 0.3, 0.04),
     transforms.RandomGrayscale(0.05),
     transforms.RandomApply([transforms.GaussianBlur(5, (0.1, 2.0))], p=0.25),
@@ -518,17 +520,63 @@ T_TRAIN = transforms.Compose([
 ])
 T_EVAL = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(), transforms.Normalize(MEAN, STD)])  # = app runtime
 
+# ---- domain-gap augmentation: make every source look like every other source ----
+from scipy import ndimage as ndi
+def plant_mask(arr):
+    """Green tissue (excess-green on a smoothed image), speckle-removed, closed and hole-filled so lesions
+    INSIDE the leaf count as leaf while brown soil around it stays background."""
+    a = ndi.gaussian_filter(arr.astype(np.float32) / 255.0, sigma=(2, 2, 0))
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    m = ndi.binary_opening((2 * g - r - b) > 0.06, iterations=2)
+    m = ndi.binary_fill_holes(ndi.binary_closing(m, iterations=4))
+    lab, n = ndi.label(m)
+    if n > 1:
+        sizes = ndi.sum(m, lab, range(1, n + 1))
+        m = np.isin(lab, 1 + np.flatnonzero(sizes >= 0.02 * m.size))
+    return m
+
+def background_swap(im, rows):
+    """Paste the leaf onto the background of a random photo from ANOTHER source (or a plain/noisy one)."""
+    arr = np.asarray(im); m = plant_mask(arr)
+    if m.mean() < 0.12 or m.mean() > 0.92: return im          # mask unreliable -> leave as is
+    k = random.random()
+    if k < 0.6:
+        other = random.choice(rows)
+        bg = Image.open(other["path"]).convert("RGB").resize(im.size)
+    elif k < 0.8:
+        bg = Image.new("RGB", im.size, tuple(int(x) for x in np.random.randint(40, 230, 3)))
+    else:
+        bg = Image.fromarray(np.random.randint(0, 255, (im.size[1] // 8 + 1, im.size[0] // 8 + 1, 3), np.uint8)).resize(im.size, Image.BILINEAR)
+    mm = Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2))
+    return Image.composite(im, bg, mm)
+
+def jpeg_degrade(im):
+    buf = io.BytesIO(); im.save(buf, "JPEG", quality=random.randint(25, 90)); buf.seek(0)
+    return Image.open(buf).convert("RGB")
+
+def random_shadow(im):
+    arr = np.asarray(im).astype(np.float32); h, w = arr.shape[:2]
+    x0, x1 = sorted(random.sample(range(w), 2)); f = random.uniform(0.45, 0.8)
+    arr[:, x0:x1] *= f
+    return Image.fromarray(arr.clip(0, 255).astype(np.uint8))
+
+P_BG, P_JPEG, P_SHADOW = 0.35, 0.35, 0.2
+
 class DS(Dataset):
-    def __init__(self, rows, tf): self.rows, self.tf = rows, tf
+    def __init__(self, rows, tf, train=False): self.rows, self.tf, self.train = rows, tf, train
     def __len__(self): return len(self.rows)
     def __getitem__(self, i):
         r = self.rows[i]
         im = Image.open(r["path"]).convert("RGB")
+        if self.train:
+            if random.random() < P_BG: im = background_swap(im, self.rows)
+            if random.random() < P_SHADOW: im = random_shadow(im)
+            if random.random() < P_JPEG: im = jpeg_degrade(im)
         return self.tf(im), C2I[r["cls"]]
 
 def loader(rows, train_mode):
     if not rows: return None
-    ds = DS(rows, T_TRAIN if train_mode else T_EVAL)
+    ds = DS(rows, T_TRAIN if train_mode else T_EVAL, train=train_mode)
     if train_mode:
         cnt = Counter(r["cls"] for r in rows)
         w = [1.0 / cnt[r["cls"]] for r in rows]

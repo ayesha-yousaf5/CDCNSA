@@ -177,13 +177,19 @@ test_metrics = evaluate(dl["test"]); print("TEST", test_metrics)
 # ## 5. Severity = lesion area / leaf area
 
 # %%
+from scipy import ndimage as ndi
 def leaf_mask(rgb):
-    """Plant tissue = green-ish (excess-green) OR yellow/brown tissue that is not background-dark/white."""
-    a = rgb.astype(np.float32) / 255.0; r, g, b = a[..., 0], a[..., 1], a[..., 2]
-    exg = 2 * g - r - b
-    mx, mn = a.max(-1), a.min(-1); sat = (mx - mn) / (mx + 1e-6)
-    tissue = (exg > 0.05) | ((sat > 0.25) & (mx > 0.15) & (r >= b))
-    return tissue
+    """Leaf = green tissue (excess-green on a smoothed image), speckle-removed, closed + hole-filled so lesions
+    inside the leaf count as leaf, while brown soil / background does not (it would dilute the severity %)."""
+    a = ndi.gaussian_filter(rgb.astype(np.float32) / 255.0, sigma=(2, 2, 0))
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    m = ndi.binary_opening((2 * g - r - b) > 0.06, iterations=2)
+    m = ndi.binary_fill_holes(ndi.binary_closing(m, iterations=4))
+    lab, n = ndi.label(m)
+    if n > 1:
+        sizes = ndi.sum(m, lab, range(1, n + 1))
+        m = np.isin(lab, 1 + np.flatnonzero(sizes >= 0.02 * m.size))
+    return m
 
 @torch.no_grad()
 def lesion_prob(im):
@@ -250,7 +256,7 @@ ts = torch.jit.trace(model, torch.zeros(1, 3, IMG_SIZE, IMG_SIZE))
 ts.save(str(EXPORT / "lesion_seg_unet_r34.ts"))
 cfg = {"model": "lesion_seg_unet_r34.ts", "input_size": IMG_SIZE, "letterbox": True, "mean": MEAN, "std": STD,
        "lesion_threshold": 0.5, "mild_max_pct": MILD_MAX, "moderate_max_pct": MODERATE_MAX,
-       "leaf_mask": "exg>0.05 | (sat>0.25 & max>0.15 & r>=b), union lesion",
+       "leaf_mask": "fill_holes(close(exg>0.05)) union lesion",
        "test": test_metrics, "severity_vs_gt": sev_report, "external_cotton": ext,
        "dataset": "PlantSeg (Zenodo 13958858, CC BY-NC-ND 4.0)"}
 (EXPORT / "severity_config.json").write_text(json.dumps(cfg, indent=2))

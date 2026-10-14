@@ -17,15 +17,15 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 ## Order (most important / best data first)
 | # | Notebook | Train sources | Held-out test source |
 |---|---|---|---|
-| 01 | Corn | Tanzania maize (Dataverse), Bangladesh corn (Mendeley), PlantVillage (capped) | South Africa field maize (Figshare) + PlantDoc |
+| 01 | Corn | Tanzania maize (Dataverse), Bangladesh seasonal corn + Bangladesh multi-format maize (Mendeley), PlantVillage (capped) | South Africa field maize (Figshare) + PlantDoc |
 | 02 | Cotton | SAR-CLD-2024 + EWU 2025 cotton set (Mendeley; Alternaria, Bacterial Blight, Fusarium, Verticillium, Healthy) + any attached Kaggle cotton set | Cotton severity-levels set (Mendeley) |
-| 03 | Rice | RiceLeafBD, Rice 10-class (Mendeley) | Dhan-Shomadhan field photos (Mendeley) |
+| 03 | Rice | RiceLeafBD, Rice 10-class, Sambalpur rice (5.9k), DIU rice 5-class, DIU rice pests incl. Leaffolder (Mendeley) | Dhan-Shomadhan field photos (Mendeley) |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
-| 04 | Tomato | Bangladesh field tomato (Mendeley), PlantVillage (capped) | PlantDoc |
-| 05 | Apple | Plant Pathology 2021 (Hugging Face), PlantVillage (capped) | PlantDoc |
-| 06 | Mango | MangoLeafBD (Hugging Face) | MLD24 (Mendeley) |
+| 04 | Tomato | **Pakistan field tomato (7.2k)**, Bangladesh field tomato (Mendeley), PlantVillage (capped) | PlantDoc |
+| 05 | Apple | Plant Pathology 2021 (Hugging Face), Indonesian orchard set (Mendeley), PlantVillage (capped) | PlantDoc |
+| 06 | Mango | MLD24 (6.4k orchard photos), MLDID (Mendeley) | MangoLeafBD (Hugging Face) |
 | 07 | Grape | Grape field set (Mendeley), PlantVillage (capped) | PlantDoc |
-| 08 | Eggplant | Eggplant BD (Mendeley) | Curated eggplant set (Mendeley) |
+| 08 | Eggplant | Eggplant BD + high-res eggplant + eggplant detection set (Mendeley) | Curated eggplant set (Mendeley) |
 | 09 | Cucumber | Cucumber BD (Hugging Face) | none — single source (less trustworthy) |
 | 10 | Peas | Pisum sativum (Mendeley) | none — single source (less trustworthy) |
 
@@ -33,7 +33,8 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 - **Original photos only** — folders named augmented/aug/synthetic are skipped (the old splits leaked rotated copies into validation).
 - **Near-duplicates removed**, including flipped/rotated copies (perceptual hash).
 - **Split by source**: the model is chosen, calibrated and scored on a dataset it never trained on. The "OOD TEST" number is the honest one; the "val (same sources)" number is shown only for comparison.
-- Strong on-the-fly augmentation, class-balanced sampling, label smoothing, early stopping on the held-out source.
+- **Domain-gap augmentation** so every source looks like every other source: leaf pasted onto backgrounds from other datasets / plain / noise (leaf found by green-tissue mask with lesions kept), random shadows, JPEG (cheap phone camera) degradation, perspective, TrivialAugment colour/contrast, plus crops, flips, rotation, blur, erasing. Class-balanced sampling, label smoothing, early stopping on the held-out source.
+- **Only classes with real field data are kept**; lab-only classes (e.g. tomato mosaic / spider mites) are dropped.
 - Lab-only PlantVillage is capped at 400 per class so it cannot dominate field photos.
 - Four backbones compared fairly: the slides' ResNet50, DenseNet121, EfficientNet-B0 **plus DINOv2 ViT-S/14** (self-supervised on 142M varied images — the most robust to new photo styles). The best on the held-out source is exported (DINOv2 as TorchScript; the app supports it).
 - **Extra data:** anything you attach with **+ Add Input** is automatically used as an additional training source (e.g. for cotton: search Kaggle for *cotton plant disease* — Aphids / Army worm / Bacterial blight / Healthy / Powdery mildew / Target spot).
