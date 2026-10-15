@@ -122,29 +122,39 @@ CROPS = {
     },
     "tomato": {
         "title": "Tomato",
-        "classes": ["Bacterial Spot", "Early Blight", "Late Blight", "Leaf Mold", "Septoria Leaf Spot",
-                    "Target Spot", "Tomato Yellow Leaf Curl Virus", "healthy"],
+        # Field photos only (no PlantVillage lab images). A class is kept only if it has >= 150 training photos from
+        # >= 2 different field datasets (checked automatically in the notebook); the rest are left to Qwen.
+        "classes": ["Early Blight", "Late Blight", "Leaf Mold", "Septoria Leaf Spot", "Tomato Yellow Leaf Curl Virus",
+                    "Bacterial Spot", "Target Spot", "Tomato Mosaic Virus", "healthy"],
+        "min_train_images": 150,
+        "min_train_sources": 2,
         "aliases": [
-            (r"black spot|shot hole|miner|cercospora|powdery|mosaic|spider|mite", None),
-            (r"yellow|curl", "Tomato Yellow Leaf Curl Virus"),
-            (r"mosaic", "Tomato Mosaic Virus"),
-            (r"spider|mite", "Spider Mites"),
+            # not leaf diseases we can model reliably / tiny classes
+            (r"cercospora|black spot|miner|insect|spider|mite|powdery|spotted wilt|nutri|deficien|\bclass 16\b|uncategori|other", None),
+            (r"yellow|curl|tylcv", "Tomato Yellow Leaf Curl Virus"),
+            (r"mosaic|tomv|tmv", "Tomato Mosaic Virus"),
             (r"target", "Target Spot"),
             (r"septoria", "Septoria Leaf Spot"),
             (r"mold|mould", "Leaf Mold"),
             (r"late", "Late Blight"),
             (r"early", "Early Blight"),
             (r"bacterial", "Bacterial Spot"),
-            (r"healthy|^tomato leaf$", "healthy"),
+            (r"healthy|^tomato leaf$|^h$", "healthy"),
         ],
         "sources": [
+            # Pakistan field photos (smartphone, natural light), 7,200 images, 6 classes
             {"name": "tomato_pakistan_field", "kind": "mendeley", "role": "train", "id": "3mbnb82mxd", "version": 1},
-            {"name": "tomato_bd_field", "kind": "mendeley", "role": "train", "id": "bpfd9cns5g", "version": 2},
-            PV("Tomato___Bacterial_spot", "Tomato___Early_blight", "Tomato___Late_blight", "Tomato___Leaf_Mold",
-               "Tomato___Septoria_leaf_spot", "Tomato___Target_Spot",
-               "Tomato___Tomato_Yellow_Leaf_Curl_Virus", "Tomato___healthy"),
+            # Bangladesh field photos (Data in Brief 2025, Dinajpur/Thakurgaon/Kushtia)
+            {"name": "tomato_bd_dib2025", "kind": "mendeley", "role": "train", "id": "bpfd9cns5g", "version": 2},
+            # Bangladesh field photos (Daffodil Intl. Univ., natural light, ~2.6k)
+            {"name": "tomato_bd_diu", "kind": "mendeley", "role": "train", "id": "93h9p62kg4", "version": 1},
+            # Pakistan PlantCity (Data in Brief 2025, Chitral & Charsadda): half train, half real-world Pakistan test
+            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1,
+             "require": r"tomato"},
+            # internet/real-world photos (PlantDoc, CODS-COMAD 2020): never trained on, used to pick & calibrate
             PD(r"tomato"),
         ],
+        "auto_kaggle_inputs": False,
     },
     "mango": {
         "title": "Mango",

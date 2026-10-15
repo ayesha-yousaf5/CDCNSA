@@ -36,6 +36,8 @@ TARGET_PRECISION = 0.85           # uncertainty gate: accepted predictions shoul
 PRETRAINED = True                 # ImageNet weights (needs Internet on)
 AUTO_KAGGLE_INPUTS = True         # every dataset you attach with "+ Add Input" becomes an extra TRAIN source
 ARCHS = ["efficientnet_b0", "resnet50", "densenet121", "dinov2_vits14"]  # slides' 3 backbones + DINOv2 (robust to new photo styles)
+MIN_TRAIN_IMAGES = __MIN_TRAIN__     # a class needs at least this many distinct training photos, else it is dropped
+MIN_TRAIN_SOURCES = __MIN_SOURCES__      # ...and photos from at least this many different datasets (1 source = shortcut risk)
 EXTRA_TEST_DIR = None             # optional: path to your own labelled test photos, e.g. "/kaggle/input/cdcnsa-test-photos/__CROP__"
 
 # %%
@@ -611,7 +613,19 @@ if split_rows:
           f"{len(split_rows) - len(kept_train_extra)} kept as real-world test")
     external += [r for r in split_rows if r["role"] == "external"]
 train_pool = [r for r in kept if r["role"] == "train"]
-present = [c for c in CLASSES if any(r["cls"] == c for r in train_pool)]
+_n_cls = Counter(r["cls"] for r in train_pool)
+_src_cls = defaultdict(set)
+for r in train_pool: _src_cls[r["cls"]].add(r["src"])
+present, too_small = [], []
+for c in CLASSES:
+    if _n_cls[c] == 0: continue
+    if _n_cls[c] < MIN_TRAIN_IMAGES or len(_src_cls[c]) < MIN_TRAIN_SOURCES:
+        too_small.append(f"{c} ({_n_cls[c]} photos from {len(_src_cls[c])} dataset(s))")
+    else:
+        present.append(c)
+if too_small:
+    print("DROPPED - too few training photos or only one dataset:", too_small)
+    print(f"  (rule: >= {MIN_TRAIN_IMAGES} photos from >= {MIN_TRAIN_SOURCES} datasets; the app will leave these to Qwen)")
 missing = [c for c in CLASSES if c not in present]
 if missing: print("Classes with NO training images (will be excluded):", missing)
 if len(present) < 2:

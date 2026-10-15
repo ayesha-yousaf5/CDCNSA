@@ -21,7 +21,7 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 | 02 | Cotton | SAR-CLD-2024 (Data in Brief 2024; its 7 classes) **+ half of CoSEV's Pakistani leaf-curl/healthy photos** (incl. leaf enation) | Cotton severity-levels set + real-world Pakistan tests: Southern Punjab field set (all) and the other half of CoSEV |
 | 03 | Rice | RiceLeafBD, Rice 10-class, Sambalpur rice (5.9k), DIU rice 5-class, DIU rice pests incl. Leaffolder (Mendeley) | Dhan-Shomadhan field photos (Mendeley) |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
-| 04 | Tomato | **Pakistan field tomato (7.2k)**, Bangladesh field tomato (Mendeley), PlantVillage (capped) | PlantDoc |
+| 04 | Tomato | Field photos only, no PlantVillage: **Pakistan field tomato (7.2k)**, Bangladesh field sets (Data in Brief 2025 + DIU), **half of PlantCity Pakistan tomato**. A class is kept only with >= 150 photos from >= 2 datasets | PlantDoc tomato + real-world test: other half of PlantCity Pakistan |
 | 05 | Apple | 5 Pakistan/Kashmir-relevant classes (Apple Scab, Alternaria Leaf Blotch, Powdery Mildew, Apple Mosaic, Healthy): **half of PlantCity Pakistan apple (Chitral/Charsadda)**, **half of the Indigenous Kashmir set** (its augmented copies are grouped back to one photo per leaf), AppleLeaf9 (Agronomy 2022, ~94% in-the-wild photos) | PlantDoc apple + real-world tests: other halves of PlantCity Pakistan and Kashmir |
 | 06 | Mango | MLD24 (6.4k orchard photos), MLDID (Mendeley) | MangoLeafBD (Hugging Face) |
 | 07 | Grape | Grape field set (Mendeley), PlantVillage (capped) | PlantDoc |
