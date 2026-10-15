@@ -23,15 +23,22 @@ CROPS = {
             HEALTHY,
         ],
         "sources": [
-            # Pakistan field photos (PlantCity, Data in Brief 2025, Chitral & Charsadda): half train, half real-world test
+            # Contents checked file-by-file before release (Mendeley/OSF APIs):
+            # PlantCity Pakistan test.zip = the 10,667 originals (train.zip = augmented copies, not downloaded).
+            # Its maize part: gray leaf spot 132, normal 142 (+ fungal/holcus leaf spot, unused). Half train, half test.
             {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1,
-             "require": r"maize|corn"},
-            {"name": "cds_purdue", "kind": "osf", "role": "train", "id": "s6ru5"},
+             "only_files": r"^test\.zip$", "require": r"maize|corn"},
+            # CD&S (Purdue, arXiv 2110.12084): only Dataset_Original/{train,test}/{gls,nlb,nls}; the no/black/white-
+            # background folders are the SAME photos re-rendered, so they are excluded.
+            {"name": "cds_purdue", "kind": "osf", "role": "train", "id": "s6ru5", "require": r"dataset original",
+             "osf_folders": r"^CD&S(/Dataset_Original)?$"},
+            # Bangladesh: 'Final corn dataset' - common rust 129, gray leaf spot 1,497, healthy 1,038 (+BLS, MCMV unused)
             {"name": "bangladesh_corn", "kind": "mendeley", "role": "train", "id": "vy629dngm8", "version": 1},
-            {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1},
-            {"name": "tanzania_maize", "kind": "dataverse", "role": "train", "doi": "doi:10.7910/DVN/GDON8Q", "cap": 800},
-            {"name": "pretoria_field", "kind": "figshare", "role": "heldout", "id": 20237613},
-            {"name": "plantdoc", "kind": "plantdoc", "role": "external", "require": r"corn"},
+            # Bangladesh multi-format: RAW_Image only (Converted/Annotation folders hold the same photos again)
+            {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1,
+             "require": r"(^| / )raw image( / |$)"},
+            # PlantDoc (real-world photos, folder-labelled): never trained on -> picks & calibrates the model
+            {"name": "plantdoc", "kind": "plantdoc", "role": "heldout", "require": r"corn"},
         ],
         "auto_kaggle_inputs": False,
     },
@@ -75,13 +82,13 @@ CROPS = {
             (r"neck|panicle|stripe|smut|false|^insect$|^rice$", None),
             (r"leaf ?folder", "Rice Leaffolder"),
             (r"narrow", "Narrow Brown Leaf Spot"),
-            (r"brown ?spot", "Brown Spot"),
-            (r"sheath|steath", "Sheath Blight"),
+            (r"brown ?spot|browon ?spot", "Brown Spot"),
+            (r"sheath|steath|shath", "Sheath Blight"),
             (r"bacterial|\bblb\b|leaf ?blight|^blight$", "Bacterial Leaf Blight"),
             (r"scald|scaled", "Leaf Scald"),
             (r"blast", "Rice Blast"),
             (r"hispa", "Rice Hispa"),
-            (r"tungro|turngo", "Rice Tungro"),
+            (r"tungro|turngo|turgro", "Rice Tungro"),
             (r"healthy|normal|fresh", "healthy"),
         ],
         "sources": [
@@ -92,8 +99,6 @@ CROPS = {
             {"name": "rice_sambalpur", "kind": "mendeley", "role": "train", "id": "fwcj7stb8r", "version": 2},
             {"name": "rice_diu_5class", "kind": "mendeley", "role": "train", "id": "g7tcwvshff", "version": 1},
             {"name": "rice_diu_pest", "kind": "mendeley", "role": "train", "id": "vwv3nry3wr", "version": 1},
-            # 10-class Mendeley set: no paper / unknown origin -> capped so it cannot dominate
-            {"name": "rice_10class", "kind": "mendeley", "role": "train", "id": "zfwkkdj6dk", "version": 2, "cap": 400},
             # Dhan-Shomadhan (arXiv 2309.07515): white-background half trains, field half is the never-seen test
             {"name": "dhan_white_bg", "kind": "mendeley", "role": "train", "id": "znsxdctwtt", "version": 1,
              "require": r"(^| / )white"},
@@ -110,6 +115,7 @@ CROPS = {
         # Dropped: rust (cedar-apple / Gymnosporangium - not a main Pakistani problem), frog-eye/black rot, grey spot,
         # brown spot (Marssonina - one source only), multi-disease 'complex' images.
         "classes": ["Apple Scab", "Alternaria Leaf Blotch", "Powdery Mildew", "Apple Mosaic", "healthy"],
+        "min_train_images": 150,
         "aliases": [
             (r"complex|rust|frog|black ?rot|gr[ae]y spot|brown spot|marssonina|blotch fruit|cedar", None),
             (r"alternaria", "Alternaria Leaf Blotch"),
@@ -120,7 +126,7 @@ CROPS = {
         ],
         "sources": [
             # Pakistan field photos: half train, half real-world test
-            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1,
+            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1, "only_files": r"^test\.zip$",
              "require": r"apple"},
             # Kashmir orchards (neighbouring region): the download holds ONLY augmented copies -> DINOv2 grouping keeps one
             # photo per original leaf, then half train / half test
@@ -146,7 +152,7 @@ CROPS = {
             (r"yellow|curl|tylcv", "Tomato Yellow Leaf Curl Virus"),
             (r"mosaic|tomv|tmv", "Tomato Mosaic Virus"),
             (r"target", "Target Spot"),
-            (r"septoria", "Septoria Leaf Spot"),
+            (r"septor", "Septoria Leaf Spot"),
             (r"mold|mould", "Leaf Mold"),
             (r"late", "Late Blight"),
             (r"early", "Early Blight"),
@@ -156,12 +162,10 @@ CROPS = {
         "sources": [
             # Pakistan field photos (smartphone, natural light), 7,200 images, 6 classes
             {"name": "tomato_pakistan_field", "kind": "mendeley", "role": "train", "id": "3mbnb82mxd", "version": 1},
-            # Bangladesh field photos (Data in Brief 2025, Dinajpur/Thakurgaon/Kushtia)
-            {"name": "tomato_bd_dib2025", "kind": "mendeley", "role": "train", "id": "bpfd9cns5g", "version": 2},
             # Bangladesh field photos (Daffodil Intl. Univ., natural light, ~2.6k)
             {"name": "tomato_bd_diu", "kind": "mendeley", "role": "train", "id": "93h9p62kg4", "version": 1},
             # Pakistan PlantCity (Data in Brief 2025, Chitral & Charsadda): half train, half real-world Pakistan test
-            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1,
+            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1, "only_files": r"^test\.zip$",
              "require": r"tomato"},
             # internet/real-world photos (PlantDoc, CODS-COMAD 2020): never trained on, used to pick & calibrate
             PD(r"tomato"),
@@ -181,7 +185,7 @@ CROPS = {
             (r"anthrac", "Anthracnose"),
             (r"canker|cancer", "Bacterial Canker"),
             (r"weevil", "Cutting Weevil"),
-            (r"die ?b(ac|la)k|dieback", "Die Back"),
+            (r"die ?b(l)?ack|dieback", "Die Back"),
             (r"gall", "Gall Midge"),
             (r"powdery|mildew", "Powdery Mildew"),
             (r"sooty|mould|mold", "Sooty Mould"),
@@ -195,12 +199,10 @@ CROPS = {
             {"name": "mld24", "kind": "mendeley", "role": "train", "id": "6dvpywm2m2", "version": 1},
             # MLDID: 3,000 photos, 5 classes
             {"name": "mango_mldid", "kind": "mendeley", "role": "train", "id": "jpwtpv2c4s", "version": 1},
-            # Ashulia mango garden, natural conditions: 1,319 originals + augmented copies -> grouped back to 1 per leaf
-            {"name": "mango_ashulia", "kind": "mendeley", "role": "train", "id": "fn8dgf4hb5", "version": 1,
-             "collapse_aug": True, "cap": 3000},
-            # Pabna & Savar field photos (2024), 2,336 originals + augmented copies (grouped back), all 8 classes: never trained on
-            {"name": "mango_pabna_savar", "kind": "mendeley", "role": "heldout", "id": "7ghdbftp54", "version": 1,
-             "collapse_aug": True, "cap": 3000},
+            # Ashulia mango garden, natural conditions: 'Original Mango Dataset.zip' used; 'Augmented Mango dataset.zip' skipped
+            {"name": "mango_ashulia", "kind": "mendeley", "role": "train", "id": "fn8dgf4hb5", "version": 1},
+            # Pabna & Savar field photos (2024): uses 'process data.zip' (2,336 originals); 'Augmented Image.zip' is skipped. Never trained on
+            {"name": "mango_pabna_savar", "kind": "mendeley", "role": "heldout", "id": "7ghdbftp54", "version": 1},
         ],
         "auto_kaggle_inputs": False,
     },

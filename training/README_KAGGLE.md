@@ -2,6 +2,9 @@
 
 11 notebooks: one disease classifier per crop + one severity model. Everything downloads **inside Kaggle**; nothing goes to your laptop except the small finished model files.
 
+## Dataset check (done before release)
+Every Mendeley/OSF/Hugging Face source used by corn, rice, tomato, apple and mango was opened file-by-file (zip directory read remotely) and every real folder name was run through the label rules before these notebooks were handed over.
+
 ## Run a notebook (same steps for every file)
 1. kaggle.com → **Create → New Notebook**.
 2. **File → Import Notebook** → upload e.g. `01_corn_disease.ipynb`.
@@ -17,11 +20,11 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 ## Order (most important / best data first)
 | # | Notebook | Train sources | Held-out test source |
 |---|---|---|---|
-| 01 | Corn | 4 Pakistan-relevant classes (Common Rust, Gray Leaf Spot, Northern Leaf Blight, Healthy): **half of PlantCity Pakistan maize (Data in Brief 2025, Chitral/Charsadda)**, CD&S (Purdue, OSF), Bangladesh seasonal + multi-format maize (Mendeley), Tanzania (healthy only) | South Africa field maize (Pretoria) + real-world tests: other half of PlantCity Pakistan, PlantDoc corn |
+| 01 | Corn | Common Rust, Gray Leaf Spot, Northern Leaf Blight, Healthy: half of PlantCity Pakistan (GLS + healthy only), CD&S Dataset_Original (Purdue), Bangladesh corn, Bangladesh multi-format (RAW_Image only) | PlantDoc corn + other half of PlantCity Pakistan |
 | 02 | Cotton | SAR-CLD-2024 (Data in Brief 2024; its 7 classes) **+ half of CoSEV's Pakistani leaf-curl/healthy photos** (incl. leaf enation) | Cotton severity-levels set + real-world Pakistan tests: Southern Punjab field set (all) and the other half of CoSEV |
-| 03 | Rice | Sambalpur/Odisha field set (Sethy 2020), DIU 5-class + pest sets, Dhan-Shomadhan white-background half, 10-class Mendeley set (capped at 400, unknown origin). A class is kept only with >= 150 photos from >= 2 datasets | **RiceLeafBD** (field, Sylhet/Dhaka, 2025) + **Dhan-Shomadhan field photos** |
+| 03 | Rice | Sambalpur/Odisha (Sethy 2020), DIU 5-class + pest sets (original folders only), Dhan-Shomadhan white-background half. >= 150 photos from >= 2 datasets per class | RiceLeafBD (field, 2025) + Dhan-Shomadhan field photos |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
-| 04 | Tomato | Field photos only, no PlantVillage: **Pakistan field tomato (7.2k)**, Bangladesh field sets (Data in Brief 2025 + DIU), **half of PlantCity Pakistan tomato**. A class is kept only with >= 150 photos from >= 2 datasets | PlantDoc tomato + real-world test: other half of PlantCity Pakistan |
+| 04 | Tomato | Pakistan field tomato (7.2k), DIU Bangladesh field set, half of PlantCity Pakistan tomato (bacterial spot, early/late blight, leaf curl, leaf mold, septoria, healthy). >= 150 photos from >= 2 datasets per class | PlantDoc tomato + other half of PlantCity Pakistan |
 | 05 | Apple | 5 Pakistan/Kashmir-relevant classes (Apple Scab, Alternaria Leaf Blotch, Powdery Mildew, Apple Mosaic, Healthy): **half of PlantCity Pakistan apple (Chitral/Charsadda)**, **half of the Indigenous Kashmir set** (its augmented copies are grouped back to one photo per leaf), AppleLeaf9 (Agronomy 2022, ~94% in-the-wild photos) | PlantDoc apple + real-world tests: other halves of PlantCity Pakistan and Kashmir |
 | 06 | Mango | MangoLeafBD's 8 classes: MangoLeafBD (Data in Brief 2023; zoom/rotate copies grouped back to one per leaf), MLD24 (6.4k orchard photos), MLDID, Ashulia field set. A class is kept only with >= 150 photos from >= 2 datasets | Pabna & Savar field photos 2024 (different orchards and season) |
 | 07 | Grape | Grape field set (Mendeley), PlantVillage (capped) | PlantDoc |

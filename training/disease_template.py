@@ -142,29 +142,43 @@ def extract_all(folder):
 
 def dl_mendeley(spec, dest):
     ds, ver = spec["id"], spec.get("version", 1)
-    zip_url = f"https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/{ds}-{ver}.zip"
-    try:
-        print("  trying Mendeley bulk zip ...")
-        http_get(zip_url, dest / f"{ds}-{ver}.zip", timeout=600)
-        return True
-    except Exception as e:
-        print("  bulk zip failed:", e)
-    # fallback: public API, walk folders
+    only = re.compile(spec["only_files"], re.I) if spec.get("only_files") else None
+    if not only:   # the bulk zip contains every file, so it is skipped when only some files are wanted
+        zip_url = f"https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/{ds}-{ver}.zip"
+        try:
+            print("  trying Mendeley bulk zip ...")
+            http_get(zip_url, dest / f"{ds}-{ver}.zip", timeout=600)
+            return True
+        except Exception as e:
+            print("  bulk zip failed:", e)
+    # fallback: public API. Files are saved under their FULL folder path (class folders like
+    # "Field Background/Rice Blast/" carry the labels - flattening them loses every label).
     try:
         base = f"https://data.mendeley.com/public-api/datasets/{ds}"
-        files = http_json(f"{base}/files?folder_id=root&version={ver}")
-        folders = http_json(f"{base}/folders/{ver}") if True else []
-        todo = list(files)
-        for fo in folders if isinstance(folders, list) else []:
+        folders = http_json(f"{base}/folders/{ver}")
+        folders = folders if isinstance(folders, list) else []
+        by_id = {fo["id"]: fo for fo in folders}
+        def folder_path(fid):
+            parts = []
+            while fid in by_id:
+                parts.append(re.sub(r'[\\/:*?"<>|]+', "_", by_id[fid]["name"].strip())); fid = by_id[fid].get("parent_id")
+            return Path(*reversed(parts)) if parts else Path()
+        todo = [(Path(), f) for f in http_json(f"{base}/files?folder_id=root&version={ver}")]
+        for fo in folders:
             try:
-                todo += http_json(f"{base}/files?folder_id={fo['id']}&version={ver}")
+                todo += [(folder_path(fo["id"]), f) for f in http_json(f"{base}/files?folder_id={fo['id']}&version={ver}")]
             except Exception:
                 pass
+        print(f"  Mendeley API: {len(todo)} files in {len(folders)} folders")
         n = 0
-        for f in todo:
+        for sub, f in todo:
             url = (f.get("content_details") or {}).get("download_url")
             if not url: continue
-            http_get(url, dest / f["filename"], timeout=600); n += 1
+            if only and not only.search(f["filename"]): continue
+            out = dest / sub / f["filename"]; out.parent.mkdir(parents=True, exist_ok=True)
+            if out.exists() and out.stat().st_size > 0: n += 1; continue
+            http_get(url, out, timeout=600); n += 1
+            if n % 200 == 0: print(f"    ... {n}/{len(todo)} files", flush=True)
         print(f"  downloaded {n} files via Mendeley API")
         return n > 0
     except Exception as e:
@@ -209,12 +223,14 @@ def dl_zenodo(spec, dest):
 def dl_osf(spec, dest):
     """OSF project: try the whole-storage zip, else walk the API and download every file."""
     node = spec["id"]
-    try:
-        print("  trying OSF storage zip ...")
-        http_get(f"https://files.osf.io/v1/resources/{node}/providers/osfstorage/?zip=", dest / f"{node}.zip", timeout=3600)
-        return True
-    except Exception as e:
-        print("  OSF zip failed:", e)
+    only = re.compile(spec["osf_folders"], re.I) if spec.get("osf_folders") else None
+    if not only:   # the whole-storage zip holds every folder, so it is skipped when only some folders are wanted
+        try:
+            print("  trying OSF storage zip ...")
+            http_get(f"https://files.osf.io/v1/resources/{node}/providers/osfstorage/?zip=", dest / f"{node}.zip", timeout=3600)
+            return True
+        except Exception as e:
+            print("  OSF zip failed:", e)
     n = 0
     def walk(url, sub):
         nonlocal n
@@ -223,7 +239,9 @@ def dl_osf(spec, dest):
             for item in page.get("data", []):
                 a = item["attributes"]
                 if a.get("kind") == "folder":
-                    walk(item["relationships"]["files"]["links"]["related"]["href"], sub / a["name"])
+                    nxt = sub / a["name"]
+                    if only and len(nxt.parts) <= 2 and not only.search(str(nxt)): continue   # filter top levels only
+                    walk(item["relationships"]["files"]["links"]["related"]["href"], nxt)
                 else:
                     (dest / sub).mkdir(parents=True, exist_ok=True)
                     http_get(item["links"]["download"], dest / sub / a["name"], timeout=3600); n += 1
@@ -331,7 +349,7 @@ def pick_scratch():
     return Path(best) / "cdcnsa_raw" / CROP
 SCRATCH = pick_scratch()
 
-DROP_PATH = re.compile(r"augment|\baug\b|_aug|synthetic|generated|__macosx", re.I)
+DROP_PATH = re.compile(r"augment|augument|augumen|\baug\b|_aug|synthetic|generated|__macosx", re.I)
 COMPILED = [(re.compile(p, re.I), t) for p, t in ALIASES]
 ARCHIVES = (".zip", ".rar", ".7z", ".tar", ".tar.gz", ".tgz")
 
