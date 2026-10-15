@@ -18,7 +18,7 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 | # | Notebook | Train sources | Held-out test source |
 |---|---|---|---|
 | 01 | Corn | Tanzania maize (Dataverse), Bangladesh seasonal corn + Bangladesh multi-format maize (Mendeley), PlantVillage (capped) | South Africa field maize (Figshare) + PlantDoc |
-| 02 | Cotton | SAR-CLD-2024 + EWU 2025 cotton set (Mendeley; Alternaria, Bacterial Blight, Fusarium, Verticillium, Healthy) + any attached Kaggle cotton set | Cotton severity-levels set (Mendeley) |
+| 02 | Cotton | **SAR-CLD-2024 only** (Data in Brief 2024 paper; its 7 classes = the app's cotton classes) | Cotton severity-levels set + **real-world Pakistan tests: Southern Punjab field set (Zenodo, Islamia Univ. Bahawalpur) and CoSEV leaf-curl set** |
 | 03 | Rice | RiceLeafBD, Rice 10-class, Sambalpur rice (5.9k), DIU rice 5-class, DIU rice pests incl. Leaffolder (Mendeley) | Dhan-Shomadhan field photos (Mendeley) |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
 | 04 | Tomato | **Pakistan field tomato (7.2k)**, Bangladesh field tomato (Mendeley), PlantVillage (capped) | PlantDoc |

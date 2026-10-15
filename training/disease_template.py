@@ -306,7 +306,8 @@ def add_image(spec, rel_parts, opener):
     c = class_for(rel_parts, spec.get("require"), spec.get("exclude"))
     if c == "SKIP_AUG": skipped_aug[name] += 1; return
     if c is None: unmapped[(name, "/".join(rel_parts[-3:-1]))] += 1; return
-    if c == "DROP" or c not in CLASSES: return
+    if c == "DROP" or (c not in CLASSES and c != "__DISEASED__"): return
+    if c == "__DISEASED__" and spec["role"] != "external": return
     if per_src[name][c] >= spec.get("cap", CAP_PER_CLASS_PER_SOURCE): return
     try:
         im = to_rgb_resized(opener())
@@ -460,6 +461,7 @@ for c in CLASSES:
 # %%
 train_pool = [r for r in kept if r["role"] == "train"]
 held = [r for r in kept if r["role"] == "heldout"]
+external = [r for r in kept if r["role"] == "external"]
 present = [c for c in CLASSES if any(r["cls"] == c for r in train_pool)]
 missing = [c for c in CLASSES if c not in present]
 if missing: print("Classes with NO training images (will be excluded):", missing)
@@ -498,7 +500,8 @@ if EXTRA_TEST_DIR and Path(EXTRA_TEST_DIR).exists():
     print("Extra test photos:", len(extra))
 else:
     extra = []
-for name, rows in [("train", train), ("val_id", val_id), ("ood_val", ood_val), ("ood_test", ood_test), ("extra", extra)]:
+external = [r for r in external if r["cls"] in C2I or r["cls"] == "__DISEASED__"]
+for name, rows in [("train", train), ("val_id", val_id), ("ood_val", ood_val), ("ood_test", ood_test), ("extra", extra), ("external", external)]:
     print(f"{name:9s} {len(rows):6d}  {dict(Counter(r['cls'] for r in rows))}")
 
 # %% [markdown]
@@ -724,6 +727,41 @@ final["val_in_distribution"] = report("val (same sources as training — optimis
 final["ood_test"] = report("OOD TEST (held-out source — the honest number)", dl_test)
 final["extra_test"] = report("EXTRA (your own photos)", dl_extra)
 
+@torch.no_grad()
+def external_report():
+    """Real-world test sets (e.g. Pakistani field photos). Rows labelled __DISEASED__ only say 'some disease':
+    they count as correct when the model does NOT answer healthy."""
+    if not external: return None
+    model.eval(); out = {}
+    by_src = defaultdict(list)
+    for r in external: by_src[r["src"]].append(r)
+    hi = C2I.get("healthy")
+    for src, rows in by_src.items():
+        ok = Counter(); tot = Counter(); answered = Counter(); ok_ans = Counter(); confusion = defaultdict(Counter)
+        for i in range(0, len(rows), 64):
+            chunk = rows[i:i + 64]
+            x = torch.stack([T_EVAL(Image.open(r["path"]).convert("RGB")) for r in chunk]).to(DEVICE)
+            with torch.autocast(device_type="cuda", enabled=DEVICE == "cuda"):
+                p = F.softmax(model(x).float(), 1).cpu()
+            conf, pred = p.max(1)
+            for r, c, pr in zip(chunk, conf.tolist(), pred.tolist()):
+                lab = r["cls"]
+                good = (pr != hi) if lab == "__DISEASED__" else (pr == C2I[lab])
+                tot[lab] += 1; ok[lab] += int(good); confusion[lab][CLS[pr]] += 1
+                if c >= THRESH: answered[lab] += 1; ok_ans[lab] += int(good)
+        print(f"\n=== EXTERNAL REAL-WORLD TEST: {src} (never seen in training) ===")
+        res = {}
+        for lab in tot:
+            name = "any disease (not healthy)" if lab == "__DISEASED__" else lab
+            acc = ok[lab] / tot[lab]; ans = answered[lab] / tot[lab]
+            acc_ans = (ok_ans[lab] / answered[lab]) if answered[lab] else float("nan")
+            print(f"  {name:32s} n={tot[lab]:4d}  correct {acc:6.1%} | answered {ans:5.0%}, correct when answered {acc_ans:6.1%}")
+            print(f"      predicted as: {dict(confusion[lab].most_common(4))}")
+            res[name] = {"n": tot[lab], "acc": round(acc, 4), "answered": round(ans, 3), "acc_answered": round(acc_ans, 4)}
+        out[src] = res
+    return out
+final["external_real_world"] = external_report()
+
 # %% [markdown]
 # ## 7. Export for the CDCNSA app
 
@@ -756,6 +794,6 @@ shutil.make_archive(str(WORK / f"cdcnsa_{CROP}_export"), "zip", EXPORT)
 ok = (final["ood_test"] or {}).get("macroF1") or 0
 verdict = "PASS (ship it)" if (SELECT_ON == "ood_val" and ok >= 0.70) else ("WEAK - keep Qwen as primary" if ok >= 0.5 else "FAIL - hide crop or rely on Qwen")
 print("\n" + "=" * 30 + " FINAL REPORT (copy everything below) " + "=" * 30)
-print(json.dumps({k: final[k] for k in ("crop", "best_arch", "selected_on", "backbones", "threshold", "classes", "ood_test", "val_in_distribution", "extra_test")}, indent=1))
+print(json.dumps({k: final[k] for k in ("crop", "best_arch", "selected_on", "backbones", "threshold", "classes", "ood_test", "val_in_distribution", "extra_test", "external_real_world")}, indent=1))
 print("VERDICT:", verdict)
 print("Download from the Output panel:", f"cdcnsa_{CROP}_export.zip")
