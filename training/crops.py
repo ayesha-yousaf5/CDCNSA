@@ -88,9 +88,12 @@ CROPS = {
     },
     "apple": {
         "title": "Apple",
+        # Follows Plant Pathology 2021 (FGVC8; Thapa et al., Cornell): single-label images of its 5 main classes
+        # (same protocol as arXiv 2605.08618, 15,675 images). frog_eye_leaf_spot = Black Rot fungus.
         "classes": ["Apple Scab", "Cedar Apple Rust", "Apple Powdery Mildew", "Black Rot", "healthy"],
         "aliases": [
-            (r"complex|alternaria|mosaic|brown spot|grey spot|gray spot", None),
+            (r"complex", None),
+            (r"alternaria|mosaic|marssonina|blotch", "__DISEASED__"),   # Kashmir external test: 'some disease'
             (r"scab", "Apple Scab"),
             (r"rust", "Cedar Apple Rust"),
             (r"powdery", "Apple Powdery Mildew"),
@@ -99,11 +102,11 @@ CROPS = {
         ],
         "sources": [
             {"name": "plant_pathology_2021", "kind": "hf", "role": "train", "repo": "timm/plant-pathology-2021",
-             "split": "train", "single_label_only": True, "space_separated_labels": True, "cap": 900},
-            {"name": "apple_indonesia_orchard", "kind": "mendeley", "role": "train", "id": "9zgkwwv9j8", "version": 1},
-            PV("Apple___Apple_scab", "Apple___Black_rot", "Apple___Cedar_apple_rust", "Apple___healthy"),
+             "split": "train", "single_label_only": True, "space_separated_labels": True, "cap": 2500},
             PD(r"apple"),
+            {"name": "kashmir_apple_indigenous", "kind": "mendeley", "role": "external", "id": "9m2dcb5mmr", "version": 3},
         ],
+        "auto_kaggle_inputs": False,
     },
     "tomato": {
         "title": "Tomato",

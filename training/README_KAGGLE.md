@@ -22,7 +22,7 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 | 03 | Rice | RiceLeafBD, Rice 10-class, Sambalpur rice (5.9k), DIU rice 5-class, DIU rice pests incl. Leaffolder (Mendeley) | Dhan-Shomadhan field photos (Mendeley) |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
 | 04 | Tomato | **Pakistan field tomato (7.2k)**, Bangladesh field tomato (Mendeley), PlantVillage (capped) | PlantDoc |
-| 05 | Apple | Plant Pathology 2021 (Hugging Face), Indonesian orchard set (Mendeley), PlantVillage (capped) | PlantDoc |
+| 05 | Apple | **Plant Pathology 2021 only** (Cornell orchard photos, expert-labelled; single-label images of its 5 main classes) | PlantDoc apple + **real-world test: Indigenous Kashmir apple set (Data in Brief 2024)** |
 | 06 | Mango | MLD24 (6.4k orchard photos), MLDID (Mendeley) | MangoLeafBD (Hugging Face) |
 | 07 | Grape | Grape field set (Mendeley), PlantVillage (capped) | PlantDoc |
 | 08 | Eggplant | Eggplant BD + high-res eggplant + eggplant detection set (Mendeley) | Curated eggplant set (Mendeley) |
