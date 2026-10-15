@@ -23,7 +23,7 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
 | 04 | Tomato | Field photos only, no PlantVillage: **Pakistan field tomato (7.2k)**, Bangladesh field sets (Data in Brief 2025 + DIU), **half of PlantCity Pakistan tomato**. A class is kept only with >= 150 photos from >= 2 datasets | PlantDoc tomato + real-world test: other half of PlantCity Pakistan |
 | 05 | Apple | 5 Pakistan/Kashmir-relevant classes (Apple Scab, Alternaria Leaf Blotch, Powdery Mildew, Apple Mosaic, Healthy): **half of PlantCity Pakistan apple (Chitral/Charsadda)**, **half of the Indigenous Kashmir set** (its augmented copies are grouped back to one photo per leaf), AppleLeaf9 (Agronomy 2022, ~94% in-the-wild photos) | PlantDoc apple + real-world tests: other halves of PlantCity Pakistan and Kashmir |
-| 06 | Mango | MLD24 (6.4k orchard photos), MLDID (Mendeley) | MangoLeafBD (Hugging Face) |
+| 06 | Mango | MangoLeafBD's 8 classes: MangoLeafBD (Data in Brief 2023; zoom/rotate copies grouped back to one per leaf), MLD24 (6.4k orchard photos), MLDID, Ashulia field set. A class is kept only with >= 150 photos from >= 2 datasets | Pabna & Savar field photos 2024 (different orchards and season) |
 | 07 | Grape | Grape field set (Mendeley), PlantVillage (capped) | PlantDoc |
 | 08 | Eggplant | Eggplant BD + high-res eggplant + eggplant detection set (Mendeley) | Curated eggplant set (Mendeley) |
 | 09 | Cucumber | Cucumber BD (Hugging Face) | none — single source (less trustworthy) |

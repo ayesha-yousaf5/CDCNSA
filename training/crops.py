@@ -158,23 +158,39 @@ CROPS = {
     },
     "mango": {
         "title": "Mango",
+        # 8 classes of MangoLeafBD (Ahmed et al., Data in Brief 2023) - the de-facto benchmark; these are also the
+        # main mango leaf problems in Pakistan (anthracnose, powdery mildew, die-back/decline, sooty mould, canker).
+        # No public Pakistani mango leaf set exists (the Multan/MRI set of Tech Science CMC 2021 is not released).
         "classes": ["Anthracnose", "Bacterial Canker", "Cutting Weevil", "Die Back", "Gall Midge",
                     "Powdery Mildew", "Sooty Mould", "healthy"],
+        "min_train_images": 150,
+        "min_train_sources": 2,
         "aliases": [
             (r"anthrac", "Anthracnose"),
-            (r"canker", "Bacterial Canker"),
+            (r"canker|cancer", "Bacterial Canker"),
             (r"weevil", "Cutting Weevil"),
-            (r"die ?back", "Die Back"),
+            (r"die ?b(ac|la)k|dieback", "Die Back"),
             (r"gall", "Gall Midge"),
-            (r"powdery", "Powdery Mildew"),
-            (r"sooty", "Sooty Mould"),
-            HEALTHY,
+            (r"powdery|mildew", "Powdery Mildew"),
+            (r"sooty|mould|mold", "Sooty Mould"),
+            (r"healthy|normal|fresh", "healthy"),
         ],
         "sources": [
+            # MangoLeafBD (paper-backed): ~1,800 original leaves + zoom/rotate copies -> copies grouped back to 1 per leaf
+            {"name": "mangoleafbd", "kind": "hf", "role": "train", "repo": "Project-AgML/MangoLeafBD_disease_classification",
+             "split": "train", "collapse_aug": True, "max_minutes": 30},
+            # MLD24: 6,400 orchard photos (iPhone, Kushtia & Dhaka), 800 per class
             {"name": "mld24", "kind": "mendeley", "role": "train", "id": "6dvpywm2m2", "version": 1},
+            # MLDID: 3,000 photos, 5 classes
             {"name": "mango_mldid", "kind": "mendeley", "role": "train", "id": "jpwtpv2c4s", "version": 1},
-            {"name": "mangoleafbd", "kind": "hf", "role": "heldout", "repo": "Project-AgML/MangoLeafBD_disease_classification", "split": "train"},
+            # Ashulia mango garden, natural conditions: 1,319 originals + augmented copies -> grouped back to 1 per leaf
+            {"name": "mango_ashulia", "kind": "mendeley", "role": "train", "id": "fn8dgf4hb5", "version": 1,
+             "collapse_aug": True, "cap": 3000},
+            # Pabna & Savar field photos (2024), 2,336 originals + augmented copies (grouped back), all 8 classes: never trained on
+            {"name": "mango_pabna_savar", "kind": "mendeley", "role": "heldout", "id": "7ghdbftp54", "version": 1,
+             "collapse_aug": True, "cap": 3000},
         ],
+        "auto_kaggle_inputs": False,
     },
     "grape": {
         "title": "Grape",
