@@ -31,12 +31,13 @@ CROPS = {
             # CD&S (Purdue, arXiv 2110.12084): only Dataset_Original/{train,test}/{gls,nlb,nls}; the no/black/white-
             # background folders are the SAME photos re-rendered, so they are excluded.
             {"name": "cds_purdue", "kind": "osf", "role": "train", "id": "s6ru5", "require": r"dataset original",
-             "osf_folders": r"^CD&S(/Dataset_Original)?$"},
+             "osf_folders": r"^CD&S(/Dataset_Original)?$",
+             "osf_zip_folder": "60be295acb2a5e0501690f31"},   # = CD&S/Dataset_Original
             # Bangladesh: 'Final corn dataset' - common rust 129, gray leaf spot 1,497, healthy 1,038 (+BLS, MCMV unused)
             {"name": "bangladesh_corn", "kind": "mendeley", "role": "train", "id": "vy629dngm8", "version": 1},
             # Bangladesh multi-format: RAW_Image only (Converted/Annotation folders hold the same photos again)
             {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1,
-             "require": r"(^| / )raw image( / |$)"},
+             "require": r"(^| / )raw image( / |$)", "download_folders": r"RAW_Image"},
             # PlantDoc (real-world photos, folder-labelled): never trained on -> picks & calibrates the model
             {"name": "plantdoc", "kind": "plantdoc", "role": "heldout", "require": r"corn"},
         ],

@@ -143,7 +143,7 @@ def extract_all(folder):
 def dl_mendeley(spec, dest):
     ds, ver = spec["id"], spec.get("version", 1)
     only = re.compile(spec["only_files"], re.I) if spec.get("only_files") else None
-    if not only:   # the bulk zip contains every file, so it is skipped when only some files are wanted
+    if not only and not spec.get("download_folders"):   # the bulk zip contains every file, so it is skipped when only some files are wanted
         zip_url = f"https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/{ds}-{ver}.zip"
         try:
             print("  trying Mendeley bulk zip ...")
@@ -175,6 +175,7 @@ def dl_mendeley(spec, dest):
             url = (f.get("content_details") or {}).get("download_url")
             if not url: continue
             if only and not only.search(f["filename"]): continue
+            if spec.get("download_folders") and not re.search(spec["download_folders"], str(sub), re.I): continue
             out = dest / sub / f["filename"]; out.parent.mkdir(parents=True, exist_ok=True)
             if out.exists() and out.stat().st_size > 0: n += 1; continue
             http_get(url, out, timeout=600); n += 1
@@ -231,6 +232,14 @@ def dl_osf(spec, dest):
             return True
         except Exception as e:
             print("  OSF zip failed:", e)
+    if spec.get("osf_zip_folder"):   # zip of ONE folder (much smaller than the whole project)
+        try:
+            print("  trying OSF folder zip ...")
+            http_get(f"https://files.osf.io/v1/resources/{node}/providers/osfstorage/{spec['osf_zip_folder']}/?zip=",
+                     dest / "Dataset_Original.zip", timeout=3600)   # zip name becomes the path prefix
+            return True
+        except Exception as e:
+            print("  OSF folder zip failed:", e)
     n = 0
     def walk(url, sub):
         nonlocal n
