@@ -307,7 +307,7 @@ def add_image(spec, rel_parts, opener):
     if c == "SKIP_AUG": skipped_aug[name] += 1; return
     if c is None: unmapped[(name, "/".join(rel_parts[-3:-1]))] += 1; return
     if c == "DROP" or (c not in CLASSES and c != "__DISEASED__"): return
-    if c == "__DISEASED__" and spec["role"] != "external": return
+    if c == "__DISEASED__" and spec["role"] not in ("external", "split"): return
     if per_src[name][c] >= spec.get("cap", CAP_PER_CLASS_PER_SOURCE): return
     try:
         im = to_rgb_resized(opener())
@@ -400,6 +400,7 @@ def reload_done(spec):
             im = Image.open(r["path"]); remember(hashes(im)[0])
         except Exception:
             continue
+        r["role"] = spec["role"]           # always use the role from the CURRENT config
         kept.append(r); per_src[r["src"]][r["cls"]] += 1
     return True
 
@@ -459,9 +460,23 @@ for c in CLASSES:
 # ## 4. Source-based split (the anti-overfitting step)
 
 # %%
-train_pool = [r for r in kept if r["role"] == "train"]
 held = [r for r in kept if r["role"] == "heldout"]
 external = [r for r in kept if r["role"] == "external"]
+split_rows = [r for r in kept if r["role"] == "split" and r["cls"] != "__DISEASED__"]
+if split_rows:
+    # Half of each 'split' source (e.g. Pakistani photos) is used for TRAINING, the other half stays a never-seen test.
+    by = defaultdict(list)
+    for r in split_rows: by[(r["src"], r["cls"])].append(r)
+    rng_split = random.Random(SEED + 7)
+    for (src, cls_), lst in by.items():
+        rng_split.shuffle(lst); half = len(lst) // 2
+        for r in lst[:half]: r["role"] = "train"
+        for r in lst[half:]: r["role"] = "external"
+    kept_train_extra = [r for r in split_rows if r["role"] == "train"]
+    print(f"'split' sources: {len(kept_train_extra)} photos added to training, "
+          f"{len(split_rows) - len(kept_train_extra)} kept as real-world test")
+    external += [r for r in split_rows if r["role"] == "external"]
+train_pool = [r for r in kept if r["role"] == "train"]
 present = [c for c in CLASSES if any(r["cls"] == c for r in train_pool)]
 missing = [c for c in CLASSES if c not in present]
 if missing: print("Classes with NO training images (will be excluded):", missing)
