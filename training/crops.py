@@ -104,7 +104,7 @@ CROPS = {
         ],
         "sources": [
             {"name": "plant_pathology_2021", "kind": "hf", "role": "train", "repo": "timm/plant-pathology-2021",
-             "split": "train", "single_label_only": True, "space_separated_labels": True, "cap": 2500},
+             "split": "train", "single_label_only": True, "space_separated_labels": True, "cap": 1500, "max_minutes": 40},
             PD(r"apple"),
             {"name": "kashmir_apple_indigenous", "kind": "mendeley", "role": "external", "id": "9m2dcb5mmr", "version": 3},
         ],

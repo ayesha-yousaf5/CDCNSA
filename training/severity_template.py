@@ -54,7 +54,15 @@ UA = {"User-Agent": "Mozilla/5.0 (CDCNSA research notebook)"}
 IMG_EXT = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 MEAN, STD = [0.485, 0.456, 0.406], [0.229, 0.224, 0.225]
 
-def http_get(url, dest=None, timeout=3600):
+def http_get(url, dest=None, timeout=3600, attempts=3):
+    for k in range(attempts):
+        try:
+            return _http_get_once(url, dest, timeout)
+        except Exception as e:
+            if k == attempts - 1: raise
+            print(f"  download problem ({e}); retrying in {10 * (k + 1)}s", flush=True); time.sleep(10 * (k + 1))
+
+def _http_get_once(url, dest=None, timeout=3600):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         if dest is None: return r.read()
@@ -96,6 +104,8 @@ for key, ip in images.items():
     mp = masks.get(key)
     if mp: pairs[key[0]].append((ip, mp))
 print({k: len(v) for k, v in pairs.items()}, "| unpaired images:", len(images) - sum(len(v) for v in pairs.values()))
+from collections import Counter as _C
+print("Folder layout (top 12):", _C(str(p.parent.relative_to(ps_dir)) for p in list(images.values())[:5000] + list(masks.values())[:5000]).most_common(12))
 if not pairs["val"]:
     random.shuffle(pairs["train"]); n = len(pairs["train"]) // 10
     pairs["val"], pairs["train"] = pairs["train"][:n], pairs["train"][n:]

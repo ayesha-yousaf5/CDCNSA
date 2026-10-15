@@ -41,7 +41,7 @@ EXTRA_TEST_DIR = None             # optional: path to your own labelled test pho
 # %%
 import subprocess, sys
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "imagehash", "rarfile"], check=False)
-import os, re, io, json, glob, math, time, random, shutil, zipfile, tarfile, hashlib, urllib.request, urllib.parse
+import os, re, io, json, glob, math, time, random, shutil, zipfile, tarfile, hashlib, urllib.request, urllib.parse, urllib.error
 from collections import Counter, defaultdict
 from pathlib import Path
 import numpy as np
@@ -54,6 +54,10 @@ from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
 from torchvision import transforms, models
 from sklearn.metrics import f1_score, classification_report, confusion_matrix
 
+import warnings
+warnings.filterwarnings("ignore", message=".*lr_scheduler.step.*")
+warnings.filterwarnings("ignore", category=torch.jit.TracerWarning) if hasattr(torch.jit, "TracerWarning") else None
+warnings.filterwarnings("ignore", message=".*unauthenticated requests to the HF Hub.*")
 random.seed(SEED); np.random.seed(SEED); torch.manual_seed(SEED)
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device:", DEVICE, torch.cuda.get_device_name(0) if DEVICE == "cuda" else "")
@@ -71,14 +75,37 @@ UA = {"User-Agent": "Mozilla/5.0 (CDCNSA research notebook)"}
 # ## 1. Download helpers
 
 # %%
-def http_get(url, dest=None, timeout=120):
+def http_get(url, dest=None, timeout=300, attempts=3):
+    """Download with retries (network hiccups / timeouts). A clear refusal (HTTP 4xx) fails fast."""
+    for k in range(attempts):
+        try:
+            return _http_get_once(url, dest, timeout)
+        except urllib.error.HTTPError as e:
+            if 400 <= e.code < 500 and e.code != 429: raise
+            err = e
+        except Exception as e:
+            err = e
+        wait = 10 * (k + 1)
+        print(f"    download problem ({err}); retry {k + 1}/{attempts - 1} in {wait}s" if k < attempts - 1 else f"    giving up: {err}", flush=True)
+        if k < attempts - 1: time.sleep(wait)
+    raise err
+
+def _http_get_once(url, dest=None, timeout=300):
     req = urllib.request.Request(url, headers=UA)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         if dest is None:
             return r.read()
         tmp = str(dest) + ".part"
+        total = int(r.headers.get("Content-Length") or 0); done = 0; next_report = 100 << 20; t0 = time.time()
         with open(tmp, "wb") as f:
-            shutil.copyfileobj(r, f, length=1 << 20)
+            while True:
+                chunk = r.read(1 << 20)
+                if not chunk: break
+                f.write(chunk); done += len(chunk)
+                if done >= next_report:
+                    tot = f" of {total/1e6:.0f} MB" if total else ""
+                    print(f"    ... {Path(str(dest)).name}: {done/1e6:.0f} MB{tot} ({done/1e6/max(1e-6, time.time()-t0):.1f} MB/s)", flush=True)
+                    next_report += 100 << 20
         os.replace(tmp, dest)
         return dest
 
@@ -190,8 +217,19 @@ def dl_plantvillage(spec, dest):
     subprocess.run(["git", "-C", str(repo), "sparse-checkout", "set"] + [f"raw/color/{d}" for d in spec["folders"]], check=True)
     return True
 
+def _hf_token():
+    if os.environ.get("HF_TOKEN"): return os.environ["HF_TOKEN"]
+    try:
+        from kaggle_secrets import UserSecretsClient
+        return UserSecretsClient().get_secret("HF_TOKEN")
+    except Exception:
+        return None
+
 def dl_hf(spec, dest):
     from datasets import load_dataset
+    tok = _hf_token()
+    if tok:
+        os.environ["HF_TOKEN"] = tok; print("  using HF_TOKEN from Kaggle secrets (faster)")
     ds = load_dataset(spec["repo"], split=spec.get("split", "train"), streaming=True)
     feats = ds.features or {}
     label_col = spec.get("label_col")
@@ -206,7 +244,8 @@ def dl_hf(spec, dest):
     except Exception:
         try: names = feats[label_col].feature.names
         except Exception: pass
-    per = Counter(); n = 0
+    per = Counter(); n = 0; last_new = 0; t_hf = time.time()
+    cap = spec.get("cap", CAP_PER_CLASS_PER_SOURCE)
     for row in ds:
         lab = row[label_col]
         if isinstance(lab, list):
@@ -217,13 +256,22 @@ def dl_hf(spec, dest):
             if len(parts) != 1: continue
             lab = parts[0]
         lab = names[lab] if (names and isinstance(lab, int)) else str(lab)
-        if per[lab] >= spec.get("cap", CAP_PER_CLASS_PER_SOURCE) * 2: continue
-        img = row[img_col]
-        if not isinstance(img, Image.Image):
-            img = Image.open(io.BytesIO(img["bytes"]))
-        before = len(kept)
-        add_image(spec, (re.sub(r"[^\w\- ]", "_", lab), f"{n:06d}.jpg"), lambda img=img: img)
-        per[lab] += 1; n += 1
+        n += 1; per[lab] += 1
+        got = per_src[spec["name"]]
+        if per[lab] <= cap * 2:                       # decode the image only while this label may still be needed
+            img = row[img_col]
+            if not isinstance(img, Image.Image):
+                img = Image.open(io.BytesIO(img["bytes"]))
+            classes_before = len(got)
+            add_image(spec, (re.sub(r"[^\w\- ]", "_", lab), f"{n:06d}.jpg"), lambda img=img: img)
+            if len(got) > classes_before: last_new = n
+        if n % 500 == 0:
+            print(f"    ... {n} rows read, kept {dict(got)} ({time.time() - t_hf:.0f}s)", flush=True)
+        # stop once every class found so far is full and no new class has shown up for 3000 rows
+        if got and all(v >= cap for v in got.values()) and n - last_new > 3000:
+            print("    all classes reached the cap -> stopping the download early"); break
+        if time.time() - t_hf > 60 * spec.get("max_minutes", 45):
+            print(f"    time budget of {spec.get('max_minutes', 45)} min reached -> stopping with what we have"); break
     print("  HF labels seen:", dict(per))
     return True   # images were ingested directly (nothing left on disk)
 
@@ -265,7 +313,7 @@ def norm_part(s):
 def class_for(rel_parts, require=None, exclude=None):
     path_txt = " / ".join(norm_part(p) for p in rel_parts)
     if DROP_PATH.search(path_txt): return "SKIP_AUG"
-    if require and not re.search(require, path_txt, re.I): return None
+    if require and not re.search(require, path_txt, re.I): return "OTHER_CROP"
     if exclude and re.search(exclude, path_txt, re.I): return None
     for part in reversed([norm_part(p) for p in rel_parts[:-1]] + [norm_part(Path(rel_parts[-1]).stem)]):
         # dataset-title folders (long, or containing "dataset") must not decide the class
@@ -305,6 +353,7 @@ def add_image(spec, rel_parts, opener):
     name = spec["name"]
     c = class_for(rel_parts, spec.get("require"), spec.get("exclude"))
     if c == "SKIP_AUG": skipped_aug[name] += 1; return
+    if c == "OTHER_CROP": return
     if c is None: unmapped[(name, "/".join(rel_parts[-3:-1]))] += 1; return
     if c == "DROP" or (c not in CLASSES and c != "__DISEASED__"): return
     if c == "__DISEASED__" and spec["role"] not in ("external", "split"): return
@@ -372,6 +421,8 @@ def ingest_dataverse(spec, dest):
     meta = http_json(f"https://dataverse.harvard.edu/api/datasets/:persistentId/?persistentId={urllib.parse.quote(spec['doi'])}")
     files = meta["data"]["latestVersion"]["files"]; random.shuffle(files)
     print(f"  Dataverse: {len(files)} files, {sum(f['dataFile'].get('filesize', 0) for f in files)/1e9:.2f} GB listed")
+    for f in files[:40]:
+        print(f"    - {f.get('directoryLabel', '')}/{f['dataFile'].get('filename')} ({f['dataFile'].get('filesize', 0)/1e6:.0f} MB)")
     cap = spec.get("cap", CAP_PER_CLASS_PER_SOURCE)
     for f in files:
         df = f["dataFile"]; dlab = f.get("directoryLabel", "")
@@ -380,11 +431,14 @@ def ingest_dataverse(spec, dest):
         if Path(name).suffix.lower() in IMG_EXT:
             c = class_for(parts, spec.get("require"), spec.get("exclude"))
             if c in CLASSES and per_src[spec["name"]][c] >= cap: continue   # don't even download
-            if c is None or c in ("DROP", "SKIP_AUG"): continue
+            if c is None or c in ("DROP", "SKIP_AUG", "OTHER_CROP"): continue
         tmp = dest / name
         try:
-            http_get(f"https://dataverse.harvard.edu/api/access/datafile/{df['id']}", tmp, timeout=1800)
+            before_n = sum(per_src[spec["name"]].values())
+            http_get(f"https://dataverse.harvard.edu/api/access/datafile/{df['id']}", tmp, timeout=3600)
             ingest_path(spec, tmp, tuple(Path(dlab).parts))
+            if not Path(name).suffix.lower() in IMG_EXT:
+                print(f"   file {dlab}/{name} ({df.get('filesize', 0)/1e6:.0f} MB): kept {sum(per_src[spec['name']].values()) - before_n} images")
         except Exception as e:
             print("   failed", name, e)
         finally:
@@ -660,6 +714,7 @@ def train_arch(arch):
     model, head = build(arch, len(CLS)); model.to(DEVICE)
     dl_tr = loader(train, True)
     dl_sel = loader(ood_val if SELECT_ON == "ood_val" else val_id, False)
+    dl_vid_sel = loader(val_id, False) if SELECT_ON == "ood_val" else None
     crit = nn.CrossEntropyLoss(label_smoothing=0.1)
     scaler = torch.amp.GradScaler("cuda", enabled=DEVICE == "cuda")
     best, best_state, patience = -1, None, 0
@@ -675,8 +730,15 @@ def train_arch(arch):
                 with torch.autocast(device_type="cuda", enabled=DEVICE == "cuda"):
                     loss = crit(model(x), y)
                 scaler.scale(loss).backward(); scaler.step(opt); scaler.update(); sched.step(); tl += loss.item()
-            lg, yy = predict(model, dl_sel); f = macro_f1(lg, yy)
-            print(f"  {arch} ep{ep+1}/{epochs} loss {tl/len(dl_tr):.3f}  {SELECT_ON} macroF1 {f:.3f}")
+            lg, yy = predict(model, dl_sel); f_ood = macro_f1(lg, yy)
+            if dl_vid_sel is not None:
+                # held-out sources often contain only a few classes -> also require all classes to stay good
+                lg2, yy2 = predict(model, dl_vid_sel); f_id = macro_f1(lg2, yy2)
+                f = 0.5 * f_ood + 0.5 * f_id
+                print(f"  {arch} ep{ep+1}/{epochs} loss {tl/len(dl_tr):.3f}  held-out F1 {f_ood:.3f} | all-class F1 {f_id:.3f} | score {f:.3f}")
+            else:
+                f = f_ood
+                print(f"  {arch} ep{ep+1}/{epochs} loss {tl/len(dl_tr):.3f}  {SELECT_ON} macroF1 {f:.3f}")
             if f > best + 1e-4:
                 best, patience = f, 0
                 best_state = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
