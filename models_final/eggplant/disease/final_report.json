@@ -1,0 +1,110 @@
+{
+  "crop": "eggplant",
+  "best_arch": "efficientnet_b0",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.7859,
+      "minutes": 35.0
+    },
+    "resnet50": {
+      "select_macroF1": 0.7842,
+      "minutes": 35.1
+    },
+    "densenet121": {
+      "select_macroF1": 0.7537,
+      "minutes": 36.0
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.7451,
+      "minutes": 20.6
+    }
+  },
+  "temperature": 0.71,
+  "threshold": 0.5,
+  "classes": [
+    "General Pest Damage",
+    "Leaf Spot",
+    "Mosaic Virus",
+    "Wilt",
+    "Small Leaf",
+    "White Mold",
+    "Phomopsis Blight",
+    "Powdery Mildew",
+    "healthy"
+  ],
+  "counts": {
+    "eggplant_bd_recognition": {
+      "healthy": 208,
+      "White Mold": 194,
+      "Mosaic Virus": 170,
+      "General Pest Damage": 198,
+      "Wilt": 214,
+      "Leaf Spot": 198,
+      "Small Leaf": 179
+    },
+    "eggplant_whitebg": {
+      "Mosaic Virus": 1346,
+      "General Pest Damage": 524,
+      "Leaf Spot": 475,
+      "healthy": 1404,
+      "Wilt": 57,
+      "White Mold": 62
+    },
+    "eggplant_dhaka_field": {
+      "Wilt": 157,
+      "General Pest Damage": 1079,
+      "Leaf Spot": 610,
+      "Phomopsis Blight": 211,
+      "healthy": 188,
+      "Mosaic Virus": 345
+    },
+    "eggplant_comprehensive": {
+      "healthy": 127,
+      "Powdery Mildew": 211,
+      "Mosaic Virus": 405,
+      "General Pest Damage": 562,
+      "Wilt": 84,
+      "Leaf Spot": 131
+    },
+    "eggplant_brinjal_2025": {
+      "healthy": 300,
+      "Phomopsis Blight": 300,
+      "Leaf Spot": 300,
+      "Powdery Mildew": 300
+    },
+    "eggplant_hires_field": {
+      "healthy": 90,
+      "Mosaic Virus": 65,
+      "General Pest Damage": 65,
+      "Leaf Spot": 60,
+      "Wilt": 61,
+      "Small Leaf": 77
+    }
+  },
+  "download_status": {
+    "eggplant_bd_recognition": "ok",
+    "eggplant_whitebg": "ok",
+    "eggplant_dhaka_field": "ok",
+    "eggplant_comprehensive": "ok",
+    "eggplant_brinjal_2025": "ok",
+    "eggplant_hires_field": "ok"
+  },
+  "val_in_distribution": {
+    "n": 1264,
+    "acc": 0.7856,
+    "macroF1": 0.7887,
+    "answered": 0.911,
+    "acc_answered": 0.8177
+  },
+  "ood_test": {
+    "n": 207,
+    "acc": 0.7488,
+    "macroF1": 0.7421,
+    "answered": 0.894,
+    "acc_answered": 0.8108
+  },
+  "extra_test": null,
+  "external_real_world": null,
+  "verdict": "PASS (ship it)"
+}

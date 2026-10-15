@@ -10,10 +10,11 @@ from PIL import Image
 from PIL import ImageStat
 from torch.nn import functional as F
 from .architectures import build_classifier
-from .errors import ModelContractError, ModelUnavailable
+from .errors import ImageDecodeError, ModelContractError, ModelUnavailable
 from .preprocess import decode_rgb, transform_for
 from .registry import ModelRegistry
 from . import vlm
+from .severity_seg import LesionSeverityModel
 
 ALIASES={'maize':'corn','corn / maize':'corn','brinjal':'eggplant','eggplant / brinjal':'eggplant'}  # lemon/citrus aliases hidden for now
 
@@ -83,7 +84,65 @@ class ModelRuntime:
         if not self.registry.checkpoint_path(combined).is_file(): return None
         return combined
     def _spec_for(self,crop:str,task:str):
+        # A crop's own FINAL (source-held-out validated) model wins over the shared combined model.
+        own=self.registry.crops.get(crop,{}).get(task)
+        if own and own.get('final') and own.get('enabled') and self.registry.checkpoint_path(own).is_file():
+            return own
         return self._combined_spec(crop,task) or self.registry.task(crop,task)
+    # ---- lesion-segmentation severity (one model for all crops) ----
+    def _seg_cfg(self)->dict:
+        return self.registry.data.get('severity_segmentation') or {}
+    def _seg_paths(self):
+        cfg=self._seg_cfg()
+        return self.root/cfg.get('checkpoint',''),self.root/cfg.get('config','')
+    def _seg_available(self)->bool:
+        cfg=self._seg_cfg(); mp,cp=self._seg_paths()
+        return bool(cfg.get('enabled')) and mp.is_file() and cp.is_file()
+    def _load_seg(self):
+        key=('_severity_segmentation',)
+        with self._cache_lock:
+            loaded=self._cached(key)
+            if loaded is not None:return loaded
+            mp,cp=self._seg_paths()
+            if not (mp.is_file() and cp.is_file()): raise ModelUnavailable(f'Severity segmentation model missing: {mp}')
+            self._make_cache_room()
+            loaded=LesionSeverityModel(mp,cp,self.device)
+            self._models[key]=loaded
+            return loaded
+    def _segmentation_severity(self,crop:str,disease:str,image)->dict|None:
+        """Returns severity fields, or None when the segmentation model is not installed
+        (the caller then keeps its previous behaviour)."""
+        if not self._seg_available(): return None
+        cfg=self._seg_cfg(); d=str(disease or '').lower()
+        base={'severity_confidence':None,'severity_percent':None,'severity_reliability':None}
+        # virus / wilt / pest damage is not a classic spot disease: still measured (the model marks the
+        # damaged leaf area), but labelled approximate. On the cotton check curl virus agreed with experts 72%.
+        not_spot=any(k in d for k in cfg.get('not_measurable_keywords',[]))
+        unconfirmed=d in ('','uncertain')
+        with self._inference_lock:
+            m=self._load_seg().measure(image)
+        if m['leaf_fraction']<float(cfg.get('min_leaf_fraction',0.03)):
+            return {**base,'severity':'N/A','severity_abstained':True,'severity_method':'lesion_segmentation',
+                    'severity_note':'leaf_not_clearly_visible'}
+        reliability='validated' if crop in cfg.get('validated_crops',[]) and not not_spot and not unconfirmed else 'approximate'
+        note='not_spot_disease' if not_spot else ('disease_not_confirmed' if unconfirmed else None)
+        return {**base,'severity':m['band'],'severity_percent':m['percent'],'severity_abstained':False,
+                'severity_method':'lesion_segmentation','severity_reliability':reliability,'severity_note':note}
+    def _apply_segmentation(self,out:dict,crop:str,image)->dict:
+        # healthy -> no severity. Everything else (also an unconfirmed disease) gets the measured diseased-leaf %,
+        # because the segmentation model does not need to know which disease it is.
+        if out.get('healthy') or out.get('disease')=='healthy' or out.get('reason') in (
+                'image_too_small','image_too_uniform','image_not_a_plant','image_does_not_match_selected_crop'):
+            return out
+        try:
+            disease=None if out.get('uncertain') or out.get('disease') in (None,'Uncertain') else out.get('disease')
+            seg=self._segmentation_severity(crop,disease,image)
+        except Exception as exc:  # never lose the diagnosis because severity failed
+            out['severity_error']=str(exc)[:300]; return out
+        if seg is not None:
+            if out.get('severity') not in (None,'N/A'): out['vlm_severity']=out.get('severity')
+            out.update(seg)
+        return out
     def load(self,crop:str,task:str):
         crop=canonical_crop(crop); key=(crop,task)
         spec=self._spec_for(crop,task)
@@ -93,6 +152,17 @@ class ModelRuntime:
             loaded=self._cached(key)
             if loaded is not None:return loaded
             if not spec.get('enabled'): raise ModelUnavailable(f'{crop} {task} model is not enabled in this build.')
+            if spec.get('runtime_kind')=='torchscript':
+                p=self.registry.checkpoint_path(spec)
+                if not p.is_file(): raise ModelUnavailable(f'{crop} {task} checkpoint is missing: {spec.get("checkpoint")}')
+                self._make_cache_room()
+                c2i=spec.get('class_to_idx') or {}
+                ordered=[c for c,_ in sorted(c2i.items(),key=lambda kv:kv[1])]
+                if not ordered: raise ModelContractError(f'{crop} {task} TorchScript model needs class_to_idx in the registry.')
+                model=torch.jit.load(str(p),map_location='cpu').eval().to(self.device)
+                loaded={'model':model,'classes':ordered,'spec':spec,'architecture':spec.get('architecture'),'meta':{},'combined':False}
+                self._models[key]=loaded
+                return loaded
             if spec.get('runtime_kind') not in ('classification','combined_classification'):
                 raise ModelUnavailable(f'{crop} {task} uses {spec.get("runtime_kind")}; its dedicated runtime is not attached yet.')
             p=self.registry.checkpoint_path(spec)
@@ -143,7 +213,7 @@ class ModelRuntime:
         with self._inference_lock:
             loaded=self.load(crop,task); spec=loaded['spec']
             x=transform_for(spec)(image).unsqueeze(0).to(self.device)
-            if self.device.type=='cpu' and self.cpu_half:
+            if self.device.type=='cpu' and self.cpu_half and spec.get('runtime_kind')!='torchscript':
                 x=x.half()
             logits=loaded['model'](x)
             if logits.ndim!=2 or logits.shape[1]!=len(loaded['classes']): raise ModelContractError('Unexpected model output shape.')
@@ -186,6 +256,8 @@ class ModelRuntime:
         try:
             with self._inference_lock:
                 cnn=self._diagnose(crop,payload,language,run_severity=not use_vlm)
+        except ImageDecodeError:
+            raise                      # not an image -> tell the user (415), don't blame the models
         except Exception as exc:
             # In hybrid mode a broken/missing CNN must not block the visual diagnosis.
             if not use_vlm: raise
@@ -196,8 +268,24 @@ class ModelRuntime:
         try:
             return self._merge_vlm(cnn,crop,payload,language)
         except Exception as exc:  # network/API problem -> keep the CNN answer (fail safe)
-            if 'cnn_error' in cnn: raise ModelUnavailable(f'Visual model failed ({exc}) and CNN unavailable ({cnn["cnn_error"]}).') from exc
+            if 'cnn_error' in cnn:
+                # no trained model for this crop AND Qwen unavailable: no disease name, but severity is still measured
+                if not self._seg_available():
+                    raise ModelUnavailable(f'Visual model failed ({exc}) and CNN unavailable ({cnn["cnn_error"]}).') from exc
+                image=decode_rgb(payload)
+                out={'crop':canonical_crop(crop),'disease':'Uncertain','candidate_disease':None,'confidence':0.0,'healthy':False,
+                     'candidate_healthy':False,'uncertain':True,'severity':'N/A','severity_confidence':None,
+                     'severity_unavailable':False,'severity_abstained':False,'language':language,'runtime_device':str(self.device),
+                     'demo':False,'diagnosis_source':'none','reason':'diagnosis_unavailable_try_again',
+                     'vlm_error':str(exc)[:300],'cnn_error':cnn['cnn_error'][:300]}
+                if self._image_quality_reason(image) is None:
+                    out=self._apply_segmentation(out,canonical_crop(crop),image)
+                return out
             cnn['diagnosis_source']='cnn'; cnn['vlm_error']=str(exc)[:300]
+            # Qwen down -> our own models answer: disease from the crop model + measured severity
+            if cnn.get('reason') in ('ok','disease_uncertain_skips_severity') and cnn.get('severity') in (None,'N/A'):
+                try: cnn=self._apply_segmentation(cnn,canonical_crop(crop),decode_rgb(payload))
+                except Exception as sev_exc: cnn['severity_error']=str(sev_exc)[:300]
             return cnn
     def _merge_vlm(self,cnn:dict,crop:str,payload:bytes,language:str)->dict:
         crop=canonical_crop(crop); image=decode_rgb(payload)
@@ -215,7 +303,19 @@ class ModelRuntime:
         reason=None
         if not v['is_plant_photo']: reason='image_not_a_plant'
         elif not v['matches_selected_crop']: reason='image_does_not_match_selected_crop'
-        elif not v['diagnosis']: reason='disease_not_recognised'
+        # Crops whose own trained model PASSED the held-out-source test: its confident answer is primary,
+        # Qwen-VL only acts as the safety check (plant? right crop?) and supplies the visible symptoms.
+        spec=self.registry.task(crop,'disease')
+        if reason is None and spec.get('primary') and cnn_label not in (None,'Uncertain') and not cnn.get('uncertain',True):
+            healthy=is_healthy(cnn_label)
+            out.update({'diagnosis_source':'trained_model','disease':'healthy' if healthy else display_label(cnn_label),
+                        'confidence':round(cnn_conf,6),'healthy':healthy,'candidate_healthy':healthy,'uncertain':False,
+                        'severity':'N/A' if healthy or v['severity']=='N/A' else v['severity'],
+                        'severity_confidence':None if healthy or v['severity']=='N/A' else round(v['confidence'],6),
+                        'severity_abstained':(not healthy and v['severity']=='N/A'),
+                        'vlm_disease':v['diagnosis'],'reason':'healthy_skips_severity' if healthy else 'ok'})
+            return self._apply_segmentation(out,crop,image)
+        if reason is None and not v['diagnosis']: reason='disease_not_recognised'
         conf=v['confidence']
         if agree and not cnn.get('uncertain',True): conf=max(conf,cnn_conf)
         else: conf=min(conf,0.9)
@@ -225,6 +325,8 @@ class ModelRuntime:
             out.update({'disease':'Uncertain','candidate_disease':v['diagnosis'] or v['raw_diagnosis'],'confidence':round(conf,6),
                         'healthy':False,'candidate_healthy':v['diagnosis']=='Healthy','uncertain':True,'severity':'N/A',
                         'severity_confidence':None,'reason':reason})
+            if reason in ('disease_uncertain_skips_severity','disease_not_recognised') and v['diagnosis']!='Healthy':
+                return self._apply_segmentation(out,crop,image)
             return out
         healthy=v['diagnosis']=='Healthy'
         out.update({'disease':'healthy' if healthy else v['diagnosis'],'confidence':round(conf,6),'healthy':healthy,
@@ -233,7 +335,7 @@ class ModelRuntime:
                     'severity_confidence':None if healthy or v['severity']=='N/A' else round(conf,6),
                     'severity_abstained':(not healthy and v['severity']=='N/A'),
                     'reason':'healthy_skips_severity' if healthy else 'ok'})
-        return out
+        return self._apply_segmentation(out,crop,image)
     def _diagnose(self,crop:str,payload:bytes,language:str='en',run_severity:bool=True)->dict:
         crop=canonical_crop(crop); image=decode_rgb(payload)
         quality_reason=self._image_quality_reason(image)
@@ -257,11 +359,16 @@ class ModelRuntime:
             out['reason']='image_does_not_match_selected_crop' if crop_mismatch else 'disease_uncertain_skips_severity'
             out['margin']=round(margin,6)
             out['crop_match']=round(crop_mass,6)
+            if run_severity and not crop_mismatch and not is_healthy(label) and self._seg_available():
+                out=self._apply_segmentation(out,crop,image)
             return out
         if healthy:
             out['reason']='healthy_skips_severity'; return out
         if not run_severity:
             out['reason']='ok'; return out
+        if self._seg_available():
+            out['reason']='ok'
+            return self._apply_segmentation(out,crop,image)
         sev_spec=self._spec_for(crop,'severity')
         if not sev_spec.get('enabled') or not self.registry.checkpoint_path(sev_spec).is_file():
             out['severity_unavailable']=True; out['reason']='severity_model_unavailable'; return out
@@ -277,7 +384,10 @@ class ModelRuntime:
             out['severity']=display_label(sev_label).upper(); out['reason']='ok'
         return out
     def status(self,deep:bool=False)->dict:
-        result={'device':str(self.device),'max_cached_models':self.max_cached_models,'crops':{}}
+        mp,cp=self._seg_paths()
+        result={'device':str(self.device),'max_cached_models':self.max_cached_models,
+                'severity_segmentation':{'enabled':bool(self._seg_cfg().get('enabled')),'checkpoint':str(mp),
+                                         'present':mp.is_file() and cp.is_file()},'crops':{}}
         for crop,tasks in self.registry.crops.items():
             result['crops'][crop]={}
             for task,spec in tasks.items():

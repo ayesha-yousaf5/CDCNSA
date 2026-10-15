@@ -1,0 +1,105 @@
+{
+  "crop": "apple",
+  "best_arch": "dinov2_vits14",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.8592,
+      "minutes": 27.9
+    },
+    "resnet50": {
+      "select_macroF1": 0.8524,
+      "minutes": 31.0
+    },
+    "densenet121": {
+      "select_macroF1": 0.8474,
+      "minutes": 25.1
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.8832,
+      "minutes": 26.6
+    }
+  },
+  "temperature": 0.911,
+  "threshold": 0.67,
+  "classes": [
+    "Apple Scab",
+    "Alternaria Leaf Blotch",
+    "Powdery Mildew",
+    "Apple Mosaic",
+    "healthy"
+  ],
+  "counts": {
+    "pakistan_plantcity": {
+      "healthy": 199
+    },
+    "kashmir_apple": {
+      "Alternaria Leaf Blotch": 1593,
+      "Apple Mosaic": 1589,
+      "healthy": 1598
+    },
+    "appleleaf9": {
+      "Alternaria Leaf Blotch": 415,
+      "healthy": 505,
+      "Apple Mosaic": 367,
+      "Powdery Mildew": 1184,
+      "Apple Scab": 1500
+    },
+    "plantdoc": {
+      "healthy": 91,
+      "Apple Scab": 93
+    }
+  },
+  "download_status": {
+    "pakistan_plantcity": "ok",
+    "kashmir_apple": "ok",
+    "appleleaf9": "ok",
+    "plantdoc": "ok"
+  },
+  "val_in_distribution": {
+    "n": 564,
+    "acc": 0.9823,
+    "macroF1": 0.98,
+    "answered": 0.975,
+    "acc_answered": 0.9945
+  },
+  "ood_test": {
+    "n": 92,
+    "acc": 0.6957,
+    "macroF1": 0.7955,
+    "answered": 0.587,
+    "acc_answered": 0.8519
+  },
+  "extra_test": null,
+  "external_real_world": {
+    "pakistan_plantcity": {
+      "healthy": {
+        "n": 100,
+        "acc": 1.0,
+        "answered": 0.98,
+        "acc_answered": 1.0
+      }
+    },
+    "kashmir_apple": {
+      "Alternaria Leaf Blotch": {
+        "n": 183,
+        "acc": 0.9727,
+        "answered": 0.984,
+        "acc_answered": 0.9889
+      },
+      "Apple Mosaic": {
+        "n": 253,
+        "acc": 1.0,
+        "answered": 0.996,
+        "acc_answered": 1.0
+      },
+      "healthy": {
+        "n": 194,
+        "acc": 1.0,
+        "answered": 0.995,
+        "acc_answered": 1.0
+      }
+    }
+  },
+  "verdict": "PASS (ship it)"
+}

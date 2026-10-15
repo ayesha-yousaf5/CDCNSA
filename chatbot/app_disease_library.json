@@ -1,0 +1,831 @@
+{
+ "corn": [
+  {
+   "name": "Gray Leaf Spot",
+   "name_ur": "گرے لیف اسپاٹ",
+   "aliases": [
+    "gray_leaf_spot",
+    "grey leaf spot"
+   ],
+   "type": "fungal",
+   "cause": "Cercospora zeae-maydis / Cercospora zeina",
+   "risk": "Warm, humid weather, prolonged leaf wetness and infected maize residue increase risk.",
+   "symptoms": "Rectangular gray-tan lesions are usually bounded by leaf veins and often have smoother, straighter margins than bacterial leaf streak.",
+   "symptoms_ur": "پتوں کی رگوں کے درمیان مستطیل سرمئی یا بھورے دھبے بنتے ہیں جن کے کنارے نسبتاً سیدھے ہوتے ہیں۔",
+   "management": "Reduce prolonged leaf wetness where possible, manage infected residue and confirm the lesion pattern before choosing a fungicide.",
+   "prevention": "Use tolerant hybrids, crop rotation and residue management where suitable.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Northern Leaf Blight",
+   "name_ur": "نادرن لیف بلائٹ",
+   "aliases": [
+    "northern_leaf_blight",
+    "northern corn leaf blight"
+   ],
+   "type": "fungal",
+   "cause": "Exserohilum turcicum",
+   "risk": "Moderate temperatures, frequent dew/rain and infected residue favor disease development.",
+   "symptoms": "Long, elliptical or cigar-shaped gray-green to tan lesions expand along the leaves and may coalesce when disease is severe.",
+   "symptoms_ur": "پتوں پر لمبے بیضوی یا سگار نما سرمئی سبز سے بھورے دھبے بنتے اور آپس میں مل سکتے ہیں۔",
+   "management": "Scout before the disease reaches the upper canopy and manage crop residue after harvest.",
+   "prevention": "Use resistant hybrids, rotation and residue management; maintain good field airflow where possible.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  }
+ ],
+ "cotton": [
+  {
+   "name": "Bacterial Blight",
+   "name_ur": "بیکٹیریل بلائٹ",
+   "aliases": [
+    "bacterial_blight"
+   ],
+   "type": "bacterial",
+   "cause": "Xanthomonas citri pv. malvacearum",
+   "risk": "Rain splash, storms, wounds, contaminated seed and susceptible varieties increase spread.",
+   "symptoms": "Angular water-soaked leaf lesions can turn dark; veins, petioles, stems or bolls may also develop dark bacterial lesions.",
+   "symptoms_ur": "پتوں پر زاویہ دار پانی جیسے دھبے گہرے ہو سکتے ہیں اور رگیں، ڈنٹھل یا ٹینڈے بھی متاثر ہو سکتے ہیں۔",
+   "management": "Use clean seed and avoid field operations through wet foliage; remove severely affected residue after harvest.",
+   "prevention": "Prefer resistant varieties where available and reduce splash/wound spread.",
+   "chemical": "Pakistan/Punjab evidence example: streptomycin sulfate. Punjab Plant Pathology Research Institute reports streptomycin sulfate as a cotton bacterial-leaf-blight treatment example. Treat this as provincial technical evidence, not a universal prescription; verify the current DPP cotton/target label before use.",
+   "note": ""
+  },
+  {
+   "name": "Leaf Curl",
+   "name_ur": "لیف کرل",
+   "aliases": [
+    "leaf_curl",
+    "cotton leaf curl",
+    "CLCuD"
+   ],
+   "type": "viral",
+   "cause": "Cotton leaf curl begomovirus complex; transmitted by whitefly (Bemisia tabaci)",
+   "risk": "High whitefly pressure and nearby infected hosts increase risk, especially in young crops.",
+   "symptoms": "Leaves may curl upward or downward, thicken, darken and develop vein swelling; severe plants can be stunted.",
+   "symptoms_ur": "پتے اوپر یا نیچے مڑ، موٹے یا گہرے ہو سکتے ہیں اور رگیں ابھر سکتی ہیں؛ شدید پودے چھوٹے رہ سکتے ہیں۔",
+   "management": "Rogue severely affected young plants where locally advised and manage weed/volunteer hosts and whitefly pressure through IPM.",
+   "prevention": "Use tolerant varieties and clean planting material; avoid unnecessary broad-spectrum sprays that destroy natural enemies.",
+   "chemical": "No pesticide cures cotton leaf curl virus. Insecticides can only reduce confirmed whitefly vector pressure when the economic threshold and current Pakistan label justify treatment. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  },
+  {
+   "name": "Herbicide Growth Damage",
+   "name_ur": "ہربیسائڈ گروتھ ڈیمیج",
+   "aliases": [
+    "herbicide_growth_damage",
+    "herbicide damage"
+   ],
+   "type": "abiotic",
+   "cause": "Herbicide exposure or carryover injury; not an infectious disease",
+   "risk": "Recent spraying, drift, tank contamination, overlap, weather stress or soil carryover can produce patterned injury.",
+   "symptoms": "Twisted, cupped, narrowed or malformed new leaves and abnormal growth can appear after herbicide drift, carryover or dosing injury.",
+   "symptoms_ur": "ہربیسائڈ کے بہاؤ یا باقیات سے نئے پتے مڑ، سکڑ یا بگڑ سکتے ہیں اور بڑھوتری غیر معمولی ہو سکتی ہے۔",
+   "management": "Stop further exposure, document recent herbicide use and drift, and compare affected field patterns with spray direction or treated rows.",
+   "prevention": "Calibrate sprayers, prevent drift, observe rotational restrictions and avoid contaminated tanks.",
+   "chemical": "No pesticide is automatically indicated for this non-infectious condition. Correct the underlying non-infectious cause instead.",
+   "note": "This is an injury/abiotic model class, not an infectious disease."
+  },
+  {
+   "name": "Leaf Hopper Jassids",
+   "name_ur": "لیف ہاپر / جیسڈز",
+   "aliases": [
+    "leaf_hopper_jassids",
+    "jassids",
+    "leaf hopper"
+   ],
+   "type": "pest",
+   "cause": "Cotton jassid/leafhopper feeding, commonly Amrasca biguttula biguttula",
+   "risk": "Warm weather and increasing jassid populations favor hopper-burn symptoms.",
+   "symptoms": "Leaf margins may yellow, redden or curl; feeding can produce hopper-burn and reduced vigor, with small wedge-shaped jassids often on leaf undersides.",
+   "symptoms_ur": "پتوں کے کنارے زرد، سرخ یا مڑ سکتے ہیں؛ شدید رس چوسنے سے ہوپر برن اور کمزور بڑھوتری ہو سکتی ہے۔",
+   "management": "Scout leaf undersides and use threshold-based IPM; conserve predators and avoid unnecessary repeated insecticide use.",
+   "prevention": "Control weeds/alternate hosts and maintain balanced crop growth without excessive nitrogen.",
+   "chemical": "If the threshold is exceeded, choose only a current DPP-registered insecticide labelled for cotton jassid; rotate mode of action according to the label. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  },
+  {
+   "name": "Leaf Reddening",
+   "name_ur": "لیف ریڈننگ",
+   "aliases": [
+    "leaf_reddening"
+   ],
+   "type": "abiotic",
+   "cause": "Multifactorial physiological syndrome; may involve boll load, nutrient imbalance, root/water stress or temperature stress",
+   "risk": "Heavy boll load, root stress, moisture imbalance and nutrient imbalance can intensify reddening.",
+   "symptoms": "Leaves develop red, bronze or purple coloration that may begin at margins or between veins; causes can include nutrient/root stress as well as crop aging.",
+   "symptoms_ur": "پتے سرخ، کانسی یا جامنی ہو سکتے ہیں؛ وجہ غذائی، جڑوں کا دباؤ یا فصل کی عمر بھی ہو سکتی ہے۔",
+   "management": "Treat this as a symptom class: inspect roots, irrigation, salinity, crop stage and field pattern before assigning a disease.",
+   "prevention": "Correct identified agronomic stress and avoid unnecessary pesticide use.",
+   "chemical": "No pesticide is automatically indicated for this non-infectious condition. Correct the underlying non-infectious cause instead.",
+   "note": "This is a symptom/physiological model class; the causal factor must be confirmed."
+  },
+  {
+   "name": "Leaf Variegation",
+   "name_ur": "لیف ویریگیشن",
+   "aliases": [
+    "leaf_variegation"
+   ],
+   "type": "syndrome",
+   "cause": "Visual variegation/chlorosis model class; multiple nutritional, genetic, viral or injury causes are possible",
+   "risk": "Field pattern, new versus old leaves, spray history and nutrient status are needed to identify the true cause.",
+   "symptoms": "Irregular pale, yellow or differently colored sectors appear in leaves; patterns may reflect genetic, nutritional, viral or chemical injury.",
+   "symptoms_ur": "پتوں میں بے قاعدہ ہلکے یا زرد حصے بن سکتے ہیں جن کی وجہ جینیاتی، غذائی، وائرل یا کیمیائی ہو سکتی ہے۔",
+   "management": "Do not prescribe a pesticide from the visual class alone. Review field pattern, new versus old growth, spray history and neighboring plants.",
+   "prevention": "Use clean planting material and correct only confirmed agronomic causes.",
+   "chemical": "No pesticide is automatically indicated for this non-infectious condition. Correct the underlying non-infectious cause instead.",
+   "note": "This model class is a visual syndrome, not a single pathogen."
+  }
+ ],
+ "tomato": [
+  {
+   "name": "Early Blight",
+   "name_ur": "ارلی بلائٹ",
+   "aliases": [
+    "early_blight"
+   ],
+   "type": "fungal",
+   "cause": "Alternaria solani / Alternaria linariae complex",
+   "risk": "Warm weather, dew/rain, lower-leaf aging and crop stress favor disease.",
+   "symptoms": "Older leaves develop dark brown lesions with concentric target-like rings, often surrounded by yellow tissue; stems and fruit can also be affected.",
+   "symptoms_ur": "پرانے پتوں پر ہدف جیسے حلقوں والے گہرے بھورے دھبے بنتے ہیں اور اردگرد زردی ہو سکتی ہے۔",
+   "management": "Remove badly infected lower foliage when practical, keep leaves dry and reduce soil splash.",
+   "prevention": "Rotate away from solanaceous crops, stake/mulch plants and manage residue.",
+   "chemical": "Pakistan/Punjab evidence example: pyraclostrobin + tebuconazole, azoxystrobin + difenoconazole. Punjab PPRI lists these as tomato early-blight research/advisory options. Do not infer a rate from this card.",
+   "note": ""
+  },
+  {
+   "name": "Late Blight",
+   "name_ur": "لیٹ بلائٹ",
+   "aliases": [
+    "late_blight"
+   ],
+   "type": "oomycete",
+   "cause": "Phytophthora infestans",
+   "risk": "Cool to mild, very humid weather and prolonged leaf wetness can drive rapid epidemics.",
+   "symptoms": "Rapidly enlarging water-soaked dark lesions occur on leaves and stems in cool humid conditions; white sporulation may appear at lesion margins on leaf undersides.",
+   "symptoms_ur": "ٹھنڈے مرطوب موسم میں پتوں اور تنوں پر پانی جیسے گہرے دھبے تیزی سے بڑھتے ہیں اور نیچے سفید پھپھوندی نظر آ سکتی ہے۔",
+   "management": "Remove badly infected tissue/plants where feasible, avoid overhead irrigation and act quickly after confirmation because epidemics can progress rapidly.",
+   "prevention": "Use clean transplants, spacing/ventilation and avoid prolonged leaf wetness.",
+   "chemical": "Pakistan/Punjab evidence example: metalaxyl-M + mancozeb, azoxystrobin + difenoconazole. Punjab PPRI lists these for tomato late blight. Resistance management and current DPP tomato/late-blight registration must be checked.",
+   "note": ""
+  },
+  {
+   "name": "Tomato Yellow Leaf Curl Virus",
+   "name_ur": "ٹماٹو یلو لیف کرل وائرس",
+   "aliases": [
+    "tomato_yellow_leaf_curl_virus",
+    "yellow leaf curl virus",
+    "TYLCV"
+   ],
+   "type": "viral",
+   "cause": "Tomato yellow leaf curl virus (TYLCV), transmitted by Bemisia tabaci whiteflies",
+   "risk": "Whitefly pressure, infected seedlings and nearby host plants increase risk; early infection is most damaging.",
+   "symptoms": "Young leaves become small, upward-curled and yellowed; plants can be severely stunted with poor flower/fruit set.",
+   "symptoms_ur": "نئے پتے چھوٹے، اوپر کو مڑے اور زرد ہو سکتے ہیں اور پودا شدید چھوٹا رہ سکتا ہے۔",
+   "management": "Remove strongly infected plants early where feasible and suppress whitefly/weed reservoirs using IPM.",
+   "prevention": "Use clean transplants, resistant/tolerant varieties and insect exclusion in nurseries/tunnels.",
+   "chemical": "No pesticide cures TYLCV. Whitefly insecticides only reduce vector pressure and must follow threshold/current Pakistan label. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  },
+  {
+   "name": "Bacterial Spot",
+   "name_ur": "بیکٹیریل اسپاٹ",
+   "aliases": [
+    "bacterial_spot"
+   ],
+   "type": "bacterial",
+   "cause": "Xanthomonas species complex",
+   "risk": "Warm, wet weather, splash, contaminated seed/transplants and handling wet plants favor spread.",
+   "symptoms": "Small dark brown to black leaf spots often have yellow halos; centers may dry or fall out, and fruit can develop raised scabby spots.",
+   "symptoms_ur": "چھوٹے گہرے بھورے یا سیاہ دھبوں کے گرد زرد ہالہ بن سکتا ہے اور پھل پر کھردرے دھبے آ سکتے ہیں۔",
+   "management": "Use clean transplants/seed, avoid handling wet plants and reduce splash irrigation. Remove heavily infected debris.",
+   "prevention": "Rotate crops, stake/space plants for drying and disinfect tools.",
+   "chemical": "Bacterial spot is not automatically controlled by fungal-disease products. Use only a current Pakistan tomato/bacterial-spot label after diagnosis. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  }
+ ],
+ "apple": [
+  {
+   "name": "Apple Scab",
+   "name_ur": "ایپل اسکیب",
+   "aliases": [
+    "apple_scab",
+    "Apple Apple Scab"
+   ],
+   "type": "fungal",
+   "cause": "Venturia inaequalis",
+   "risk": "Cool to mild wet periods during green-tip through early fruit development drive primary infections.",
+   "symptoms": "Olive-green velvety leaf spots become darker; fruit lesions can turn corky, cracked or deformed.",
+   "symptoms_ur": "پتوں پر زیتونی سبز مخملی دھبے بعد میں گہرے ہو سکتے ہیں اور پھل کھردرا یا پھٹا ہو سکتا ہے۔",
+   "management": "Remove/shred infected leaf litter and prune for rapid drying; protect new growth according to local disease risk.",
+   "prevention": "Use resistant cultivars where available and maintain balanced orchard fertility.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Alternaria Leaf Blotch",
+   "name_ur": "الٹرنیریا لیف بلاچ",
+   "aliases": [
+    "alternaria_apple",
+    "Alternaria Apple",
+    "alternaria_leaf_blotch"
+   ],
+   "type": "fungal",
+   "cause": "Alternaria mali / Alternaria blotch complex",
+   "risk": "Warm, humid weather and repeated leaf wetness favor blotch development on susceptible cultivars.",
+   "symptoms": "Round brown to dark leaf lesions may have purple margins or target-like zoning; severe infection can cause defoliation.",
+   "symptoms_ur": "پتوں پر بھورے یا گہرے گول دھبے بن سکتے ہیں جن کے کنارے جامنی یا حلقہ دار ہوں۔",
+   "management": "Remove infected leaves/debris where practical, improve airflow and confirm Alternaria against other leaf spots.",
+   "prevention": "Prune for canopy drying and avoid excessive nitrogen that creates dense susceptible growth.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Apple Powdery Mildew",
+   "name_ur": "ایپل پاؤڈری ملڈیو",
+   "aliases": [
+    "apple_powdery_mildew",
+    "powdery mildew"
+   ],
+   "type": "fungal",
+   "cause": "Podosphaera leucotricha",
+   "risk": "Mild temperatures and high humidity favor infection; unlike many fungi, free water is not required for spore germination.",
+   "symptoms": "White powdery growth appears on young leaves and shoots; infected leaves may narrow, curl or remain small.",
+   "symptoms_ur": "نئے پتوں اور کونپلوں پر سفید سفوف جیسی تہہ بنتی ہے اور پتے سکڑ یا مڑ سکتے ہیں۔",
+   "management": "Prune visibly infected shoots where practical and improve canopy airflow.",
+   "prevention": "Use resistant cultivars where available and avoid excessive nitrogen.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Apple Mosaic",
+   "name_ur": "ایپل موزیک وائرس",
+   "aliases": [
+    "apple_mosaic",
+    "apple mosaic virus",
+    "ApMV"
+   ],
+   "type": "viral",
+   "cause": "Apple mosaic virus (ApMV)",
+   "risk": "Spread mainly through infected nursery stock, budwood and natural root grafts; no known insect vector. Yield loss is usually minor.",
+   "symptoms": "In spring, pale yellow to cream spots, flecks, blotches or bands along the main veins appear on new leaves; they turn bright yellow or white and die, and badly affected leaves drop early.",
+   "symptoms_ur": "بہار میں نئے پتوں پر ہلکے زرد یا کریم رنگ کے دھبے، نشان یا رگوں کے ساتھ پٹیاں بنتی ہیں جو بعد میں چمکدار زرد یا سفید ہو کر سوکھ جاتی ہیں؛ زیادہ متاثرہ پتے جلدی گر جاتے ہیں۔",
+   "management": "There is no cure. Mark affected trees; remove badly affected trees, and never take budwood or grafting material from them.",
+   "prevention": "Plant certified virus-free nursery stock and budwood. The virus also passes between neighbouring trees through natural root grafts.",
+   "chemical": "No pesticide cures apple mosaic virus, and it has no known insect vector, so insecticide sprays do not help. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  }
+ ],
+ "rice": [
+  {
+   "name": "Bacterial Leaf Blight",
+   "name_ur": "بیکٹیریل لیف بلائٹ",
+   "aliases": [
+    "bacterial_leaf_blight"
+   ],
+   "type": "bacterial",
+   "cause": "Xanthomonas oryzae pv. oryzae",
+   "risk": "Wind-driven rain, wounds, high nitrogen, storms and infected residues can increase disease.",
+   "symptoms": "Water-soaked streaks begin near leaf tips/margins and expand into yellow-white blighted areas; severe plants may wilt.",
+   "symptoms_ur": "پتوں کے سروں یا کناروں سے پانی جیسی دھاریاں شروع ہو کر زرد سفید سوکھے حصوں میں بدل سکتی ہیں۔",
+   "management": "Use disease-free seed, avoid excessive nitrogen and prevent unnecessary leaf injury/splash.",
+   "prevention": "Use resistant varieties, sanitation and balanced crop nutrition.",
+   "chemical": "Pakistan/Punjab evidence example: kasugamycin, copper oxychloride, kasugamycin + copper oxychloride. Punjab rice advisories and PPRI list kasugamycin and copper-based options for bacterial leaf blight. Confirm the current DPP rice/BLB label before use and do not infer rate or PHI from this card.",
+   "note": ""
+  },
+  {
+   "name": "Brown Spot",
+   "name_ur": "براؤن اسپاٹ",
+   "aliases": [
+    "brown_spot"
+   ],
+   "type": "fungal",
+   "cause": "Bipolaris oryzae",
+   "risk": "Nutrient-stressed plants, drought or other stress, infected seed and humid leaf-wetness periods favor disease.",
+   "symptoms": "Oval brown lesions often have gray/tan centers and darker margins; spotting can occur on leaves and grain.",
+   "symptoms_ur": "پتوں پر بیضوی بھورے دھبے بنتے ہیں جن کا مرکز ہلکا اور کنارے گہرے ہو سکتے ہیں۔",
+   "management": "Use healthy seed, manage residue and avoid drought/nutrient stress.",
+   "prevention": "Maintain balanced fertility and correct confirmed soil deficiencies.",
+   "chemical": "Pakistan/Punjab evidence example: tebuconazole, azoxystrobin + difenoconazole, epoxiconazole + pyraclostrobin. Punjab PPRI reports these active ingredients as brown-spot management examples in rice. Use only a currently registered rice/brown-spot product and follow its resistance-management and label directions.",
+   "note": ""
+  },
+  {
+   "name": "Leaf Scald",
+   "name_ur": "لیف اسکیلڈ",
+   "aliases": [
+    "leaf_scald"
+   ],
+   "type": "fungal",
+   "cause": "Microdochium oryzae (leaf scald pathogen complex)",
+   "risk": "High humidity, frequent rain and infected seed/residue favor symptom development.",
+   "symptoms": "Lesions often start near leaf tips or margins as zoned/striped brown areas and can expand into large scorched regions.",
+   "symptoms_ur": "پتے کے سرے یا کنارے سے حلقہ دار بھورے دھبے شروع ہو کر بڑے جلے ہوئے حصوں میں بدل سکتے ہیں۔",
+   "management": "Use clean seed, reduce infected residue and avoid excessive nitrogen.",
+   "prevention": "Use resistant varieties where available and balanced fertility.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Rice Blast",
+   "name_ur": "رائس بلاسٹ",
+   "aliases": [
+    "rice_blast",
+    "leaf_blast",
+    "blast"
+   ],
+   "type": "fungal",
+   "cause": "Magnaporthe oryzae (Pyricularia oryzae)",
+   "risk": "High humidity, dew, cool nights, susceptible varieties and excessive/late nitrogen increase risk.",
+   "symptoms": "Diamond/spindle-shaped leaf lesions with gray centers and brown margins may occur; neck infection can cause panicle blanking or breakage.",
+   "symptoms_ur": "پتوں پر ہیرے یا تکلے جیسے دھبے بن سکتے ہیں جن کا مرکز سرمئی اور کنارے بھورے ہوں؛ گردن بلاسٹ بالی کو شدید نقصان دے سکتا ہے۔",
+   "management": "Maintain proper flooding/water management where appropriate and remove severe volunteer/grass hosts.",
+   "prevention": "Use resistant varieties and avoid excessive or late nitrogen.",
+   "chemical": "Pakistan/Punjab evidence example: azoxystrobin + difenoconazole, pyraclostrobin, isoprothiolane. Punjab PPRI and rice advisories report these active ingredients for rice blast. Apply only under a current DPP rice/blast label; late or excessive nitrogen should also be avoided.",
+   "note": ""
+  },
+  {
+   "name": "Rice Tungro",
+   "name_ur": "رائس ٹنگرو",
+   "aliases": [
+    "rice_tungro",
+    "tungro"
+   ],
+   "type": "viral",
+   "cause": "Rice tungro virus complex; transmitted by green leafhoppers",
+   "risk": "Infected volunteer rice and high green-leafhopper activity increase risk, especially in staggered plantings.",
+   "symptoms": "Plants become yellow-orange, stunted and produce fewer tillers; leaves may show mottling and panicles can be poorly filled.",
+   "symptoms_ur": "پودے زرد نارنجی، چھوٹے اور کم شاخوں والے ہو سکتے ہیں، پتے چتکبرے اور بالیاں کم بھری ہو سکتی ہیں۔",
+   "management": "Remove strongly infected plants where feasible and reduce ratoons/volunteer rice that maintain infection.",
+   "prevention": "Use resistant varieties and integrated management of green leafhopper vectors.",
+   "chemical": "No pesticide cures rice tungro. Insecticides can only suppress confirmed leafhopper vectors and must follow thresholds/current label. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  },
+  {
+   "name": "Sheath Blight",
+   "name_ur": "شیتھ بلائٹ",
+   "aliases": [
+    "sheath_blight"
+   ],
+   "type": "fungal",
+   "cause": "Rhizoctonia solani",
+   "risk": "Dense canopies, high humidity, standing water contact and high nitrogen favor upward spread from lower sheaths.",
+   "symptoms": "Oval green-gray lesions with brown margins develop on leaf sheaths near the waterline and can spread upward into the canopy.",
+   "symptoms_ur": "پانی کی سطح کے قریب پتوں کے غلاف پر بیضوی سرمئی سبز دھبے بھورے کناروں کے ساتھ بنتے اور اوپر پھیل سکتے ہیں۔",
+   "management": "Avoid dense overly nitrogenous canopies, manage infected residue and maintain appropriate plant spacing.",
+   "prevention": "Use balanced nitrogen, resistant/tolerant varieties where available and crop sanitation.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  }
+ ],
+ "mango": [
+  {
+   "name": "Anthracnose",
+   "name_ur": "انتھراکنوز",
+   "aliases": [
+    "Mango / Anthracnose",
+    "anthracnose"
+   ],
+   "type": "fungal",
+   "cause": "Colletotrichum species complex, commonly C. gloeosporioides sensu lato",
+   "risk": "Rain, high humidity and wet flowers/young fruit favor infection; latent infections may appear during ripening.",
+   "symptoms": "Dark irregular leaf spots, blossom blight and black sunken fruit lesions can develop, especially in humid weather.",
+   "symptoms_ur": "پتوں پر گہرے بے قاعدہ دھبے، پھولوں کا جھلساؤ اور پھل پر دھنسے سیاہ زخم بن سکتے ہیں۔",
+   "management": "Prune infected/dead twigs, remove mummified fruit and improve canopy airflow.",
+   "prevention": "Avoid prolonged canopy wetness and maintain balanced orchard nutrition.",
+   "chemical": "Pakistan/Punjab evidence example: Bordeaux mixture, copper-based fungicides. Punjab orchard advisories list Bordeaux/copper-based fungicides for anthracnose/wither-tip management. Verify the current DPP mango/anthracnose label.",
+   "note": ""
+  },
+  {
+   "name": "Bacterial Canker",
+   "name_ur": "بیکٹیریل کینکر",
+   "aliases": [
+    "Mango / Bacterial Canker",
+    "bacterial_canker"
+   ],
+   "type": "bacterial",
+   "cause": "Xanthomonas citri pv. mangiferaeindicae / mango bacterial canker complex",
+   "risk": "Wind-driven rain, wounds and wet conditions favor spread and infection.",
+   "symptoms": "Water-soaked leaf/fruit lesions can become dark, cracked or corky; twigs may develop cankers and dieback depending on the causal bacterium.",
+   "symptoms_ur": "پتوں یا پھل پر پانی جیسے دھبے گہرے، پھٹے یا کھردرے ہو سکتے ہیں اور شاخوں پر کینکر بن سکتا ہے۔",
+   "management": "Prune clearly cankered twigs in dry weather and sanitize tools; avoid wounding and splash spread.",
+   "prevention": "Use clean planting material and good canopy aeration.",
+   "chemical": "Do not assume a fungicide is appropriate for a bacterial canker. A bactericide requires a confirmed diagnosis and current Pakistan mango/canker label. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  },
+  {
+   "name": "Cutting Weevil",
+   "name_ur": "کٹنگ ویول",
+   "aliases": [
+    "Mango / Cutting Weevil",
+    "cutting_weevil"
+   ],
+   "type": "pest",
+   "cause": "Weevil feeding/cutting damage; exact local species should be confirmed from the insect or characteristic injury",
+   "risk": "Tender flush and unmanaged orchard pest reservoirs can increase damage; verify adults/larvae before treatment.",
+   "symptoms": "Notches, cut tissue, holes or internal feeding may be associated with weevil injury depending on life stage and plant part.",
+   "symptoms_ur": "ویول کے حملے میں کٹے ہوئے کنارے، سوراخ یا اندرونی کھانے کے نشان ہو سکتے ہیں۔",
+   "management": "Inspect fruit, shoots and fallen material for adults/larvae before treatment; remove and destroy heavily infested plant material where locally advised.",
+   "prevention": "Maintain orchard sanitation and monitor pest emergence.",
+   "chemical": "The model class name does not identify a specific weevil species with certainty. Confirm the pest before selecting any insecticide. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": "Pest-damage model class; species confirmation is required for chemical choice."
+  },
+  {
+   "name": "Die Back",
+   "name_ur": "ڈائی بیک",
+   "aliases": [
+    "Mango / Die Back",
+    "die_back",
+    "dieback"
+   ],
+   "type": "fungal",
+   "cause": "Lasiodiplodia theobromae / Botryodiplodia-type dieback complex; other causes can mimic it",
+   "risk": "Wounds, drought/heat stress, poor tree vigor and infected pruning material can contribute.",
+   "symptoms": "Shoot tips and twigs dry progressively backward; bark may darken or crack and associated gummosis/cankers may be present in some cases.",
+   "symptoms_ur": "شاخوں کے سرے سے سوکھاؤ پیچھے کی طرف بڑھ سکتا ہے، چھال گہری یا پھٹی اور بعض اوقات گوند خارج ہو سکتی ہے۔",
+   "management": "Prune back to healthy wood, disinfect tools, protect wounds and correct drainage/water-contact problems.",
+   "prevention": "Avoid trunk injury/direct irrigation against trunks and maintain balanced orchard vigor.",
+   "chemical": "Pakistan/Punjab evidence example: metalaxyl + mancozeb (only where local diagnosis links dieback to wound/gummosis disease). A recent Punjab orchard advisory mentions metalaxyl+mancozeb paste in quick-decline/dieback/gummosis management. This is not a universal cure for every dieback cause; diagnosis and current label are essential.",
+   "note": ""
+  },
+  {
+   "name": "Gall Midge",
+   "name_ur": "گال مِج",
+   "aliases": [
+    "Mango / Gall Midge",
+    "gall_midge"
+   ],
+   "type": "pest",
+   "cause": "Mango gall-midge complex (Procontarinia and related midges)",
+   "risk": "Tender flush and flowering stages are most vulnerable; repeated generations can build when infested tissue remains.",
+   "symptoms": "Small raised galls, blistering or abnormal swellings may form on leaves or young tissues; heavy attack can reduce functional leaf area.",
+   "symptoms_ur": "پتوں یا نئی بافت پر چھوٹے ابھرے گال، چھالے یا غیر معمولی سوجن بن سکتی ہے۔",
+   "management": "Count galls and confirm larvae/midge injury before treatment; prune or remove heavily affected material where practical.",
+   "prevention": "Monitor new flushes and conserve natural enemies.",
+   "chemical": "Use an insecticide only after pest confirmation, threshold assessment and current Pakistan mango/gall-midge label. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  },
+  {
+   "name": "Powdery Mildew",
+   "name_ur": "پاؤڈری ملڈیو",
+   "aliases": [
+    "Mango / Powdery Mildew",
+    "powdery_mildew"
+   ],
+   "type": "fungal",
+   "cause": "Oidium mangiferae",
+   "risk": "Cool to mild, humid weather around flowering strongly favors powdery mildew; rain can reduce exposed spores but prolonged favorable weather drives outbreaks.",
+   "symptoms": "White powdery fungal growth occurs on panicles, flowers, young leaves or fruitlets; infected flowers may dry and fruit set can fall.",
+   "symptoms_ur": "پھولوں، خوشوں، نئے پتوں یا ننھے پھل پر سفید سفوف جیسی تہہ بن سکتی ہے اور پھول سوکھ سکتے ہیں۔",
+   "management": "Remove severely affected panicles/shoots where practical and open the canopy.",
+   "prevention": "Avoid excessive nitrogen and maintain airflow around flowering tissue.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Sooty Mould",
+   "name_ur": "سوٹی مولڈ",
+   "aliases": [
+    "Mango / Sooty Mould",
+    "sooty_mould",
+    "sooty mold"
+   ],
+   "type": "fungal",
+   "cause": "Surface-growing sooty-mould fungi colonizing honeydew; the primary problem is usually a sap-sucking insect",
+   "risk": "Scale, mealybug, hopper or whitefly honeydew supports black fungal growth.",
+   "symptoms": "A black soot-like coating develops on leaves, twigs or fruit, usually growing on honeydew excreted by sucking insects.",
+   "symptoms_ur": "پتوں، شاخوں یا پھل پر سیاہ کالک جیسی تہہ بنتی ہے جو عموماً رس چوسنے والے کیڑوں کے ہنی ڈیو پر اگتی ہے۔",
+   "management": "Identify and manage the honeydew-producing pest rather than treating the black coating as the primary disease.",
+   "prevention": "Improve canopy airflow and wash/remediate heavy surface deposits where practical after pest control.",
+   "chemical": "A fungicide is usually not the primary solution. If an insecticide is needed, it must target the confirmed honeydew pest at a justified threshold and carry a current Pakistan mango label. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  }
+ ],
+ "grape": [
+  {
+   "name": "Black Rot",
+   "name_ur": "بلیک روٹ",
+   "aliases": [
+    "black_rot"
+   ],
+   "type": "fungal",
+   "cause": "Phyllosticta ampelicida (Guignardia bidwellii)",
+   "risk": "Warm wet periods, mummified berries and infected cane/leaf debris provide inoculum.",
+   "symptoms": "Reddish-brown leaf spots develop dark margins and black fruiting dots; berries turn brown, then shrivel into hard black mummies.",
+   "symptoms_ur": "پتوں پر سرخی مائل بھورے دھبے اور سیاہ نقطے بنتے ہیں، جبکہ بیر بھورے ہو کر سیاہ خشک ممی بن سکتے ہیں۔",
+   "management": "Remove mummified berries and infected clusters/canes and prune for rapid drying.",
+   "prevention": "Maintain open canopy, sanitation and timely vineyard scouting.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Downy Mildew",
+   "name_ur": "ڈاؤنی ملڈیو",
+   "aliases": [
+    "downy_mildew"
+   ],
+   "type": "oomycete",
+   "cause": "Plasmopara viticola",
+   "risk": "Warm, wet nights, high humidity and prolonged leaf wetness strongly favor epidemics.",
+   "symptoms": "Yellow oil-like spots form on upper leaf surfaces; white downy growth appears beneath in humid conditions, and berries/young shoots can be blighted.",
+   "symptoms_ur": "پتوں کے اوپر تیل جیسے زرد دھبے اور نمی میں نیچے سفید روئیں دار تہہ بن سکتی ہے۔",
+   "management": "Improve airflow and avoid prolonged leaf wetness; remove severely infected tissue where practical.",
+   "prevention": "Use canopy management, drainage and preventive scouting.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Esca Black Measles",
+   "name_ur": "ایسکا بلیک میزلز",
+   "aliases": [
+    "esca_black_measles",
+    "black measles"
+   ],
+   "type": "fungal",
+   "cause": "Grapevine trunk-disease complex involving Phaeomoniella, Phaeoacremonium and other wood-colonizing fungi",
+   "risk": "Pruning wounds, infected propagation material and vine age/stress contribute; foliar symptoms can be intermittent.",
+   "symptoms": "Leaves can develop interveinal “tiger-stripe” necrosis; berries may show small dark spots (“measles”), and wood discoloration can occur.",
+   "symptoms_ur": "پتوں میں رگوں کے درمیان ٹائیگر اسٹرائپ جیسا سوکھاؤ اور بیری پر چھوٹے سیاہ دھبے بن سکتے ہیں۔",
+   "management": "Mark affected vines, prune/remove severely diseased wood carefully and disinfect tools; confirm trunk-disease symptoms.",
+   "prevention": "Use clean planting material and minimize pruning wounds/stress.",
+   "chemical": "There is no reliable curative foliar pesticide for established Esca/trunk infection; management focuses on sanitation, pruning decisions and vine replacement when necessary. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  },
+  {
+   "name": "Leaf Blight / Isariopsis Leaf Spot",
+   "name_ur": "لیف بلائٹ / اساریوپسس لیف اسپاٹ",
+   "aliases": [
+    "leaf_blight_isariopsis_leaf_spot",
+    "isariopsis_leaf_spot",
+    "leaf blight"
+   ],
+   "type": "fungal",
+   "cause": "Pseudocercospora vitis (formerly Isariopsis leaf spot complex)",
+   "risk": "Warm humid weather and infected leaves/canes favor repeated spotting.",
+   "symptoms": "Irregular brown to dark leaf lesions enlarge, may coalesce and can cause premature leaf drop.",
+   "symptoms_ur": "بے قاعدہ بھورے یا گہرے دھبے بڑھ کر آپس میں مل سکتے ہیں اور پتے جلد گرا سکتے ہیں۔",
+   "management": "Remove infected debris, improve canopy airflow and confirm the leaf-spot pathogen.",
+   "prevention": "Prune/manage canopy for sunlight and drying and keep vineyard sanitation.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Powdery Mildew",
+   "name_ur": "پاؤڈری ملڈیو",
+   "aliases": [
+    "powdery_mildew",
+    "grape powdery mildew"
+   ],
+   "type": "fungal",
+   "cause": "Erysiphe necator",
+   "risk": "Warm (20–25 °C), shaded, humid canopies favour it. Unlike downy mildew it does not need rain or dew to infect.",
+   "symptoms": "White to grey powdery patches on upper and lower leaf surfaces spread until they cover the leaf; leaves may curl upward in hot dry weather. Berries get a white powdery coat, may show rusty spots and can split.",
+   "symptoms_ur": "پتوں کے اوپر اور نیچے سفید یا سرمئی سفوف جیسے دھبے پھیل کر پورا پتا ڈھانپ لیتے ہیں؛ گرم خشک موسم میں پتے اوپر کو مڑ سکتے ہیں۔ دانوں پر سفید سفوف، زنگ نما نشان اور پھٹنا ہو سکتا ہے۔",
+   "management": "Open the canopy by shoot positioning and removing leaves around clusters so air and sunlight reach them. Remove wild grapevines near the vineyard.",
+   "prevention": "Protect the vines from just before bloom until 2–4 weeks after bloom, the most susceptible period. Good canopy management also improves spray coverage.",
+   "chemical": "Sulfur is the most common protectant for grape powdery mildew (avoid it above about 30 °C, when it can burn leaves). No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  }
+ ],
+ "eggplant": [
+  {
+   "name": "General Pest Damage",
+   "name_ur": "جنرل پیسٹ ڈیمیج",
+   "aliases": [
+    "general_pest_damage",
+    "pest damage"
+   ],
+   "type": "syndrome",
+   "cause": "Non-specific insect/arthropod damage model class",
+   "risk": "Inspect leaf undersides, shoots, stems and fruit for the actual pest before any insecticide decision.",
+   "symptoms": "Chewed holes, skeletonizing, stippling, mining, frass or fruit/shoot injury may be present depending on the pest.",
+   "symptoms_ur": "کیڑے کے مطابق چبائے ہوئے سوراخ، جالی نما پتے، نقطے، مائنز، فضلہ یا پھل/شاخ کا نقصان ہو سکتا ہے۔",
+   "management": "Identify the pest and affected plant part before treatment; inspect leaf undersides, shoots and fruit.",
+   "prevention": "Use sanitation, traps, natural enemies and threshold-based IPM.",
+   "chemical": "No single insecticide is valid for generic pest damage. Confirm the pest and apply the Punjab vegetable threshold/current DPP brinjal label. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  },
+  {
+   "name": "Leaf Spot",
+   "name_ur": "لیف اسپاٹ",
+   "aliases": [
+    "leaf_spot"
+   ],
+   "type": "syndrome",
+   "cause": "Leaf-spot model class; Alternaria, Cercospora and other pathogens can produce similar lesions",
+   "risk": "Warm humid weather and splash favor many fungal leaf spots, but the causal agent should be confirmed.",
+   "symptoms": "Brown to dark circular or irregular leaf lesions may enlarge or merge; several fungal/bacterial agents can produce a similar pattern.",
+   "symptoms_ur": "پتوں پر بھورے یا گہرے گول یا بے قاعدہ دھبے بن سکتے ہیں جو بڑھ کر آپس میں مل سکتے ہیں۔",
+   "management": "Remove badly affected leaves/debris, avoid splash and confirm the causal agent before a pesticide.",
+   "prevention": "Rotate crops, use clean seed/transplants and improve airflow.",
+   "chemical": "“Leaf spot” is not one guaranteed pathogen; use only a crop-labelled product after diagnosis. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": "Model class groups a visual leaf-spot pattern; etiology should be confirmed for chemistry."
+  },
+  {
+   "name": "Mosaic Virus",
+   "name_ur": "موزیک وائرس",
+   "aliases": [
+    "mosaic_virus"
+   ],
+   "type": "viral",
+   "cause": "Mosaic-virus syndrome; cucumber mosaic virus, tobamoviruses and other viruses can infect eggplant",
+   "risk": "Infected seedlings, weeds, aphid vectors or mechanical transmission may be involved depending on the virus.",
+   "symptoms": "Mottled light/dark green leaves, distortion, puckering and stunting can occur; fruit may be misshapen.",
+   "symptoms_ur": "پتوں میں ہلکے گہرے سبز چتکبرے نقش، بگاڑ، شکنیں اور کم بڑھوتری ہو سکتی ہے۔",
+   "management": "Remove strongly infected plants where feasible, sanitize tools and control weed/alternate hosts.",
+   "prevention": "Use clean transplants/seed and resistant varieties where available; manage confirmed vectors using IPM.",
+   "chemical": "No pesticide cures a plant virus. Insecticide is only relevant to a confirmed vector and must follow threshold/current label. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  },
+  {
+   "name": "Wilt",
+   "name_ur": "مرجھاؤ (وِلٹ)",
+   "aliases": [
+    "wilt",
+    "eggplant wilt",
+    "brinjal wilt",
+    "bacterial wilt"
+   ],
+   "type": "syndrome",
+   "cause": "Broad model class: bacterial wilt (Ralstonia solanacearum) and Fusarium/Verticillium wilts look alike",
+   "risk": "The bacterium survives in soil, plant debris and irrigation water for years and has over 250 hosts.",
+   "symptoms": "Leaves droop, yellow and dry; the whole plant or some branches wilt and collapse, suddenly or gradually. The water-conducting tissue inside the stem turns brown.",
+   "symptoms_ur": "پتے لٹک کر زرد اور خشک ہو جاتے ہیں؛ پورا پودا یا کچھ شاخیں اچانک یا آہستہ آہستہ مرجھا کر گر جاتی ہیں۔ تنے کے اندر پانی لے جانے والا حصہ بھورا ہو جاتا ہے۔",
+   "management": "Pull out wilted plants with their roots and destroy them; avoid moving soil or water from affected patches and disinfect tools. Cut a stem and place it in clear water: milky threads flowing out point to bacterial wilt rather than fungal wilt.",
+   "prevention": "Use resistant varieties and healthy seedlings; do not follow eggplant with tomato, potato, chilli or okra (bhindi) in the same field.",
+   "chemical": "No spray revives a plant that is already wilting; confirm whether the cause is bacterial or fungal before any treatment. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  },
+  {
+   "name": "Small Leaf",
+   "name_ur": "چھوٹے پتوں کی بیماری (لٹل لیف)",
+   "aliases": [
+    "small_leaf",
+    "little leaf",
+    "brinjal little leaf"
+   ],
+   "type": "phytoplasma",
+   "cause": "Phytoplasma ('Candidatus Phytoplasma trifolii' group, reported from India), carried by the leafhopper Hishimonus phycitis",
+   "risk": "Leafhopper build-up (in Delhi, July–October) is followed by more little-leaf plants.",
+   "symptoms": "New leaves are pale yellow, very small and misshapen; plants become short and bushy with many shoots and short internodes. Flowers are deformed, so plants bear no fruit or hard fruit that does not ripen.",
+   "symptoms_ur": "نئے پتے ہلکے زرد، بہت چھوٹے اور بے ڈھنگے ہوتے ہیں؛ پودا چھوٹا اور جھاڑی نما ہو جاتا ہے، شاخیں زیادہ اور گانٹھیں قریب ہوتی ہیں۔ پھول بگڑ جاتے ہیں، اس لیے پھل نہیں لگتا یا سخت رہتا ہے۔",
+   "management": "Uproot and destroy affected plants as soon as symptoms appear; they never recover and are a source for leafhoppers. Remove volunteer eggplant and weed hosts around the field.",
+   "prevention": "Adjust the sowing time to avoid the peak leafhopper period and manage leafhoppers early using IPM.",
+   "chemical": "No pesticide cures little leaf. An insecticide is only relevant against a confirmed leafhopper population and must follow a current DPP label. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  },
+  {
+   "name": "White Mold",
+   "name_ur": "وائٹ مولڈ",
+   "aliases": [
+    "white_mold"
+   ],
+   "type": "fungal",
+   "cause": "Sclerotinia sclerotiorum",
+   "risk": "Cool to mild humid conditions, dense canopies and long soil survival of sclerotia favor outbreaks.",
+   "symptoms": "Water-soaked soft lesions become covered by white cottony fungal growth; hard black sclerotia may form on or inside stems/fruit.",
+   "symptoms_ur": "پانی جیسے نرم زخموں پر سفید روئی جیسی پھپھوندی بنتی ہے اور سیاہ سخت اسکلروٹیا بن سکتے ہیں۔",
+   "management": "Remove infected plants/tissue before sclerotia spread and avoid moving infested soil/debris.",
+   "prevention": "Use wider spacing, irrigation timing and long rotation with non-hosts where feasible.",
+   "chemical": "Fungicides for white mold are preventive/timing-sensitive; no spray reverses advanced stem infection. Use only a current Pakistan brinjal/white-mold label. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  },
+  {
+   "name": "Phomopsis Blight",
+   "name_ur": "فوموپسس بلائٹ",
+   "aliases": [
+    "phomopsis_blight"
+   ],
+   "type": "fungal",
+   "cause": "Diaporthe vexans (syn. Phomopsis vexans)",
+   "risk": "Warm humid weather, infected seed/debris and splash favor leaf, stem and fruit infection.",
+   "symptoms": "Round leaf spots, elongated stem lesions/cankers and sunken soft fruit rot can occur.",
+   "symptoms_ur": "پتوں پر گول دھبے، تنے پر لمبے زخم/کینکر اور پھل پر دھنسے سڑن والے حصے بن سکتے ہیں۔",
+   "management": "Remove infected fruit and debris, avoid saving seed from diseased fruit and minimize splash.",
+   "prevention": "Use clean seed/transplants and rotate away from eggplant/related hosts.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Powdery Mildew",
+   "name_ur": "پاؤڈری ملڈیو",
+   "aliases": [
+    "powdery_mildew",
+    "eggplant powdery mildew"
+   ],
+   "type": "fungal",
+   "cause": "Leveillula taurica (other powdery mildew fungi can also occur)",
+   "risk": "Warm days (about 26 °C) with humid nights or dew favour it; it does not need rain.",
+   "symptoms": "Pale green to yellow patches appear on the upper side of mostly older, lower leaves and later turn brown; a whitish powdery growth forms on the underside of the patches.",
+   "symptoms_ur": "زیادہ تر پرانے نچلے پتوں کی اوپری سطح پر ہلکے سبز یا زرد دھبے بنتے ہیں جو بعد میں بھورے ہو جاتے ہیں؛ دھبوں کے نیچے سفید سفوف جیسی تہہ بنتی ہے۔",
+   "management": "Remove early-infected lower leaves and destroy plant debris; remove weeds that host the fungus.",
+   "prevention": "Use moderate plant spacing for airflow, balanced fertilizer and crop rotation; scout lower leaves regularly.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  }
+ ],
+ "cucumber": [
+  {
+   "name": "Anthracnose",
+   "name_ur": "اینتھراکنوز",
+   "aliases": [
+    "anthracnose",
+    "cucumber anthracnose"
+   ],
+   "type": "fungal",
+   "cause": "Colletotrichum orbiculare",
+   "risk": "Warm, wet weather (about 24 °C) with water splash, contaminated seed, hands and tools spreads it.",
+   "symptoms": "Water-soaked spots turn into yellowish, then brown to reddish round spots on leaves; their centres can crack and fall out. Fruit get round, sunken black spots with salmon-coloured spore masses in wet weather.",
+   "symptoms_ur": "پتوں پر پانی بھرے دھبے زرد اور پھر بھورے یا سرخی مائل گول دھبوں میں بدل جاتے ہیں جن کا درمیان پھٹ کر گر سکتا ہے۔ پھل پر دھنسے ہوئے کالے گول دھبے بنتے ہیں جن پر نمی میں نارنجی گلابی تہہ آتی ہے۔",
+   "management": "Avoid working in the crop while it is wet; remove volunteer cucurbits and weeds, and remove or deeply plough in crop debris after harvest.",
+   "prevention": "Use clean seed and resistant varieties, and do not grow cucurbits in the same field for 3 years.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Downy Mildew",
+   "name_ur": "ڈاؤنی ملڈیو",
+   "aliases": [
+    "downy_mildew"
+   ],
+   "type": "oomycete",
+   "cause": "Pseudoperonospora cubensis",
+   "risk": "High humidity, leaf wetness and moderate temperatures favor rapid foliar spread.",
+   "symptoms": "Angular pale-yellow to brown lesions are bounded by small veins; gray-purple downy sporulation can form on leaf undersides.",
+   "symptoms_ur": "پتوں پر رگوں سے محدود زاویہ دار زرد یا بھورے دھبے بنتے ہیں اور نیچے سرمئی جامنی روئیں دار تہہ بن سکتی ہے۔",
+   "management": "Improve ventilation and keep foliage dry; remove severely blighted leaves where practical.",
+   "prevention": "Use resistant varieties where available and preventive scouting.",
+   "chemical": "Pakistan/Punjab evidence example: metalaxyl-M + mancozeb. Punjab Plant Pathology Research Institute lists metalaxyl-M + mancozeb for downy mildew of cucurbits. Because resistance can develop quickly, use only when the current DPP crop/target label permits it and rotate modes of action according to that label.",
+   "note": ""
+  }
+ ],
+ "peas": [
+  {
+   "name": "Ascochyta Blight",
+   "name_ur": "ایسکوکائٹا بلائٹ",
+   "aliases": [
+    "ascochyta_blight"
+   ],
+   "type": "fungal",
+   "cause": "Ascochyta/Didymella blight complex of pea",
+   "risk": "Cool wet weather, infected seed and crop residue favor splash-dispersed lesions.",
+   "symptoms": "Tan to brown leaf/pod spots often have darker borders and may contain tiny black fruiting dots; stems can develop purplish lesions.",
+   "symptoms_ur": "پتوں اور پھلیوں پر ہلکے بھورے دھبے گہرے کناروں کے ساتھ بن سکتے ہیں اور چھوٹے سیاہ نقطے دکھائی دے سکتے ہیں۔",
+   "management": "Use clean seed, avoid working wet plants and remove heavily infected residue.",
+   "prevention": "Rotate away from peas/legumes according to local guidance and use resistant varieties where available.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Botrytis Blight",
+   "name_ur": "بوٹریٹس بلائٹ",
+   "aliases": [
+    "botrytis_blight",
+    "gray mold peas"
+   ],
+   "type": "fungal",
+   "cause": "Botrytis cinerea",
+   "risk": "Cool humid weather, dense canopies, senescing flowers and prolonged tissue wetness favor gray mold.",
+   "symptoms": "Soft brown lesions develop gray fuzzy mold under humid conditions, especially on flowers, pods or senescing tissue.",
+   "symptoms_ur": "نمی میں نرم بھورے زخموں پر سرمئی روئیں دار پھپھوندی بن سکتی ہے، خاص طور پر پھول یا پھلی پر۔",
+   "management": "Remove infected tissue, reduce canopy humidity and avoid overhead watering late in the day.",
+   "prevention": "Use wider spacing/airflow, sanitation and avoid excessive nitrogen.",
+   "chemical": "No exact Pakistan crop/target chemical recommendation was verified for this model class in the current evidence set. Use IPM first and verify a current DPP label before any pesticide decision.",
+   "note": ""
+  },
+  {
+   "name": "Fusarium Wilt",
+   "name_ur": "فیوزیریم ولٹ",
+   "aliases": [
+    "fusarium_wilt"
+   ],
+   "type": "fungal",
+   "cause": "Fusarium oxysporum f. sp. pisi",
+   "risk": "Infested soil, susceptible cultivars and warm root-zone conditions favor vascular wilt.",
+   "symptoms": "Lower leaves yellow and plants wilt progressively; vascular tissue may brown while soil moisture remains adequate.",
+   "symptoms_ur": "نچلے پتے زرد اور پودا بتدریج مرجھا سکتا ہے اور مناسب نمی کے باوجود اندرونی نالیاں بھوری ہو سکتی ہیں۔",
+   "management": "Confirm vascular wilt, remove severely affected plants and avoid moving infested soil.",
+   "prevention": "Use resistant varieties, clean seed and long rotation where feasible; improve drainage.",
+   "chemical": "There is no reliable foliar pesticide cure for established Fusarium wilt; management is preventive. Chemical action, if any, should target only a separately confirmed vector or secondary problem under a current Pakistan crop/target label.",
+   "note": ""
+  },
+  {
+   "name": "Pod Borer Damage",
+   "name_ur": "پھلی بورر کا نقصان",
+   "aliases": [
+    "pod_borer_damage",
+    "pod borer"
+   ],
+   "type": "pest",
+   "cause": "Pod-boring caterpillar damage, commonly Helicoverpa armigera in South Asian pulses",
+   "risk": "Flowering/podding crops are vulnerable; inspect larvae and fresh feeding holes before threshold-based treatment.",
+   "symptoms": "Entry holes, feeding scars, frass and damaged seeds/pods occur; larvae may be present inside or near pods.",
+   "symptoms_ur": "پھلی میں داخلے کے سوراخ، کھانے کے نشان، فضلہ اور خراب بیج/پھلی نظر آ سکتے ہیں اور لاروا اندر ہو سکتا ہے۔",
+   "management": "Scout plants/pods, hand-remove infested material in small plots and conserve biological control agents.",
+   "prevention": "Use pheromone/light monitoring where appropriate and threshold-based IPM.",
+   "chemical": "If the threshold is reached, use only an insecticide currently DPP-registered for peas/pod borer; do not transfer a chickpea label to peas. No product should be used unless a current DPP crop/target label confirms that use.",
+   "note": ""
+  }
+ ]
+}

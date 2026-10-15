@@ -1,0 +1,110 @@
+{
+  "crop": "cotton",
+  "best_arch": "resnet50",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.8015,
+      "minutes": 7.3
+    },
+    "resnet50": {
+      "select_macroF1": 0.8636,
+      "minutes": 6.2
+    },
+    "densenet121": {
+      "select_macroF1": 0.7803,
+      "minutes": 6.8
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.843,
+      "minutes": 6.2
+    }
+  },
+  "temperature": 0.57,
+  "threshold": 0.5,
+  "classes": [
+    "Bacterial Blight",
+    "Leaf Curl",
+    "Herbicide Growth Damage",
+    "Leaf Hopper Jassids",
+    "Leaf Reddening",
+    "Leaf Variegation",
+    "healthy"
+  ],
+  "counts": {
+    "sar_cld_2024": {
+      "healthy": 253,
+      "Leaf Curl": 428,
+      "Leaf Reddening": 574,
+      "Herbicide Growth Damage": 280,
+      "Leaf Hopper Jassids": 225,
+      "Bacterial Blight": 250,
+      "Leaf Variegation": 115
+    },
+    "cotton_severity_set": {
+      "healthy": 789,
+      "Fusarium Wilt": 43,
+      "Bacterial Blight": 119,
+      "Leaf Curl": 20
+    },
+    "pakistan_s_punjab": {
+      "__DISEASED__": 356,
+      "healthy": 501
+    },
+    "pakistan_cosev": {
+      "healthy": 140,
+      "Leaf Curl": 320
+    }
+  },
+  "download_status": {
+    "sar_cld_2024": "cached",
+    "cotton_severity_set": "cached",
+    "pakistan_s_punjab": "cached",
+    "pakistan_cosev": "cached"
+  },
+  "val_in_distribution": {
+    "n": 284,
+    "acc": 0.9613,
+    "macroF1": 0.965,
+    "answered": 1.0,
+    "acc_answered": 0.9613
+  },
+  "ood_test": {
+    "n": 464,
+    "acc": 0.9159,
+    "macroF1": 0.7057,
+    "answered": 0.981,
+    "acc_answered": 0.9209
+  },
+  "extra_test": null,
+  "external_real_world": {
+    "pakistan_s_punjab": {
+      "any disease (not healthy)": {
+        "n": 356,
+        "acc": 0.6264,
+        "answered": 0.812,
+        "acc_answered": 0.5952
+      },
+      "healthy": {
+        "n": 501,
+        "acc": 0.984,
+        "answered": 0.996,
+        "acc_answered": 0.986
+      }
+    },
+    "pakistan_cosev": {
+      "healthy": {
+        "n": 70,
+        "acc": 1.0,
+        "answered": 1.0,
+        "acc_answered": 1.0
+      },
+      "Leaf Curl": {
+        "n": 160,
+        "acc": 0.8063,
+        "answered": 1.0,
+        "acc_answered": 0.8063
+      }
+    }
+  }
+}

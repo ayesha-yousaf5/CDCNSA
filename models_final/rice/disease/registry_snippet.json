@@ -1,0 +1,31 @@
+{
+  "crop": "rice",
+  "disease": {
+    "runtime_kind": "torchscript",
+    "architecture": "dinov2_vits14",
+    "checkpoint": "models/rice/disease/rice_disease_dinov2_srcsplit.ts",
+    "image_size": 224,
+    "normalization_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normalization_std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "class_to_idx": {
+      "Bacterial Leaf Blight": 0,
+      "Brown Spot": 1,
+      "Leaf Scald": 2,
+      "Rice Blast": 3,
+      "Rice Tungro": 4,
+      "Sheath Blight": 5,
+      "healthy": 6
+    },
+    "enabled": true,
+    "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7556"
+  },
+  "disease_threshold": 0.5
+}

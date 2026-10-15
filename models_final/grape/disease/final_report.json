@@ -1,0 +1,135 @@
+{
+  "crop": "grape",
+  "best_arch": "dinov2_vits14",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.7037,
+      "minutes": 3.0
+    },
+    "resnet50": {
+      "select_macroF1": 0.7392,
+      "minutes": 5.3
+    },
+    "densenet121": {
+      "select_macroF1": 0.6851,
+      "minutes": 4.4
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.9078,
+      "minutes": 3.4
+    }
+  },
+  "temperature": 0.518,
+  "threshold": 0.5,
+  "classes": [
+    "Black Rot",
+    "Downy Mildew",
+    "Esca Black Measles",
+    "Leaf Blight / Isariopsis Leaf Spot",
+    "Powdery Mildew",
+    "healthy"
+  ],
+  "counts": {
+    "pakistan_plantcity": {
+      "healthy": 365,
+      "Anthracnose": 248,
+      "Downy Mildew": 152,
+      "Powdery Mildew": 294
+    },
+    "grape_ngld_india": {
+      "healthy": 400,
+      "Powdery Mildew": 390,
+      "Downy Mildew": 400
+    },
+    "plantvillage": {
+      "Leaf Blight / Isariopsis Leaf Spot": 300,
+      "Esca Black Measles": 300,
+      "Black Rot": 300,
+      "healthy": 300
+    },
+    "grape_gvlid_field": {
+      "Black Rot": 94,
+      "Esca Black Measles": 400,
+      "healthy": 400,
+      "Leaf Blight / Isariopsis Leaf Spot": 280
+    },
+    "plantdoc": {
+      "healthy": 69,
+      "Black Rot": 61,
+      "Downy Mildew": 1,
+      "Anthracnose": 1
+    }
+  },
+  "download_status": {
+    "pakistan_plantcity": "ok",
+    "grape_ngld_india": "ok",
+    "plantvillage": "ok",
+    "grape_gvlid_field": "ok",
+    "plantdoc": "ok"
+  },
+  "val_in_distribution": {
+    "n": 406,
+    "acc": 0.9335,
+    "macroF1": 0.923,
+    "answered": 0.983,
+    "acc_answered": 0.9424
+  },
+  "ood_test": {
+    "n": 64,
+    "acc": 0.75,
+    "macroF1": 0.7778,
+    "answered": 0.922,
+    "acc_answered": 0.8136
+  },
+  "extra_test": null,
+  "external_real_world": {
+    "pakistan_plantcity": {
+      "healthy": {
+        "n": 183,
+        "acc": 1.0,
+        "answered": 1.0,
+        "acc_answered": 1.0
+      },
+      "Downy Mildew": {
+        "n": 76,
+        "acc": 0.9079,
+        "answered": 0.934,
+        "acc_answered": 0.9437
+      },
+      "Powdery Mildew": {
+        "n": 147,
+        "acc": 0.6871,
+        "answered": 0.837,
+        "acc_answered": 0.7805
+      }
+    },
+    "grape_gvlid_field": {
+      "Esca Black Measles": {
+        "n": 200,
+        "acc": 0.785,
+        "answered": 0.925,
+        "acc_answered": 0.827
+      },
+      "healthy": {
+        "n": 200,
+        "acc": 0.965,
+        "answered": 0.975,
+        "acc_answered": 0.9744
+      },
+      "Black Rot": {
+        "n": 47,
+        "acc": 0.9149,
+        "answered": 1.0,
+        "acc_answered": 0.9149
+      },
+      "Leaf Blight / Isariopsis Leaf Spot": {
+        "n": 140,
+        "acc": 0.6429,
+        "answered": 0.921,
+        "acc_answered": 0.6512
+      }
+    }
+  },
+  "verdict": "PASS (ship it)"
+}
