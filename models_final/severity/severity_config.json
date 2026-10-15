@@ -1,0 +1,132 @@
+{
+  "model": "lesion_seg_unet_r34.ts",
+  "input_size": 384,
+  "letterbox": true,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "lesion_threshold": 0.5,
+  "mild_max_pct": 10.0,
+  "moderate_max_pct": 30.0,
+  "leaf_mask": "fill_holes(close(open(exg>0.06))) union lesion",
+  "test": {
+    "IoU": 0.6518753985141447,
+    "Dice": 0.7892549269763373,
+    "threshold": 0.5
+  },
+  "per_crop_test": {
+    "apple": {
+      "IoU": 0.6124312194834483,
+      "Dice": 0.7596370153136134,
+      "threshold": 0.5,
+      "n": 115
+    },
+    "corn": {
+      "IoU": 0.7314208692158739,
+      "Dice": 0.8448793499261908,
+      "threshold": 0.5,
+      "n": 122
+    },
+    "cucumber": {
+      "IoU": 0.5787486876821344,
+      "Dice": 0.7331739271711873,
+      "threshold": 0.5,
+      "n": 96
+    },
+    "eggplant": {
+      "IoU": 0.6461103825441558,
+      "Dice": 0.7850146495589877,
+      "threshold": 0.5,
+      "n": 28
+    },
+    "grape": {
+      "IoU": 0.6406339154579566,
+      "Dice": 0.7809590054453237,
+      "threshold": 0.5,
+      "n": 112
+    },
+    "rice": {
+      "IoU": 0.4163560736609509,
+      "Dice": 0.5879257079538867,
+      "threshold": 0.5,
+      "n": 32
+    },
+    "tomato": {
+      "IoU": 0.5660577020065483,
+      "Dice": 0.722907848518319,
+      "threshold": 0.5,
+      "n": 181
+    },
+    "citrus": {
+      "IoU": 0.5357408613825552,
+      "Dice": 0.697696955071252,
+      "threshold": 0.5,
+      "n": 105
+    }
+  },
+  "severity_vs_gt": {
+    "band_agreement_vs_gt_masks": 0.774,
+    "mean_abs_pct_error": 8.11,
+    "n": 1000
+  },
+  "external_cotton": {
+    "healthy": {
+      "n": 200,
+      "predicted_MILD_share": 0.755,
+      "mean_pct": 8.92
+    },
+    "fussarium wilt": {
+      "n": 47,
+      "agreement": 0.255,
+      "within_one_level": 0.809,
+      "label_counts": {
+        "MODERATE": 17,
+        "MILD": 19,
+        "SEVERE": 11
+      },
+      "pred_counts": {
+        "SEVERE": 25,
+        "MILD": 11,
+        "MODERATE": 11
+      }
+    },
+    "bacterial blight": {
+      "n": 119,
+      "agreement": 0.286,
+      "within_one_level": 0.79,
+      "label_counts": {
+        "MODERATE": 50,
+        "SEVERE": 19,
+        "MILD": 50
+      },
+      "pred_counts": {
+        "SEVERE": 89,
+        "MODERATE": 16,
+        "MILD": 14
+      }
+    },
+    "curl virus": {
+      "n": 25,
+      "agreement": 0.72,
+      "within_one_level": 0.92,
+      "label_counts": {
+        "SEVERE": 11,
+        "MILD": 9,
+        "MODERATE": 5
+      },
+      "pred_counts": {
+        "SEVERE": 13,
+        "MILD": 8,
+        "MODERATE": 4
+      }
+    }
+  },
+  "dataset": "PlantSeg (Zenodo 13958858, CC BY-NC-ND 4.0)"
+}

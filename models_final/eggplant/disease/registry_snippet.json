@@ -1,0 +1,33 @@
+{
+  "crop": "eggplant",
+  "disease": {
+    "runtime_kind": "classification",
+    "architecture": "efficientnet_b0",
+    "checkpoint": "models/eggplant/disease/eggplant_disease_efficientnet_b0_srcsplit.pt",
+    "image_size": 224,
+    "normalization_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normalization_std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "class_to_idx": {
+      "General Pest Damage": 0,
+      "Leaf Spot": 1,
+      "Mosaic Virus": 2,
+      "Wilt": 3,
+      "Small Leaf": 4,
+      "White Mold": 5,
+      "Phomopsis Blight": 6,
+      "Powdery Mildew": 7,
+      "healthy": 8
+    },
+    "enabled": true,
+    "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7421"
+  },
+  "disease_threshold": 0.5
+}

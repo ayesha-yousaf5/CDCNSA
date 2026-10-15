@@ -951,3 +951,49 @@ html[dir="rtl"] #diagnosePage .tip-list span::before{
   #diagnosePage .crop-strip{flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px}
   #diagnosePage .crop-chip{flex:0 0 auto}
 }
+
+
+/* Diagnose page: diseases the selected crop's model can detect */
+.crop-disease-list{margin:14px 0 4px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius-md);background:var(--ivory)}
+.crop-disease-head{display:flex;flex-direction:column;gap:3px;margin-bottom:10px}
+.crop-disease-head strong{font-size:.86rem;color:var(--ink)}
+.crop-disease-head small{font-size:.72rem;color:var(--muted);line-height:1.5}
+.crop-disease-chips{display:flex;flex-wrap:wrap;gap:7px}
+.crop-disease-chip{font:inherit;font-size:.74rem;line-height:1.2;padding:6px 11px;border-radius:999px;border:1px solid #d9e4dc;background:#fff;color:var(--ink);cursor:pointer;transition:background var(--transition),border-color var(--transition)}
+.crop-disease-chip:hover{border-color:var(--emerald);background:var(--teal-soft)}
+.crop-disease-chip:focus-visible{outline:2px solid var(--emerald);outline-offset:2px}
+.crop-disease-chip.healthy{cursor:default;border-style:dashed;color:var(--emerald)}
+#diagnosePage .crop-disease-list{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.12)}
+#diagnosePage .crop-disease-head strong{color:#eef3ee}
+#diagnosePage .crop-disease-head small{color:rgba(238,243,238,.62)}
+#diagnosePage .crop-disease-chip{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.16);color:#eef3ee}
+#diagnosePage .crop-disease-chip:hover{background:rgba(210,184,120,.14);border-color:var(--v6-brass,#d2b878)}
+#diagnosePage .crop-disease-chip.healthy{color:var(--v6-brass,#d2b878);border-color:rgba(210,184,120,.45)}
+
+/* listen + copy buttons under each assistant answer */
+.msg-actions{display:flex;gap:6px;align-items:center;margin-top:4px}
+.msg-actions .msg-listen-btn{margin-top:0!important}
+
+/* Recent Checks: same dark field background as Diagnose / Disease Library (the white title was invisible on mint) */
+#historyPage{
+  background:
+    linear-gradient(135deg,rgba(10,15,28,0.95) 0%,rgba(5,46,22,0.8) 50%,rgba(10,15,28,0.95) 100%),
+    url('https://images.unsplash.com/photo-1695453200514-d9ee3c003772?auto=format&fit=crop&w=2400&q=80') center/cover no-repeat fixed;
+  min-height:100vh;
+  color:#F8FAFC;
+}
+#historyPage .page-heading h1,
+#historyPage .page-heading>div>p:not(.eyebrow),
+#historyPage .page-heading .eyebrow{color:inherit}
+#historyPage .page-heading>div>p:not(.eyebrow){color:#CBD5E1!important}
+#historyPage .page-heading .eyebrow{color:var(--v6-brass,#b99a5e)!important}
+#historyPage .btn-secondary{background:rgba(12,36,27,.85)!important;color:#F8FAFC!important;border-color:rgba(255,255,255,.28)!important}
+#historyPage .btn-secondary:hover{border-color:var(--v6-brass,#b99a5e)!important}
+#historyPage .history-empty{background:rgba(12,36,27,.72)!important;border-color:rgba(34,197,94,.22)!important;color:#E2E8F0}
+#historyPage .history-empty h3{color:#F8FAFC!important}
+#historyPage .history-empty p{color:#94A3B8!important}
+#historyPage .history-empty .empty-icon{color:var(--v6-brass,#b99a5e)!important;border-color:var(--v6-brass,#b99a5e)!important}
+#historyPage .history-item{background:rgba(12,36,27,.85)!important;border-color:rgba(34,197,94,.12)!important;color:#E2E8F0}
+#historyPage .history-item h3,#historyPage .history-item strong{color:#F8FAFC!important}
+#historyPage .history-item p,#historyPage .history-item small,#historyPage .history-item span:not(.history-score){color:#94A3B8!important}
+#historyPage .history-score{color:#4ADE80!important}

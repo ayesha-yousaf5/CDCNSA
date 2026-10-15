@@ -1,0 +1,32 @@
+{
+  "crop": "mango",
+  "disease": {
+    "runtime_kind": "torchscript",
+    "architecture": "dinov2_vits14",
+    "checkpoint": "models/mango/disease/mango_disease_dinov2_srcsplit.ts",
+    "image_size": 224,
+    "normalization_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normalization_std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "class_to_idx": {
+      "Anthracnose": 0,
+      "Bacterial Canker": 1,
+      "Cutting Weevil": 2,
+      "Die Back": 3,
+      "Gall Midge": 4,
+      "Powdery Mildew": 5,
+      "Sooty Mould": 6,
+      "healthy": 7
+    },
+    "enabled": true,
+    "note": "source-held-out training 2026-10-15; ood_test macroF1=0.8842"
+  },
+  "disease_threshold": 0.5
+}

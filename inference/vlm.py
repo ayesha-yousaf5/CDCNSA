@@ -30,22 +30,20 @@ from PIL import Image
 # Must match the `en` names of diseaseKnowledge in app.js so the result card,
 # guidance text and disease library link all resolve.
 CROP_LABELS: dict[str, list[str]] = {
-    'corn': ['Bacterial Leaf Streak', 'Common Rust', 'Gray Leaf Spot', 'Maize Lethal Necrosis',
-             'Maize Streak Virus', 'Northern Leaf Blight'],
-    'cotton': ['Alternaria Leaf Spot', 'Bacterial Blight', 'Herbicide Growth Damage', 'Leaf Curl',
-               'Leaf Hopper Jassids', 'Leaf Reddening', 'Leaf Variegation', 'Verticillium Wilt'],
-    'tomato': ['Bacterial Spot', 'Cercospora Leaf Mold', 'Early Blight', 'General Pest Damage', 'Late Blight',
-               'Leaf Miner', 'Leaf Mold', 'Septoria Leaf Spot', 'Shot Hole Disease', 'Spider Mites',
-               'Target Spot', 'Tomato Leaf Curl Virus', 'Tomato Mosaic Virus', 'Tomato Yellow Leaf Curl Virus'],
-    'apple': ['Alternaria Apple', 'Apple Powdery Mildew', 'Apple Scab', 'Black Rot', 'Cedar Apple Rust'],
-    'rice': ['Bacterial Leaf Blight', 'Brown Spot', 'Leaf Scald', 'Narrow Brown Leaf Spot', 'Rice Blast',
-             'Rice Hispa', 'Rice Leaffolder', 'Rice Stripes', 'Rice Tungro', 'Sheath Blight'],
+    # = the class names of each crop's FINAL model (models_final, 2026-10-15); peas = previous model
+    'corn': ['Gray Leaf Spot', 'Northern Leaf Blight'],
+    'cotton': ['Bacterial Blight', 'Leaf Curl', 'Herbicide Growth Damage', 'Leaf Hopper Jassids',
+               'Leaf Reddening', 'Leaf Variegation'],
+    'tomato': ['Early Blight', 'Late Blight', 'Tomato Yellow Leaf Curl Virus', 'Bacterial Spot'],
+    'apple': ['Apple Scab', 'Alternaria Leaf Blotch', 'Powdery Mildew', 'Apple Mosaic'],
+    'rice': ['Bacterial Leaf Blight', 'Brown Spot', 'Leaf Scald', 'Rice Blast', 'Rice Tungro', 'Sheath Blight'],
     'mango': ['Anthracnose', 'Bacterial Canker', 'Cutting Weevil', 'Die Back', 'Gall Midge', 'Powdery Mildew',
-              'Sooty Mould', 'Senescence / Drying'],
-    'grape': ['Bacterial Leaf Spot', 'Black Rot', 'Downy Mildew', 'Esca Black Measles',
-              'Leaf Blight / Isariopsis Leaf Spot', 'Yellow Leaf Spot'],
-    'eggplant': ['General Pest Damage', 'Leaf Spot', 'Mosaic Virus', 'Phomopsis Blight', 'White Mold'],
-    'cucumber': ['Bacterial Wilt', 'Belly Rot', 'Downy Mildew', 'Gummy Stem Blight', 'Pythium Fruit Rot'],
+              'Sooty Mould'],
+    'grape': ['Black Rot', 'Downy Mildew', 'Esca Black Measles', 'Leaf Blight / Isariopsis Leaf Spot',
+              'Powdery Mildew'],
+    'eggplant': ['General Pest Damage', 'Leaf Spot', 'Mosaic Virus', 'Wilt', 'Small Leaf', 'White Mold',
+                 'Phomopsis Blight', 'Powdery Mildew'],
+    'cucumber': ['Anthracnose', 'Downy Mildew'],
     'peas': ['Ascochyta Blight', 'Botrytis Blight', 'Fusarium Wilt', 'Pod Borer Damage'],
 }
 CROP_NAMES = {'corn': 'corn (maize)', 'eggplant': 'eggplant (brinjal)', 'peas': 'pea'}
@@ -62,8 +60,11 @@ def _provider() -> dict | None:
         return {'name': 'alibaba', 'key': os.environ['DASHSCOPE_API_KEY'],
                 'base': os.getenv('QWEN_VL_BASE_URL', 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'),
                 'model': os.getenv('QWEN_VL_MODEL', 'qwen3-vl-plus')}
-    if os.getenv('GROQ_API_KEY'):
-        return {'name': 'groq', 'key': os.environ['GROQ_API_KEY'],
+    # Own key for the photo check (GROQ_VISION_API_KEY) so its per-minute limit never blocks the chatbot;
+    # falls back to the chatbot key GROQ_API_KEY when no separate key is set.
+    key = os.getenv('GROQ_VISION_API_KEY') or os.getenv('GROQ_API_KEY')
+    if key:
+        return {'name': 'groq', 'key': key,
                 'base': os.getenv('QWEN_VL_BASE_URL', 'https://api.groq.com/openai/v1'),
                 'model': os.getenv('QWEN_VL_MODEL', 'qwen/qwen3.8-27b')}
     return None
@@ -82,7 +83,8 @@ def _norm(text: str) -> str:
     return re.sub(r'[^a-z0-9]', '', str(text).lower())
 
 
-def _image_data_url(image: Image.Image, max_side: int = 1024) -> str:
+def _image_data_url(image: Image.Image, max_side: int = int(os.getenv('QWEN_VL_IMAGE_SIDE', '768'))) -> str:
+    # 768 px keeps lesions visible and uses ~40% fewer input tokens than 1024 px (Groq free tier: 7,000/min)
     img = image.copy()
     img.thumbnail((max_side, max_side))
     buf = BytesIO()
@@ -116,13 +118,19 @@ def _parse_json(text: str) -> dict:
     return json.loads(match.group(0))
 
 
+class _HTTPErr(Exception):
+    def __init__(self, code, text):
+        super().__init__(f'{code} {text}'); self.code, self.text = code, text
+
+
 def _call(image: Image.Image, crop: str, labels: list[str]) -> dict:
     prov = _provider()
     base = prov['base'].rstrip('/')
     body = {
         'model': prov['model'],
         'temperature': 0.1,
-        'max_tokens': 1500,
+        # the JSON answer is ~250 tokens; 1500 exceeded Groq's free 1,000 output-tokens-per-minute limit on its own
+        'max_tokens': int(os.getenv('QWEN_VL_MAX_TOKENS', '450')),
         'messages': [
             {'role': 'system', 'content': SYSTEM_PROMPT},
             {'role': 'user', 'content': [
@@ -133,28 +141,37 @@ def _call(image: Image.Image, crop: str, labels: list[str]) -> dict:
     }
     if prov['name'] == 'groq':
         body['response_format'] = {'type': 'json_object'}
+        body['reasoning_effort'] = 'none'      # no hidden 'thinking' -> much faster answer
 
-    def post(b: dict) -> dict:
-        req = urllib.request.Request(
-            base + '/chat/completions',
-            data=json.dumps(b).encode('utf-8'),
-            headers={'Content-Type': 'application/json', 'Authorization': f'Bearer {prov["key"]}'},
-            method='POST',
-        )
-        with urllib.request.urlopen(req, timeout=float(os.getenv('QWEN_VL_TIMEOUT', '45'))) as resp:
-            return json.loads(resp.read().decode('utf-8'))
+    # httpx (the HTTP library the Groq SDK itself uses). Plain urllib was refused by the API's Cloudflare
+    # front door with "HTTP 403, error code 1010" (it blocks the default Python-urllib client signature).
+    import httpx
+
+    def post(b: dict, retry: bool = True) -> dict:
+        r = httpx.post(base + '/chat/completions', json=b, timeout=float(os.getenv('QWEN_VL_TIMEOUT', '45')),
+                       headers={'Authorization': f'Bearer {prov["key"]}', 'User-Agent': 'CDCNSA/1.0'})
+        if r.status_code == 429 and retry:          # per-minute limit: wait the time the API asks for (<= 20 s), once
+            m = re.search(r'try again in ([0-9.]+)s', r.text)
+            if m and float(m.group(1)) <= float(os.getenv('QWEN_VL_MAX_WAIT', '3')):
+                import time
+                time.sleep(float(m.group(1)) + 0.5)
+                return post(b, retry=False)
+        if r.status_code >= 400:
+            raise _HTTPErr(r.status_code, r.text[:300])
+        return r.json()
 
     try:
-        try:
-            payload = post(body)
-        except urllib.error.HTTPError as exc:
-            if exc.code == 400 and 'response_format' in body:  # JSON mode rejected -> plain text, we parse it
-                body.pop('response_format')
+        payload = post(body)
+    except _HTTPErr as exc:
+        if exc.code == 400 and ('response_format' in body or 'reasoning_effort' in body):
+            body.pop('response_format', None)   # JSON mode / no-thinking rejected -> plain request, we parse it
+            body.pop('reasoning_effort', None)
+            try:
                 payload = post(body)
-            else:
-                raise
-    except urllib.error.HTTPError as exc:
-        raise RuntimeError(f'Vision model HTTP {exc.code}: {exc.read()[:300]!r}') from exc
+            except _HTTPErr as exc2:
+                raise RuntimeError(f'Vision model HTTP {exc2.code}: {exc2.text!r}') from exc2
+        else:
+            raise RuntimeError(f'Vision model HTTP {exc.code}: {exc.text!r}') from exc
     content = payload['choices'][0]['message']['content']
     if isinstance(content, list):  # some SDK versions return content parts
         content = ''.join(part.get('text', '') for part in content if isinstance(part, dict))

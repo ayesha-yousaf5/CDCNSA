@@ -1,0 +1,79 @@
+{
+  "crop": "cucumber",
+  "best_arch": "resnet50",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.8484,
+      "minutes": 3.4
+    },
+    "resnet50": {
+      "select_macroF1": 0.9269,
+      "minutes": 3.6
+    },
+    "densenet121": {
+      "select_macroF1": 0.8528,
+      "minutes": 3.7
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.8894,
+      "minutes": 5.0
+    }
+  },
+  "temperature": 0.05,
+  "threshold": 0.5,
+  "classes": [
+    "Anthracnose",
+    "Downy Mildew",
+    "healthy"
+  ],
+  "counts": {
+    "cucumber_ewu": {
+      "Anthracnose": 400,
+      "Downy Mildew": 400,
+      "healthy": 400
+    },
+    "cucumber_jnu": {
+      "healthy": 160,
+      "Gummy Stem Blight": 160,
+      "Downy Mildew": 159,
+      "Anthracnose": 160,
+      "Bacterial Wilt": 159
+    },
+    "cucumber_kazakhstan": {
+      "healthy": 244,
+      "__DISEASED__": 234
+    }
+  },
+  "download_status": {
+    "cucumber_ewu": "ok",
+    "cucumber_jnu": "ok",
+    "cucumber_kazakhstan": "ok"
+  },
+  "val_in_distribution": {
+    "n": 173,
+    "acc": 0.9884,
+    "macroF1": 0.9884,
+    "answered": 1.0,
+    "acc_answered": 0.9884
+  },
+  "ood_test": {
+    "n": 242,
+    "acc": 0.9008,
+    "macroF1": 0.8797,
+    "answered": 1.0,
+    "acc_answered": 0.9008
+  },
+  "extra_test": null,
+  "external_real_world": {
+    "cucumber_kazakhstan": {
+      "any disease (not healthy)": {
+        "n": 234,
+        "acc": 0.453,
+        "answered": 1.0,
+        "acc_answered": 0.453
+      }
+    }
+  },
+  "verdict": "PASS (ship it)"
+}

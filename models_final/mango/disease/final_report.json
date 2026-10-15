@@ -1,0 +1,105 @@
+{
+  "crop": "mango",
+  "best_arch": "dinov2_vits14",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.9282,
+      "minutes": 27.9
+    },
+    "resnet50": {
+      "select_macroF1": 0.9353,
+      "minutes": 36.9
+    },
+    "densenet121": {
+      "select_macroF1": 0.9252,
+      "minutes": 31.6
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.9362,
+      "minutes": 28.2
+    }
+  },
+  "temperature": 1.0,
+  "threshold": 0.5,
+  "classes": [
+    "Anthracnose",
+    "Bacterial Canker",
+    "Cutting Weevil",
+    "Die Back",
+    "Gall Midge",
+    "Powdery Mildew",
+    "Sooty Mould",
+    "healthy"
+  ],
+  "counts": {
+    "mangoleafbd": {
+      "Bacterial Canker": 492,
+      "Anthracnose": 478,
+      "healthy": 482,
+      "Powdery Mildew": 489,
+      "Cutting Weevil": 245,
+      "Die Back": 469,
+      "Sooty Mould": 489,
+      "Gall Midge": 483
+    },
+    "mld24": {
+      "healthy": 468,
+      "Powdery Mildew": 673,
+      "Sooty Mould": 645,
+      "Gall Midge": 635,
+      "Cutting Weevil": 356,
+      "Die Back": 276,
+      "Bacterial Canker": 583,
+      "Anthracnose": 391
+    },
+    "mango_mldid": {
+      "Gall Midge": 593,
+      "Die Back": 533,
+      "Bacterial Canker": 554,
+      "healthy": 556,
+      "Anthracnose": 587
+    },
+    "mango_ashulia": {
+      "Anthracnose": 93,
+      "Powdery Mildew": 229,
+      "Die Back": 102,
+      "healthy": 119,
+      "Gall Midge": 111
+    },
+    "mango_pabna_savar": {
+      "healthy": 242,
+      "Gall Midge": 302,
+      "Bacterial Canker": 312,
+      "Powdery Mildew": 161,
+      "Cutting Weevil": 200,
+      "Anthracnose": 302,
+      "Sooty Mould": 243,
+      "Die Back": 298
+    }
+  },
+  "download_status": {
+    "mangoleafbd": "ok",
+    "mld24": "ok",
+    "mango_mldid": "ok",
+    "mango_ashulia": "ok",
+    "mango_pabna_savar": "ok"
+  },
+  "val_in_distribution": {
+    "n": 1093,
+    "acc": 0.9899,
+    "macroF1": 0.9913,
+    "answered": 0.992,
+    "acc_answered": 0.9917
+  },
+  "ood_test": {
+    "n": 1030,
+    "acc": 0.8835,
+    "macroF1": 0.8842,
+    "answered": 0.96,
+    "acc_answered": 0.8999
+  },
+  "extra_test": null,
+  "external_real_world": null,
+  "verdict": "PASS (ship it)"
+}

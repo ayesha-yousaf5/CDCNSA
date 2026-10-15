@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Display&family=Manrope:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=14" />
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -87,7 +87,7 @@
               <button class="btn btn-secondary" data-nav="diseases"><span data-i18n="exploreDiseases">Explore crop diseases</span></button>
             </div>
             <div class="trust-row">
-              <div><span class="trust-index">01</span><span data-i18n="trust1">12 project crops</span></div>
+              <div><span class="trust-index">01</span><span data-i18n="trust1">10 project crops</span></div>
               <div><span class="trust-index">02</span><span data-i18n="trust2">English + Urdu</span></div>
               <div><span class="trust-index">03</span><span data-i18n="trust3">Farmer-friendly guidance</span></div>
             </div>
@@ -144,6 +144,7 @@
               <span id="cropStatus" class="status-label" data-i18n="notSelected">Not selected</span>
             </div>
             <div id="diagnoseCropStrip" class="crop-strip"></div>
+            <div id="cropDiseaseList" class="crop-disease-list hidden" aria-live="polite"></div>
 
             <div class="panel-divider"></div>
 
@@ -265,6 +266,6 @@
     <div id="toast" class="toast" role="status"></div>
   </div>
 
-  <script src="app.js?v=22"></script>
+  <script src="app.js?v=27"></script>
 </body>
 </html>

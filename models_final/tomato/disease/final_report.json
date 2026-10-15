@@ -1,0 +1,123 @@
+{
+  "crop": "tomato",
+  "best_arch": "dinov2_vits14",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.7456,
+      "minutes": 6.5
+    },
+    "resnet50": {
+      "select_macroF1": 0.7393,
+      "minutes": 5.9
+    },
+    "densenet121": {
+      "select_macroF1": 0.7522,
+      "minutes": 8.0
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.7926,
+      "minutes": 7.8
+    }
+  },
+  "temperature": 0.918,
+  "threshold": 0.5,
+  "classes": [
+    "Early Blight",
+    "Late Blight",
+    "Tomato Yellow Leaf Curl Virus",
+    "Bacterial Spot",
+    "healthy"
+  ],
+  "counts": {
+    "tomato_bd_diu": {
+      "Bacterial Spot": 356,
+      "Tomato Yellow Leaf Curl Virus": 350,
+      "healthy": 100,
+      "Late Blight": 118,
+      "Early Blight": 182,
+      "Leaf Mold": 58
+    },
+    "tomato_village_india": {
+      "Late Blight": 347,
+      "healthy": 212,
+      "Early Blight": 188
+    },
+    "pakistan_plantcity": {
+      "Early Blight": 181,
+      "Bacterial Spot": 183,
+      "healthy": 273,
+      "Tomato Yellow Leaf Curl Virus": 149,
+      "Septoria Leaf Spot": 127,
+      "Leaf Mold": 194,
+      "Late Blight": 129
+    },
+    "plantdoc": {
+      "Septoria Leaf Spot": 141,
+      "Late Blight": 112,
+      "Bacterial Spot": 105,
+      "healthy": 58,
+      "Tomato Mosaic Virus": 53,
+      "Tomato Yellow Leaf Curl Virus": 75,
+      "Early Blight": 90,
+      "Leaf Mold": 89,
+      "Target Spot": 1
+    }
+  },
+  "download_status": {
+    "tomato_bd_diu": "ok",
+    "tomato_village_india": "ok",
+    "pakistan_plantcity": "ok",
+    "plantdoc": "ok"
+  },
+  "val_in_distribution": {
+    "n": 277,
+    "acc": 0.9747,
+    "macroF1": 0.9762,
+    "answered": 0.982,
+    "acc_answered": 0.9816
+  },
+  "ood_test": {
+    "n": 220,
+    "acc": 0.5545,
+    "macroF1": 0.559,
+    "answered": 0.741,
+    "acc_answered": 0.6258
+  },
+  "extra_test": null,
+  "external_real_world": {
+    "pakistan_plantcity": {
+      "Early Blight": {
+        "n": 91,
+        "acc": 0.9121,
+        "answered": 0.989,
+        "acc_answered": 0.9222
+      },
+      "Bacterial Spot": {
+        "n": 92,
+        "acc": 1.0,
+        "answered": 0.989,
+        "acc_answered": 1.0
+      },
+      "Tomato Yellow Leaf Curl Virus": {
+        "n": 75,
+        "acc": 0.9867,
+        "answered": 0.987,
+        "acc_answered": 1.0
+      },
+      "healthy": {
+        "n": 137,
+        "acc": 1.0,
+        "answered": 0.993,
+        "acc_answered": 1.0
+      },
+      "Late Blight": {
+        "n": 65,
+        "acc": 0.8308,
+        "answered": 0.892,
+        "acc_answered": 0.8448
+      }
+    }
+  },
+  "verdict": "WEAK - keep Qwen as primary"
+}

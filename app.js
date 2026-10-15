@@ -2,15 +2,17 @@ const $ = (sel, root=document) => root.querySelector(sel);
 const $$ = (sel, root=document) => [...root.querySelectorAll(sel)];
 
 const crops = [
-  {id:'corn', en:'Corn / Maize', ur:'مکئی', accent:'#b58b18', soft:'#f6f0d8', image:'https://images.unsplash.com/photo-1464972377689-e7674c48d806?auto=format&fit=crop&w=1200&q=84'},
+  // Order = how well each crop's own model did on photos from sources it never saw (strongest first).
+  // corn and tomato (weaker) and peas (old model) last.
   {id:'cotton', en:'Cotton', ur:'کپاس', accent:'#8b7459', soft:'#f1ece4', image:'https://images.unsplash.com/photo-1731699317142-2333ff275326?auto=format&fit=crop&w=1200&q=84'},
-  {id:'tomato', en:'Tomato', ur:'ٹماٹر', accent:'#a84a45', soft:'#f5e9e7', image:'https://images.unsplash.com/photo-1683009118720-8424c9dd58e8?auto=format&fit=crop&w=1200&q=84'},
-  {id:'apple', en:'Apple', ur:'سیب', accent:'#8d4e43', soft:'#f3e9e5', image:'https://images.unsplash.com/photo-1738598667934-64df4b1ea34d?auto=format&fit=crop&w=1200&q=84'},
-  {id:'rice', en:'Rice', ur:'چاول', accent:'#7e8c38', soft:'#eef0df', image:'https://images.unsplash.com/photo-1756180347907-0e1d17a9ebf8?auto=format&fit=crop&w=1200&q=84'},
   {id:'mango', en:'Mango', ur:'آم', accent:'#8b7a2a', soft:'#f3eed5', image:'https://images.unsplash.com/photo-1744565172191-7d880276a6c5?auto=format&fit=crop&w=1200&q=84'},
+  {id:'apple', en:'Apple', ur:'سیب', accent:'#8d4e43', soft:'#f3e9e5', image:'https://images.unsplash.com/photo-1738598667934-64df4b1ea34d?auto=format&fit=crop&w=1200&q=84'},
   {id:'grape', en:'Grape', ur:'انگور', accent:'#62566d', soft:'#ece8ef', image:'https://images.unsplash.com/photo-1627923004714-8600ebc9ffb5?auto=format&fit=crop&w=1200&q=84'},
+  {id:'rice', en:'Rice', ur:'چاول', accent:'#7e8c38', soft:'#eef0df', image:'https://images.unsplash.com/photo-1756180347907-0e1d17a9ebf8?auto=format&fit=crop&w=1200&q=84'},
   {id:'eggplant', en:'Eggplant / Brinjal', ur:'بینگن', accent:'#67516f', soft:'#efe9f1', image:'https://images.unsplash.com/photo-1738598665657-192203600dcf?auto=format&fit=crop&w=1200&q=84'},
   {id:'cucumber', en:'Cucumber', ur:'کھیرا', accent:'#4e7556', soft:'#e9f0e9', image:'https://images.unsplash.com/photo-1725369865690-5a1a09f87e56?auto=format&fit=crop&w=1200&q=84'},
+  {id:'corn', en:'Corn / Maize', ur:'مکئی', accent:'#b58b18', soft:'#f6f0d8', image:'https://images.unsplash.com/photo-1464972377689-e7674c48d806?auto=format&fit=crop&w=1200&q=84'},
+  {id:'tomato', en:'Tomato', ur:'ٹماٹر', accent:'#a84a45', soft:'#f5e9e7', image:'https://images.unsplash.com/photo-1683009118720-8424c9dd58e8?auto=format&fit=crop&w=1200&q=84'},
   {id:'peas', en:'Peas', ur:'مٹر', accent:'#527053', soft:'#eaf0e7', image:'https://images.unsplash.com/photo-1673232649948-6a247567b8d2?auto=format&fit=crop&w=1200&q=84'},
   // {id:'lemon', en:'Lemon', ur:'لیموں', accent:'#b79a34', soft:'#f4f0d7', image:'https://images.unsplash.com/photo-1724144861106-bbb33df2f50a?auto=format&fit=crop&w=1200&q=84'},
   // {id:'soybean', en:'Soybean', ur:'سویا بین', accent:'#687b42', soft:'#e9efe0', image:'https://strapi.myplantin.com/large_Depositphotos_309360300_XL_1_866356fe8b.webp'}
@@ -2851,6 +2853,122 @@ const KIND_RISK_UR = {
   syndrome:'یہ ایک بصری ماڈل کلاس ہے؛ ایک سے زیادہ وجوہات ممکن ہیں، اس لیے کھیت کی تصدیق ضروری ہے۔'
 };
 
+// -----------------------------------------------------------------------------
+// FINAL MODEL CLASSES (models_final, source-held-out training 2026-10-15).
+// The library and the result card show ONLY what each crop's current model can
+// classify. Peas still uses its previous model, so it is unchanged.
+// To change a crop later: edit its list here (names = the model's class names).
+// -----------------------------------------------------------------------------
+const MODEL_CLASSES = {
+  corn: ['Gray Leaf Spot','Northern Leaf Blight'],
+  cotton: ['Bacterial Blight','Leaf Curl','Herbicide Growth Damage','Leaf Hopper Jassids','Leaf Reddening','Leaf Variegation'],
+  tomato: ['Early Blight','Late Blight','Tomato Yellow Leaf Curl Virus','Bacterial Spot'],
+  apple: ['Apple Scab','Alternaria Leaf Blotch','Powdery Mildew','Apple Mosaic'],
+  mango: ['Anthracnose','Bacterial Canker','Cutting Weevil','Die Back','Gall Midge','Powdery Mildew','Sooty Mould'],
+  grape: ['Black Rot','Downy Mildew','Esca Black Measles','Leaf Blight / Isariopsis Leaf Spot','Powdery Mildew'],
+  eggplant: ['General Pest Damage','Leaf Spot','Mosaic Virus','Wilt','Small Leaf','White Mold','Phomopsis Blight','Powdery Mildew'],
+  cucumber: ['Anthracnose','Downy Mildew'],
+  rice: ['Bacterial Leaf Blight','Brown Spot','Leaf Scald','Rice Blast','Rice Tungro','Sheath Blight']
+};
+
+Object.assign(VERIFIED_SOURCES, {
+  appleVirusPSU:{label:'Penn State Extension — apple viruses (apple mosaic virus)',url:'https://extension.psu.edu/apple-viruses'},
+  grapePowderyOSU:{label:'Ohio State University — grape powdery mildew',url:'https://ohiograpeweb.cfaes.ohio-state.edu/ipm/diseases/powdery-mildew'},
+  nhbBrinjal:{label:'National Horticulture Board (India) — brinjal diseases: little leaf, bacterial wilt',url:'https://www.nhb.gov.in/pdf/vegetable/brinjal/bri002.pdf'},
+  eppoHishimonus:{label:'EPPO Global Database — Hishimonus phycitis (vector of brinjal little leaf phytoplasma)',url:'https://gd.eppo.int/taxon/HISHPH/datasheet'},
+  ralstoniaWisc:{label:'University of Wisconsin Extension — Ralstonia (bacterial) wilt',url:'https://hort.extension.wisc.edu/articles/ralstonia-wilt/'},
+  eggplantPowderyINRAE:{label:'INRAE ephytia — eggplant powdery mildew (Leveillula taurica)',url:'https://ephytia.inrae.fr/en/C/26940/Aubergine-Oidium-interne'},
+  cucumberAnthracnoseCornell:{label:'Cornell Vegetables — anthracnose of cucurbits',url:'https://vegetables.cornell.edu/?p=4030'}
+});
+
+KIND_LABELS.en.phytoplasma='Phytoplasma disease (spread by leafhoppers)';
+KIND_LABELS.ur.phytoplasma='فائٹوپلازما کی بیماری (تیلے سے پھیلتی ہے)';
+KIND_RISK_UR.phytoplasma='یہ بیماری پتوں کا تیلا (لیف ہاپر) پھیلاتا ہے؛ کوئی دوا متاثرہ پودے کو ٹھیک نہیں کرتی، اس لیے متاثرہ پودے جلد نکال کر تلف کریں۔';
+
+(function applyFinalModelClasses(){
+  const base={vision:true,icon:'✦',nutritionNote:'',threshold:'',thresholdUr:'',classNote:''};
+  const dpp=['dppRegistered','dppBanned','punjabSoil'];
+  const add=(crop,entry,deep)=>{ diseaseKnowledge[crop].push({...base,...entry}); (DEEP_DISEASE_DETAILS[crop]=DEEP_DISEASE_DETAILS[crop]||{})[entry.en]=deep; };
+
+  // Apple: the new model calls it "Alternaria Leaf Blotch"
+  const alt=diseaseKnowledge.apple.find(e=>e.en==='Alternaria Apple');
+  if(alt){ alt.en='Alternaria Leaf Blotch'; alt.ur='الٹرنیریا لیف بلاچ'; alt.aliases=[...(alt.aliases||[]),'alternaria_leaf_blotch'];
+    if(DEEP_DISEASE_DETAILS.apple['Alternaria Apple']) DEEP_DISEASE_DETAILS.apple['Alternaria Leaf Blotch']=DEEP_DISEASE_DETAILS.apple['Alternaria Apple']; }
+
+  add('apple',{en:'Apple Mosaic',ur:'ایپل موزیک وائرس',
+    symptoms:'In spring, pale yellow to cream spots, flecks, blotches or bands along the main veins appear on new leaves; they turn bright yellow or white and die, and badly affected leaves drop early.',
+    urduSymptoms:'بہار میں نئے پتوں پر ہلکے زرد یا کریم رنگ کے دھبے، نشان یا رگوں کے ساتھ پٹیاں بنتی ہیں جو بعد میں چمکدار زرد یا سفید ہو کر سوکھ جاتی ہیں؛ زیادہ متاثرہ پتے جلدی گر جاتے ہیں۔',
+    management:'There is no cure. Mark affected trees; remove badly affected trees, and never take budwood or grafting material from them.',
+    prevention:'Plant certified virus-free nursery stock and budwood. The virus also passes between neighbouring trees through natural root grafts.',
+    chemStatus:'no_curative',chemExamples:[],
+    chemicalNote:'No pesticide cures apple mosaic virus, and it has no known insect vector, so insecticide sprays do not help.',
+    imageQuery:'apple mosaic virus leaf cream yellow bands',aliases:['apple_mosaic','apple mosaic virus','ApMV'],
+    sources:['appleVirusPSU',...dpp]},
+    ['viral','Apple mosaic virus (ApMV)','Spread mainly through infected nursery stock, budwood and natural root grafts; no known insect vector. Yield loss is usually minor.']);
+
+  add('grape',{en:'Powdery Mildew',ur:'پاؤڈری ملڈیو',
+    symptoms:'White to grey powdery patches on upper and lower leaf surfaces spread until they cover the leaf; leaves may curl upward in hot dry weather. Berries get a white powdery coat, may show rusty spots and can split.',
+    urduSymptoms:'پتوں کے اوپر اور نیچے سفید یا سرمئی سفوف جیسے دھبے پھیل کر پورا پتا ڈھانپ لیتے ہیں؛ گرم خشک موسم میں پتے اوپر کو مڑ سکتے ہیں۔ دانوں پر سفید سفوف، زنگ نما نشان اور پھٹنا ہو سکتا ہے۔',
+    management:'Open the canopy by shoot positioning and removing leaves around clusters so air and sunlight reach them. Remove wild grapevines near the vineyard.',
+    prevention:'Protect the vines from just before bloom until 2–4 weeks after bloom, the most susceptible period. Good canopy management also improves spray coverage.',
+    chemStatus:'verify_only',chemExamples:[],
+    chemicalNote:'Sulfur is the most common protectant for grape powdery mildew (avoid it above about 30 °C, when it can burn leaves).',
+    imageQuery:'grape powdery mildew Erysiphe necator leaf white',aliases:['powdery_mildew','grape powdery mildew'],
+    sources:['grapePowderyOSU','grapePSU','grapePHDEC','dppRegistered','dppBanned']},
+    ['fungal','Erysiphe necator','Warm (20–25 °C), shaded, humid canopies favour it. Unlike downy mildew it does not need rain or dew to infect.']);
+
+  add('eggplant',{en:'Wilt',ur:'مرجھاؤ (وِلٹ)',
+    symptoms:'Leaves droop, yellow and dry; the whole plant or some branches wilt and collapse, suddenly or gradually. The water-conducting tissue inside the stem turns brown.',
+    urduSymptoms:'پتے لٹک کر زرد اور خشک ہو جاتے ہیں؛ پورا پودا یا کچھ شاخیں اچانک یا آہستہ آہستہ مرجھا کر گر جاتی ہیں۔ تنے کے اندر پانی لے جانے والا حصہ بھورا ہو جاتا ہے۔',
+    management:'Pull out wilted plants with their roots and destroy them; avoid moving soil or water from affected patches and disinfect tools. Cut a stem and place it in clear water: milky threads flowing out point to bacterial wilt rather than fungal wilt.',
+    prevention:'Use resistant varieties and healthy seedlings; do not follow eggplant with tomato, potato, chilli or okra (bhindi) in the same field.',
+    chemStatus:'verify_only',chemExamples:[],
+    chemicalNote:'No spray revives a plant that is already wilting; confirm whether the cause is bacterial or fungal before any treatment.',
+    imageQuery:'eggplant brinjal bacterial wilt wilting plant',aliases:['wilt','eggplant wilt','brinjal wilt','bacterial wilt'],
+    sources:['nhbBrinjal','ralstoniaWisc','eggplantCornell','dppRegistered','dppBanned']},
+    ['syndrome','Broad model class: bacterial wilt (Ralstonia solanacearum) and Fusarium/Verticillium wilts look alike','The bacterium survives in soil, plant debris and irrigation water for years and has over 250 hosts.']);
+
+  add('eggplant',{en:'Small Leaf',ur:'چھوٹے پتوں کی بیماری (لٹل لیف)',
+    symptoms:'New leaves are pale yellow, very small and misshapen; plants become short and bushy with many shoots and short internodes. Flowers are deformed, so plants bear no fruit or hard fruit that does not ripen.',
+    urduSymptoms:'نئے پتے ہلکے زرد، بہت چھوٹے اور بے ڈھنگے ہوتے ہیں؛ پودا چھوٹا اور جھاڑی نما ہو جاتا ہے، شاخیں زیادہ اور گانٹھیں قریب ہوتی ہیں۔ پھول بگڑ جاتے ہیں، اس لیے پھل نہیں لگتا یا سخت رہتا ہے۔',
+    management:'Uproot and destroy affected plants as soon as symptoms appear; they never recover and are a source for leafhoppers. Remove volunteer eggplant and weed hosts around the field.',
+    prevention:'Adjust the sowing time to avoid the peak leafhopper period and manage leafhoppers early using IPM.',
+    chemStatus:'no_curative',chemExamples:[],
+    chemicalNote:'No pesticide cures little leaf. An insecticide is only relevant against a confirmed leafhopper population and must follow a current DPP label.',
+    imageQuery:'brinjal little leaf phytoplasma',aliases:['small_leaf','little leaf','brinjal little leaf'],
+    sources:['nhbBrinjal','eppoHishimonus','dppRegistered','dppBanned']},
+    ['phytoplasma',"Phytoplasma ('Candidatus Phytoplasma trifolii' group, reported from India), carried by the leafhopper Hishimonus phycitis",'Leafhopper build-up (in Delhi, July–October) is followed by more little-leaf plants.']);
+
+  add('eggplant',{en:'Powdery Mildew',ur:'پاؤڈری ملڈیو',
+    symptoms:'Pale green to yellow patches appear on the upper side of mostly older, lower leaves and later turn brown; a whitish powdery growth forms on the underside of the patches.',
+    urduSymptoms:'زیادہ تر پرانے نچلے پتوں کی اوپری سطح پر ہلکے سبز یا زرد دھبے بنتے ہیں جو بعد میں بھورے ہو جاتے ہیں؛ دھبوں کے نیچے سفید سفوف جیسی تہہ بنتی ہے۔',
+    management:'Remove early-infected lower leaves and destroy plant debris; remove weeds that host the fungus.',
+    prevention:'Use moderate plant spacing for airflow, balanced fertilizer and crop rotation; scout lower leaves regularly.',
+    chemStatus:'verify_only',chemExamples:[],chemicalNote:'',
+    imageQuery:'eggplant powdery mildew Leveillula taurica leaf',aliases:['powdery_mildew','eggplant powdery mildew'],
+    sources:['eggplantPowderyINRAE',...dpp]},
+    ['fungal','Leveillula taurica (other powdery mildew fungi can also occur)','Warm days (about 26 °C) with humid nights or dew favour it; it does not need rain.']);
+
+  add('cucumber',{en:'Anthracnose',ur:'اینتھراکنوز',
+    symptoms:'Water-soaked spots turn into yellowish, then brown to reddish round spots on leaves; their centres can crack and fall out. Fruit get round, sunken black spots with salmon-coloured spore masses in wet weather.',
+    urduSymptoms:'پتوں پر پانی بھرے دھبے زرد اور پھر بھورے یا سرخی مائل گول دھبوں میں بدل جاتے ہیں جن کا درمیان پھٹ کر گر سکتا ہے۔ پھل پر دھنسے ہوئے کالے گول دھبے بنتے ہیں جن پر نمی میں نارنجی گلابی تہہ آتی ہے۔',
+    management:'Avoid working in the crop while it is wet; remove volunteer cucurbits and weeds, and remove or deeply plough in crop debris after harvest.',
+    prevention:'Use clean seed and resistant varieties, and do not grow cucurbits in the same field for 3 years.',
+    chemStatus:'verify_only',chemExamples:[],chemicalNote:'',
+    imageQuery:'cucumber anthracnose Colletotrichum orbiculare leaf spots',aliases:['anthracnose','cucumber anthracnose'],
+    sources:['cucumberAnthracnoseCornell','cucumberCornell',...dpp]},
+    ['fungal','Colletotrichum orbiculare','Warm, wet weather (about 24 °C) with water splash, contaminated seed, hands and tools spreads it.']);
+
+  // keep only the classes each crop's current model detects, in the model's order
+  for(const [crop,classes] of Object.entries(MODEL_CLASSES)){
+    const all=diseaseKnowledge[crop]||[];
+    const match=name=>all.find(e=>[e.en,...(e.aliases||[])].some(v=>normalizeDiseaseKey(v)===normalizeDiseaseKey(name)));
+    const kept=[];
+    for(const c of classes){ const e=match(c); if(e&&!kept.includes(e)) kept.push(e); else if(!e) console.warn('[CDCNSA] no library entry for',crop,c); }
+    diseaseKnowledge[crop]=kept;
+  }
+})();
+
 function diseaseDeepDetail(cropId,e){
   const d=DEEP_DISEASE_DETAILS?.[cropId]?.[e?.en];
   if(!d) return {kind:'syndrome',agent:'Cause not uniquely established for this model class.',risk:'Confirm the field pattern and causal agent before disease-specific treatment.'};
@@ -2915,8 +3033,8 @@ function normalizeDiseaseKey(value){
 }
 
 const i18n = {
-  en:{brandTagline:'Crop Health Assistant',navHome:'Home',navDiagnose:'Diagnose Crop',navDiseases:'Disease Library',navHistory:'Recent Checks',languageLabel:'Language',farmerMode:'Farmer-first mode',farmerModeDesc:'Large controls, simple guidance, mobile ready.',systemReady:'AI system ready',breadcrumbHome:'Home',help:'Help',heroBadge:'AI crop health support for Pakistan',heroTitle:'Check your crop’s health in seconds.',heroText:'Choose a crop, take a clear photo, and get an easy-to-understand health assessment with guidance you can act on.',startDiagnosis:'Start a diagnosis',exploreDiseases:'Explore crop diseases',trust1:'12 project crops',trust2:'English + Urdu',trust3:'Farmer-friendly guidance',sampleScan:'Sample health scan',visualCheck:'Visual check',healthyPlant:'Healthy plant',cropModels:'crop models',languages:'languages',chooseCropEyebrow:'YOUR FIELD, YOUR CROP',chooseCropTitle:'Choose the crop you want to check',chooseCropText:'Tap a crop card to make it active for diagnosis and disease guidance.',simpleProcess:'SIMPLE PROCESS',howTitle:'From field photo to useful guidance',step1Title:'Select your crop',step1Text:'Choose the crop growing in your field.',step2Title:'Take or upload a photo',step2Text:'Use the camera or upload an existing crop image.',step3Title:'Review the result',step3Text:'See disease, confidence and severity when applicable.',step4Title:'Ask the AI assistant',step4Text:'Get crop-specific guidance in your selected language.',diagnoseEyebrow:'FIELD DIAGNOSIS',diagnoseTitle:'Check a crop photo',diagnoseSubtitle:'Select your crop, then upload an image or use your camera.',chooseCrop:'Choose crop',chooseCropSmall:'Tell us which crop is in the image.',notSelected:'Not selected',addPhoto:'Add crop photo',photoAdvice:'Use a clear image with the affected leaf or plant visible.',dropPhoto:'Drop your crop photo here',orChoose:'or choose an option below',uploadPhoto:'Upload Photo',openCamera:'Open Camera',formatHelp:'Images such as JPG, PNG, WEBP, HEIC/HEIF, BMP and TIFF can be sent to the backend.',previewUnavailable:'Preview unavailable, but this file can still be submitted.',remove:'Remove',betterPhoto:'For a better result',tip1:'Use natural light',tip2:'Keep the affected area in focus',tip3:'Avoid extreme zoom or blur',analyzePlant:'Analyze plant',currentCheck:'CURRENT CHECK',crop:'Crop',chooseCropPrompt:'Choose a crop',photo:'Photo',notAdded:'Not added',safeTitle:'Designed to fail safely',safeText:'If the image is unclear or confidence is weak, the app should ask for another photo instead of overstating the result.',analyzing:'Checking your crop…',analyzingText:'Looking at visual signs and preparing an easy-to-understand result.',resultEyebrow:'AI HEALTH ASSESSMENT',resultTitle:'Your crop result',newCheck:'New check',detected:'Disease detected',likelyCondition:'Likely condition',confidence:'confidence',severity:'Severity',severityConfidence:'Severity confidence',uncertainAdvice:'This result is uncertain. Please take another clear photo before acting on it.',whatNext:'What should I do next?',defaultGuidance:'Review crop-specific guidance and ask the assistant if you need help understanding the result.',viewGuidance:'View guidance',askAssistant:'Ask assistant',libraryEyebrow:'CROP KNOWLEDGE',libraryTitle:'Crop disease library',librarySubtitle:'Learn symptoms, prevention and management for the selected crop.',selectCropLabel:'Select crop',searchDiseases:'Search diseases or symptoms',visionAvailable:'AI detection available',infoOnly:'Information only',historyEyebrow:'YOUR ACTIVITY',historyTitle:'Recent crop checks',historySubtitle:'Recent completed checks are stored only in your browser.',clearHistory:'Clear history',assistantName:'CDCNSA Assistant',assistantOnline:'Ready to help',chatPlaceholder:'Ask about your crop…',cameraTitle:'Take crop photo',cameraInstruction:'Place the affected leaf clearly inside the frame.',cameraGuide:'Keep the affected area inside this frame',ready:'Selected',photoAdded:'Added',viewDetails:'View details',symptoms:'Typical signs',management:'Management approach',important:'Important',safetyNote:'Use cultural and integrated management first. Verify current Pakistan registration and the product label before any pesticide decision.',libraryCount:'knowledge entries',noDisease:'No matching disease information found.',emptyHistoryTitle:'No crop checks yet',emptyHistoryText:'Your completed checks will appear here.',healthy:'Healthy',severityNA:'N/A',uncertain:'Uncertain',highConfidence:'High confidence',moderateConfidence:'Moderate confidence',lowConfidence:'Low confidence',demoWelcome:'Assalam-o-Alaikum! I can explain crop symptoms, your diagnosis result, severity and next steps in simple language.',quick1:'What does this result mean?',quick2:'What should I do next?',quick3:'How do I take a better photo?',demoReply:'Sorry, I am currently unable to answer that. Please try again.',demoNoticeText:'Demo preview — connect /api/diagnose for real model inference.',needCrop:'Please select a crop first.',needPhoto:'Please add a crop photo first.',cameraError:'Camera could not be opened. You can still upload a photo.',cameraUnsupported:'Camera access is not supported in this browser.',historyCleared:'Recent checks cleared.',languageChanged:'Language changed to English.',helpToast:'Choose a crop, add a clear photo, then tap Analyze plant.'},
-  ur:{brandTagline:'پودوں کی صحت کا معاون',navHome:'ہوم',navDiagnose:'فصل کی جانچ',navDiseases:'بیماریوں کی معلومات',navHistory:'حالیہ جانچ',languageLabel:'زبان',farmerMode:'کسان دوست موڈ',farmerModeDesc:'بڑے بٹن، آسان رہنمائی اور موبائل کے لیے موزوں۔',systemReady:'اے آئی نظام تیار ہے',breadcrumbHome:'ہوم',help:'مدد',heroBadge:'پاکستان کے لیے اے آئی فصل صحت معاون',heroTitle:'اپنی فصل کی صحت چند سیکنڈ میں جانچیں۔',heroText:'فصل منتخب کریں، صاف تصویر لیں اور آسان زبان میں صحت کی جانچ اور قابلِ عمل رہنمائی حاصل کریں۔',startDiagnosis:'فصل کی جانچ شروع کریں',exploreDiseases:'فصل کی بیماریاں دیکھیں',trust1:'12 پروجیکٹ فصلیں',trust2:'انگریزی + اردو',trust3:'کسان دوست رہنمائی',sampleScan:'نمونہ صحت اسکین',visualCheck:'بصری جانچ',healthyPlant:'صحت مند پودا',cropModels:'فصل ماڈلز',languages:'زبانیں',chooseCropEyebrow:'آپ کا کھیت، آپ کی فصل',chooseCropTitle:'وہ فصل منتخب کریں جس کی جانچ کرنی ہے',chooseCropText:'تشخیص اور بیماریوں کی رہنمائی کے لیے فصل کے کارڈ پر ٹیپ کریں۔',simpleProcess:'آسان طریقہ',howTitle:'کھیت کی تصویر سے مفید رہنمائی تک',step1Title:'فصل منتخب کریں',step1Text:'اپنے کھیت میں موجود فصل منتخب کریں۔',step2Title:'تصویر لیں یا اپ لوڈ کریں',step2Text:'کیمرہ استعمال کریں یا موجودہ تصویر اپ لوڈ کریں۔',step3Title:'نتیجہ دیکھیں',step3Text:'بیماری، اعتماد اور جہاں مناسب ہو شدت دیکھیں۔',step4Title:'اے آئی معاون سے پوچھیں',step4Text:'اپنی زبان میں فصل سے متعلق رہنمائی حاصل کریں۔',diagnoseEyebrow:'فصل کی تشخیص',diagnoseTitle:'فصل کی تصویر جانچیں',diagnoseSubtitle:'فصل منتخب کریں، پھر تصویر اپ لوڈ کریں یا کیمرہ استعمال کریں۔',chooseCrop:'فصل منتخب کریں',chooseCropSmall:'بتائیں تصویر میں کون سی فصل ہے۔',notSelected:'منتخب نہیں',addPhoto:'فصل کی تصویر شامل کریں',photoAdvice:'صاف تصویر استعمال کریں جس میں متاثرہ پتہ یا پودا واضح ہو۔',dropPhoto:'فصل کی تصویر یہاں ڈالیں',orChoose:'یا نیچے سے ایک طریقہ منتخب کریں',uploadPhoto:'تصویر اپ لوڈ کریں',openCamera:'کیمرہ کھولیں',formatHelp:'JPG، PNG، WEBP، HEIC/HEIF، BMP اور TIFF جیسی تصاویر بیک اینڈ کو بھیجی جا سکتی ہیں۔',previewUnavailable:'پیش نظارہ دستیاب نہیں، لیکن فائل پھر بھی بھیجی جا سکتی ہے۔',remove:'ہٹائیں',betterPhoto:'بہتر نتیجے کے لیے',tip1:'قدرتی روشنی استعمال کریں',tip2:'متاثرہ حصہ واضح رکھیں',tip3:'زیادہ زوم یا دھندلی تصویر سے بچیں',analyzePlant:'پودے کا معائنہ کریں',currentCheck:'موجودہ جانچ',crop:'فصل',chooseCropPrompt:'فصل منتخب کریں',photo:'تصویر',notAdded:'شامل نہیں',safeTitle:'محفوظ انداز میں بنایا گیا',safeText:'اگر تصویر واضح نہ ہو یا اعتماد کم ہو تو ایپ غلط یقین ظاہر کرنے کے بجائے دوسری تصویر مانگے گی۔',analyzing:'آپ کی فصل کی جانچ ہو رہی ہے…',analyzingText:'بصری علامات دیکھ کر آسان نتیجہ تیار کیا جا رہا ہے۔',resultEyebrow:'اے آئی صحت کی جانچ',resultTitle:'آپ کی فصل کا نتیجہ',newCheck:'نئی جانچ',detected:'بیماری کی شناخت',likelyCondition:'ممکنہ حالت',confidence:'اعتماد',severity:'شدت',severityConfidence:'شدت کا اعتماد',uncertainAdvice:'یہ نتیجہ غیر یقینی ہے۔ کسی اقدام سے پہلے ایک اور صاف تصویر لیں۔',whatNext:'اب مجھے کیا کرنا چاہیے؟',defaultGuidance:'فصل سے متعلق رہنمائی دیکھیں اور نتیجہ سمجھنے کے لیے معاون سے پوچھیں۔',viewGuidance:'رہنمائی دیکھیں',askAssistant:'معاون سے پوچھیں',libraryEyebrow:'فصل کی معلومات',libraryTitle:'فصل کی بیماریوں کی لائبریری',librarySubtitle:'منتخب فصل کی علامات، بچاؤ اور انتظام جانیں۔',selectCropLabel:'فصل منتخب کریں',searchDiseases:'بیماری یا علامت تلاش کریں',visionAvailable:'اے آئی شناخت دستیاب',infoOnly:'صرف معلومات',historyEyebrow:'آپ کی سرگرمی',historyTitle:'حالیہ فصل جانچ',historySubtitle:'حالیہ مکمل جانچ صرف آپ کے براؤزر میں محفوظ ہوتی ہے۔',clearHistory:'تاریخ صاف کریں',assistantName:'سی ڈی سی این ایس اے معاون',assistantOnline:'مدد کے لیے تیار',chatPlaceholder:'اپنی فصل کے بارے میں پوچھیں…',cameraTitle:'فصل کی تصویر لیں',cameraInstruction:'متاثرہ پتے کو واضح طور پر فریم کے اندر رکھیں۔',cameraGuide:'متاثرہ حصہ اس فریم کے اندر رکھیں',ready:'منتخب',photoAdded:'شامل',viewDetails:'تفصیل دیکھیں',symptoms:'عام علامات',management:'انتظام کا طریقہ',important:'اہم',safetyNote:'پہلے ثقافتی اور مربوط انتظام کو ترجیح دیں۔ کسی بھی زرعی دوا کے فیصلے سے پہلے پاکستان میں موجودہ رجسٹریشن اور پروڈکٹ لیبل کی تصدیق کریں۔',libraryCount:'معلوماتی اندراجات',noDisease:'متعلقہ بیماری کی معلومات نہیں ملیں۔',emptyHistoryTitle:'ابھی کوئی جانچ نہیں',emptyHistoryText:'مکمل شدہ جانچ یہاں نظر آئے گی۔',healthy:'صحت مند',severityNA:'لاگو نہیں',uncertain:'غیر یقینی',highConfidence:'زیادہ اعتماد',moderateConfidence:'درمیانہ اعتماد',lowConfidence:'کم اعتماد',demoWelcome:'السلام علیکم! میں فصل کی علامات، تشخیص، شدت اور اگلے اقدامات آسان زبان میں سمجھا سکتا ہوں۔',quick1:'اس نتیجے کا کیا مطلب ہے؟',quick2:'اب مجھے کیا کرنا چاہیے؟',quick3:'بہتر تصویر کیسے لوں؟',demoReply:'معذرت، فی الحال میں اس کا جواب نہیں دے سکتا۔ براہ کرم دوبارہ کوشش کریں۔',demoNoticeText:'یہ ڈیمو پیش نظارہ ہے — حقیقی ماڈل کے لیے /api/diagnose جوڑیں۔',needCrop:'پہلے فصل منتخب کریں۔',needPhoto:'پہلے فصل کی تصویر شامل کریں۔',cameraError:'کیمرہ نہیں کھل سکا۔ آپ تصویر اپ لوڈ کر سکتے ہیں۔',cameraUnsupported:'اس براؤزر میں کیمرہ دستیاب نہیں۔',historyCleared:'حالیہ جانچ صاف کر دی گئی۔',languageChanged:'زبان اردو کر دی گئی۔',helpToast:'فصل منتخب کریں، صاف تصویر شامل کریں اور پھر پودے کا معائنہ کریں۔'}
+  en:{brandTagline:'Crop Health Assistant',navHome:'Home',navDiagnose:'Diagnose Crop',navDiseases:'Disease Library',navHistory:'Recent Checks',languageLabel:'Language',farmerMode:'Farmer-first mode',farmerModeDesc:'Large controls, simple guidance, mobile ready.',systemReady:'AI system ready',breadcrumbHome:'Home',help:'Help',heroBadge:'AI crop health support for Pakistan',heroTitle:'Check your crop’s health in seconds.',heroText:'Choose a crop, take a clear photo, and get an easy-to-understand health assessment with guidance you can act on.',startDiagnosis:'Start a diagnosis',exploreDiseases:'Explore crop diseases',trust1:'10 project crops',trust2:'English + Urdu',trust3:'Farmer-friendly guidance',sampleScan:'Sample health scan',visualCheck:'Visual check',healthyPlant:'Healthy plant',cropModels:'crop models',languages:'languages',chooseCropEyebrow:'YOUR FIELD, YOUR CROP',chooseCropTitle:'Choose the crop you want to check',chooseCropText:'Tap a crop card to make it active for diagnosis and disease guidance.',simpleProcess:'SIMPLE PROCESS',howTitle:'From field photo to useful guidance',step1Title:'Select your crop',step1Text:'Choose the crop growing in your field.',step2Title:'Take or upload a photo',step2Text:'Use the camera or upload an existing crop image.',step3Title:'Review the result',step3Text:'See disease, confidence and severity when applicable.',step4Title:'Ask the AI assistant',step4Text:'Get crop-specific guidance in your selected language.',diagnoseEyebrow:'FIELD DIAGNOSIS',diagnoseTitle:'Check a crop photo',diagnoseSubtitle:'Select your crop, then upload an image or use your camera.',chooseCrop:'Choose crop',chooseCropSmall:'Tell us which crop is in the image.',notSelected:'Not selected',addPhoto:'Add crop photo',photoAdvice:'Use a clear image with the affected leaf or plant visible.',dropPhoto:'Drop your crop photo here',orChoose:'or choose an option below',uploadPhoto:'Upload Photo',openCamera:'Open Camera',formatHelp:'Images such as JPG, PNG, WEBP, HEIC/HEIF, BMP and TIFF can be sent to the backend.',previewUnavailable:'Preview unavailable, but this file can still be submitted.',remove:'Remove',betterPhoto:'For a better result',tip1:'Use natural light',tip2:'Keep the affected area in focus',tip3:'Avoid extreme zoom or blur',analyzePlant:'Analyze plant',currentCheck:'CURRENT CHECK',crop:'Crop',chooseCropPrompt:'Choose a crop',photo:'Photo',notAdded:'Not added',safeTitle:'Designed to fail safely',safeText:'If the image is unclear or confidence is weak, the app should ask for another photo instead of overstating the result.',analyzing:'Checking your crop…',analyzingText:'Looking at visual signs and preparing an easy-to-understand result.',resultEyebrow:'AI HEALTH ASSESSMENT',resultTitle:'Your crop result',newCheck:'New check',detected:'Disease detected',likelyCondition:'Likely condition',confidence:'confidence',severity:'Severity',severityConfidence:'Severity confidence',uncertainAdvice:'This result is uncertain. Please take another clear photo before acting on it.',whatNext:'What should I do next?',defaultGuidance:'Review crop-specific guidance and ask the assistant if you need help understanding the result.',viewGuidance:'View guidance',askAssistant:'Ask assistant',libraryEyebrow:'CROP KNOWLEDGE',libraryTitle:'Crop disease library',librarySubtitle:'Learn symptoms, prevention and management for the selected crop.',selectCropLabel:'Select crop',searchDiseases:'Search diseases or symptoms',visionAvailable:'AI detection available',infoOnly:'Information only',historyEyebrow:'YOUR ACTIVITY',historyTitle:'Recent crop checks',historySubtitle:'Recent completed checks are stored only in your browser.',clearHistory:'Clear history',assistantName:'CDCNSA Assistant',assistantOnline:'Ready to help',chatPlaceholder:'Ask about your crop…',cameraTitle:'Take crop photo',cameraInstruction:'Place the affected leaf clearly inside the frame.',cameraGuide:'Keep the affected area inside this frame',ready:'Selected',photoAdded:'Added',viewDetails:'View details',symptoms:'Typical signs',management:'Management approach',important:'Important',safetyNote:'Use cultural and integrated management first. Verify current Pakistan registration and the product label before any pesticide decision.',libraryCount:'knowledge entries',noDisease:'No matching disease information found.',emptyHistoryTitle:'No crop checks yet',emptyHistoryText:'Your completed checks will appear here.',healthy:'Healthy',severityNA:'N/A',uncertain:'Uncertain',highConfidence:'High confidence',moderateConfidence:'Moderate confidence',lowConfidence:'Low confidence',demoWelcome:'Assalam-o-Alaikum! I can explain crop symptoms, your diagnosis result, severity and next steps in simple language.',quick1:'What does this result mean?',quick2:'What should I do next?',quick3:'How do I take a better photo?',demoReply:'Sorry, I am currently unable to answer that. Please try again.',demoNoticeText:'Demo preview — connect /api/diagnose for real model inference.',needCrop:'Please select a crop first.',needPhoto:'Please add a crop photo first.',cameraError:'Camera could not be opened. You can still upload a photo.',cameraUnsupported:'Camera access is not supported in this browser.',historyCleared:'Recent checks cleared.',languageChanged:'Language changed to English.',helpToast:'Choose a crop, add a clear photo, then tap Analyze plant.'},
+  ur:{brandTagline:'پودوں کی صحت کا معاون',navHome:'ہوم',navDiagnose:'فصل کی جانچ',navDiseases:'بیماریوں کی معلومات',navHistory:'حالیہ جانچ',languageLabel:'زبان',farmerMode:'کسان دوست موڈ',farmerModeDesc:'بڑے بٹن، آسان رہنمائی اور موبائل کے لیے موزوں۔',systemReady:'اے آئی نظام تیار ہے',breadcrumbHome:'ہوم',help:'مدد',heroBadge:'پاکستان کے لیے اے آئی فصل صحت معاون',heroTitle:'اپنی فصل کی صحت چند سیکنڈ میں جانچیں۔',heroText:'فصل منتخب کریں، صاف تصویر لیں اور آسان زبان میں صحت کی جانچ اور قابلِ عمل رہنمائی حاصل کریں۔',startDiagnosis:'فصل کی جانچ شروع کریں',exploreDiseases:'فصل کی بیماریاں دیکھیں',trust1:'10 پروجیکٹ فصلیں',trust2:'انگریزی + اردو',trust3:'کسان دوست رہنمائی',sampleScan:'نمونہ صحت اسکین',visualCheck:'بصری جانچ',healthyPlant:'صحت مند پودا',cropModels:'فصل ماڈلز',languages:'زبانیں',chooseCropEyebrow:'آپ کا کھیت، آپ کی فصل',chooseCropTitle:'وہ فصل منتخب کریں جس کی جانچ کرنی ہے',chooseCropText:'تشخیص اور بیماریوں کی رہنمائی کے لیے فصل کے کارڈ پر ٹیپ کریں۔',simpleProcess:'آسان طریقہ',howTitle:'کھیت کی تصویر سے مفید رہنمائی تک',step1Title:'فصل منتخب کریں',step1Text:'اپنے کھیت میں موجود فصل منتخب کریں۔',step2Title:'تصویر لیں یا اپ لوڈ کریں',step2Text:'کیمرہ استعمال کریں یا موجودہ تصویر اپ لوڈ کریں۔',step3Title:'نتیجہ دیکھیں',step3Text:'بیماری، اعتماد اور جہاں مناسب ہو شدت دیکھیں۔',step4Title:'اے آئی معاون سے پوچھیں',step4Text:'اپنی زبان میں فصل سے متعلق رہنمائی حاصل کریں۔',diagnoseEyebrow:'فصل کی تشخیص',diagnoseTitle:'فصل کی تصویر جانچیں',diagnoseSubtitle:'فصل منتخب کریں، پھر تصویر اپ لوڈ کریں یا کیمرہ استعمال کریں۔',chooseCrop:'فصل منتخب کریں',chooseCropSmall:'بتائیں تصویر میں کون سی فصل ہے۔',notSelected:'منتخب نہیں',addPhoto:'فصل کی تصویر شامل کریں',photoAdvice:'صاف تصویر استعمال کریں جس میں متاثرہ پتہ یا پودا واضح ہو۔',dropPhoto:'فصل کی تصویر یہاں ڈالیں',orChoose:'یا نیچے سے ایک طریقہ منتخب کریں',uploadPhoto:'تصویر اپ لوڈ کریں',openCamera:'کیمرہ کھولیں',formatHelp:'JPG، PNG، WEBP، HEIC/HEIF، BMP اور TIFF جیسی تصاویر بیک اینڈ کو بھیجی جا سکتی ہیں۔',previewUnavailable:'پیش نظارہ دستیاب نہیں، لیکن فائل پھر بھی بھیجی جا سکتی ہے۔',remove:'ہٹائیں',betterPhoto:'بہتر نتیجے کے لیے',tip1:'قدرتی روشنی استعمال کریں',tip2:'متاثرہ حصہ واضح رکھیں',tip3:'زیادہ زوم یا دھندلی تصویر سے بچیں',analyzePlant:'پودے کا معائنہ کریں',currentCheck:'موجودہ جانچ',crop:'فصل',chooseCropPrompt:'فصل منتخب کریں',photo:'تصویر',notAdded:'شامل نہیں',safeTitle:'محفوظ انداز میں بنایا گیا',safeText:'اگر تصویر واضح نہ ہو یا اعتماد کم ہو تو ایپ غلط یقین ظاہر کرنے کے بجائے دوسری تصویر مانگے گی۔',analyzing:'آپ کی فصل کی جانچ ہو رہی ہے…',analyzingText:'بصری علامات دیکھ کر آسان نتیجہ تیار کیا جا رہا ہے۔',resultEyebrow:'اے آئی صحت کی جانچ',resultTitle:'آپ کی فصل کا نتیجہ',newCheck:'نئی جانچ',detected:'بیماری کی شناخت',likelyCondition:'ممکنہ حالت',confidence:'اعتماد',severity:'شدت',severityConfidence:'شدت کا اعتماد',uncertainAdvice:'یہ نتیجہ غیر یقینی ہے۔ کسی اقدام سے پہلے ایک اور صاف تصویر لیں۔',whatNext:'اب مجھے کیا کرنا چاہیے؟',defaultGuidance:'فصل سے متعلق رہنمائی دیکھیں اور نتیجہ سمجھنے کے لیے معاون سے پوچھیں۔',viewGuidance:'رہنمائی دیکھیں',askAssistant:'معاون سے پوچھیں',libraryEyebrow:'فصل کی معلومات',libraryTitle:'فصل کی بیماریوں کی لائبریری',librarySubtitle:'منتخب فصل کی علامات، بچاؤ اور انتظام جانیں۔',selectCropLabel:'فصل منتخب کریں',searchDiseases:'بیماری یا علامت تلاش کریں',visionAvailable:'اے آئی شناخت دستیاب',infoOnly:'صرف معلومات',historyEyebrow:'آپ کی سرگرمی',historyTitle:'حالیہ فصل جانچ',historySubtitle:'حالیہ مکمل جانچ صرف آپ کے براؤزر میں محفوظ ہوتی ہے۔',clearHistory:'تاریخ صاف کریں',assistantName:'سی ڈی سی این ایس اے معاون',assistantOnline:'مدد کے لیے تیار',chatPlaceholder:'اپنی فصل کے بارے میں پوچھیں…',cameraTitle:'فصل کی تصویر لیں',cameraInstruction:'متاثرہ پتے کو واضح طور پر فریم کے اندر رکھیں۔',cameraGuide:'متاثرہ حصہ اس فریم کے اندر رکھیں',ready:'منتخب',photoAdded:'شامل',viewDetails:'تفصیل دیکھیں',symptoms:'عام علامات',management:'انتظام کا طریقہ',important:'اہم',safetyNote:'پہلے ثقافتی اور مربوط انتظام کو ترجیح دیں۔ کسی بھی زرعی دوا کے فیصلے سے پہلے پاکستان میں موجودہ رجسٹریشن اور پروڈکٹ لیبل کی تصدیق کریں۔',libraryCount:'معلوماتی اندراجات',noDisease:'متعلقہ بیماری کی معلومات نہیں ملیں۔',emptyHistoryTitle:'ابھی کوئی جانچ نہیں',emptyHistoryText:'مکمل شدہ جانچ یہاں نظر آئے گی۔',healthy:'صحت مند',severityNA:'لاگو نہیں',uncertain:'غیر یقینی',highConfidence:'زیادہ اعتماد',moderateConfidence:'درمیانہ اعتماد',lowConfidence:'کم اعتماد',demoWelcome:'السلام علیکم! میں فصل کی علامات، تشخیص، شدت اور اگلے اقدامات آسان زبان میں سمجھا سکتا ہوں۔',quick1:'اس نتیجے کا کیا مطلب ہے؟',quick2:'اب مجھے کیا کرنا چاہیے؟',quick3:'بہتر تصویر کیسے لوں؟',demoReply:'معذرت، فی الحال میں اس کا جواب نہیں دے سکتا۔ براہ کرم دوبارہ کوشش کریں۔',demoNoticeText:'یہ ڈیمو پیش نظارہ ہے — حقیقی ماڈل کے لیے /api/diagnose جوڑیں۔',needCrop:'پہلے فصل منتخب کریں۔',needPhoto:'پہلے فصل کی تصویر شامل کریں۔',cameraError:'کیمرہ نہیں کھل سکا۔ آپ تصویر اپ لوڈ کر سکتے ہیں۔',cameraUnsupported:'اس براؤزر میں کیمرہ دستیاب نہیں۔',historyCleared:'حالیہ جانچ صاف کر دی گئی۔',languageChanged:'زبان اردو کر دی گئی۔',helpToast:'فصل منتخب کریں، صاف تصویر شامل کریں اور پھر پودے کا معائنہ کریں۔'}
 };
 
 const state = {
@@ -3006,7 +3124,7 @@ function renderDiagnoseCropStrip(){
 function renderLibrarySelect(){
   const sel=$('#libraryCropSelect');
   sel.innerHTML=crops.map(c=>`<option value="${c.id}">${state.lang==='ur'?c.ur:c.en}</option>`).join('');
-  sel.value=state.selectedCrop || 'corn';
+  sel.value=state.selectedCrop || crops[0].id;
 }
 function selectCrop(id,fromHome=false){state.selectedCrop=id;localStorage.setItem('ksa_crop',id);renderCropGrid();renderDiagnoseCropStrip();renderLibrarySelect();updateSelectedCropUI();renderDiseaseLibrary();renderChatContext();checkAnalyzeReady(); if(!fromHome)toast(`${state.lang==='ur'?cropById(id).ur:cropById(id).en}`)}
 function updateSelectedCropUI(){
@@ -3022,6 +3140,22 @@ function updateSelectedCropUI(){
     $('#currentCropVisual').innerHTML=`<span class="current-crop-placeholder"></span><div><small>${t('crop')}</small><strong>${t('chooseCropPrompt')}</strong></div>`;
   }
   $('#langSummary').textContent=state.lang==='ur'?'اردو':'English';
+  renderCropDiseaseList();
+}
+
+// Diagnose page: exactly which problems the selected crop's model can detect (= its Disease Library list)
+function renderCropDiseaseList(){
+  const box=$('#cropDiseaseList'); if(!box)return;
+  const c=activeCrop(); const entries=c?(diseaseKnowledge[c.id]||[]):[];
+  if(!c||!entries.length){box.classList.add('hidden');box.innerHTML='';return}
+  const ur=state.lang==='ur'; const name=ur?c.ur:c.en;
+  const chips=entries.map(e=>`<button type="button" class="crop-disease-chip" data-key="${encodeURIComponent(e.en)}">${escapeHTML(ur?e.ur:e.en)}</button>`).join('')
+    +`<span class="crop-disease-chip healthy">${ur?'صحت مند':'Healthy'}</span>`;
+  box.innerHTML=`<div class="crop-disease-head"><strong>${ur?`${name}: یہ ماڈل ان ${entries.length} بیماریوں کی شناخت کرتا ہے`:`${name}: this model can detect these ${entries.length} problems`}</strong>`
+    +`<small>${ur?'اس فہرست سے باہر کا مسئلہ "غیر یقینی" دکھایا جائے گا۔ تفصیل کے لیے نام پر ٹیپ کریں۔':'A problem outside this list is shown as "Uncertain". Tap a name for details.'}</small></div>`
+    +`<div class="crop-disease-chips">${chips}</div>`;
+  box.classList.remove('hidden');
+  box.querySelectorAll('.crop-disease-chip[data-key]').forEach(b=>b.addEventListener('click',()=>openDiseaseByStableKey(c.id,b.dataset.key)));
 }
 
 function handleFile(file){
@@ -3080,8 +3214,13 @@ function normalizeDiagnosis(r){
     disease,
     candidateDisease:r.candidate_disease||(!uncertain?null:rawDisease),
     confidence,
-    severity:(healthy||uncertain)?'N/A':(r.severity||'N/A'),
+    // measured leaf-area severity is kept even when the disease name is uncertain (it does not depend on the name)
+    severity:healthy?'N/A':((uncertain&&r.severity_method!=='lesion_segmentation')?'N/A':(r.severity||'N/A')),
     severityConfidence:(healthy||uncertain)?null:(rawSeverityConfidence==null?null:Number(rawSeverityConfidence)),
+    severityPercent:(healthy||r.severity_percent==null)?null:Number(r.severity_percent),
+    severityMethod:r.severity_method||null,
+    severityReliability:r.severity_reliability||null,
+    severityNote:r.severity_note||null,
     uncertain,
     healthy,
     source:r.diagnosis_source||'cnn',
@@ -3089,6 +3228,7 @@ function normalizeDiagnosis(r){
     symptoms:r.visible_symptoms||null,
     symptomsUr:r.visible_symptoms_ur||null,
     cnnDisease:r.cnn_disease||null,
+    vlmDisease:r.vlm_disease||null,
     modelsAgree:r.models_agree??null,
     reason:r.reason||null
   };
@@ -3101,20 +3241,50 @@ function renderDiagnosisSource(r){
   const ur=state.lang==='ur';const parts=[];
   const reasons={image_not_a_plant:[ 'This photo does not look like a plant. Please take a clear photo of the affected leaf.','یہ تصویر پودے کی نہیں لگتی۔ براہ کرم متاثرہ پتے کی واضح تصویر لیں۔'],
     image_does_not_match_selected_crop:['This photo does not seem to match the selected crop. Please check the crop selection.','یہ تصویر منتخب فصل سے میل نہیں کھاتی۔ براہ کرم فصل کا انتخاب چیک کریں۔'],
-    disease_not_recognised:['The problem is not one of the diseases this app covers for this crop. Please consult a local agriculture expert.','یہ مسئلہ اس فصل کی شامل بیماریوں میں نہیں۔ براہ کرم مقامی زرعی ماہر سے رجوع کریں۔']};
+    disease_not_recognised:['The problem is not one of the diseases this app covers for this crop. Please consult a local agriculture expert.','یہ مسئلہ اس فصل کی شامل بیماریوں میں نہیں۔ براہ کرم مقامی زرعی ماہر سے رجوع کریں۔'],
+    diagnosis_unavailable_try_again:['The disease could not be identified right now (no trained model for this crop and the online check is busy). Severity was still measured. Please try again in a minute.','اس وقت بیماری کی شناخت نہیں ہو سکی (اس فصل کا تربیت یافتہ ماڈل نہیں اور آن لائن جانچ مصروف ہے)۔ شدت پھر بھی ناپی گئی ہے۔ ایک منٹ بعد دوبارہ کوشش کریں۔']};
   if(r.reason&&reasons[r.reason])parts.push(reasons[r.reason][ur?1:0]);
   const sym=ur?(r.symptomsUr||r.symptoms):r.symptoms;
   if(sym)parts.push((ur?'تصویر میں نظر آنے والی علامات: ':'What we see: ')+sym);
+  if(r.source==='trained_model'){
+    const v=r.vlmDisease;
+    const agree=v&&displayDisease(v)===displayDisease(r.disease);
+    const vt=v?(agree?(ur?'Qwen-VL بھی متفق ہے':'Qwen-VL agrees'):(ur?`Qwen-VL کا اندازہ: ${displayDisease(v)}`:`Qwen-VL suggested: ${displayDisease(v)}`)):'';
+    parts.push((ur?'تشخیص: ہمارا تربیت یافتہ ماڈل':'Diagnosed by our trained model')+(vt?' · '+vt:''));
+  }
+  if(r.source==='cnn'){
+    parts.push(ur?'تشخیص: ہمارا تربیت یافتہ ماڈل (آن لائن جانچ اس وقت دستیاب نہیں)':'Diagnosed by our trained model (online second check not available right now)');
+  }
   if(r.source==='qwen_vl'){
     const agreeTxt=r.modelsAgree===true?(ur?'CNN ماڈل بھی متفق ہے':'CNN model agrees'):(r.cnnDisease?(ur?`CNN ماڈل کا اندازہ: ${displayDisease(r.cnnDisease)}`:`CNN model suggested: ${displayDisease(r.cnnDisease)}`):'');
     parts.push((ur?'تشخیص: Qwen-VL بصری ماڈل':'Diagnosed by Qwen-VL vision model')+(agreeTxt?' · '+agreeTxt:''));
   }
+  if(!r.healthy){
+    if(r.severityMethod==='lesion_segmentation'&&r.severityPercent!=null){
+      parts.push(ur?`شدت: ہمارے لیژن سیگمنٹیشن ماڈل نے پتے کا ${r.severityPercent.toFixed(1)}% حصہ متاثر ناپا (ہلکی <10%، درمیانی 10–30%، شدید >30%)`+(r.severityNote==='disease_not_confirmed'?'۔ بیماری کا نام یقینی نہیں، لیکن متاثرہ حصہ ناپا گیا ہے۔':r.severityNote==='not_spot_disease'?'۔ یہ دھبوں والی بیماری نہیں (وائرس / مرجھاؤ / کیڑے)، اس لیے اندازاً ہے۔':r.severityReliability==='approximate'?'۔ اس فصل کے لیے یہ اندازاً ہے اور زیادہ بتا سکتا ہے۔':'')
+        :`Severity: our lesion-segmentation model measured ${r.severityPercent.toFixed(1)}% of the leaf area as diseased (Mild <10%, Moderate 10–30%, Severe >30%)`+(r.severityNote==='disease_not_confirmed'?'. The disease name is not confirmed, but the damaged area is measured.':r.severityNote==='not_spot_disease'?'. Approximate: this is not a spot disease (virus / wilt / pest damage).':r.severityReliability==='approximate'?'. Approximate for this crop - it may over-estimate.':''));
+    }else if(r.severityNote==='leaf_not_clearly_visible'){
+      parts.push(ur?'شدت: پتا واضح نظر نہیں آ رہا، ایک پتے کی قریب سے تصویر لیں۔':'Severity: the leaf is not clearly visible - take a close photo of a single leaf.');
+    }
+  }
   box.textContent=parts.join('\n');box.style.whiteSpace='pre-line';box.classList.toggle('hidden',!parts.length);
 }
 function showResult(r,demo){
-  $('#resultSection').classList.remove('hidden');$('#resultDisease').textContent=r.uncertain?t('uncertain'):displayDisease(r.disease);$('#resultConfidence').textContent=`${Math.round(r.confidence*100)}%`;$('#confidenceFill').style.width=`${Math.round(r.confidence*100)}%`;$('#resultCrop').textContent=state.lang==='ur'?activeCrop().ur:activeCrop().en;$('#resultSeverity').textContent=(r.healthy||r.uncertain)?t('severityNA'):translateSeverity(r.severity);$('#severityConfidence').textContent=(r.healthy||r.uncertain)?t('severityNA'):(r.severityConfidence?`${Math.round(r.severityConfidence*100)}%`:'—');
+  $('#resultSection').classList.remove('hidden');$('#resultDisease').textContent=r.uncertain?t('uncertain'):displayDisease(r.disease);$('#resultConfidence').textContent=`${Math.round(r.confidence*100)}%`;$('#confidenceFill').style.width=`${Math.round(r.confidence*100)}%`;$('#resultCrop').textContent=state.lang==='ur'?activeCrop().ur:activeCrop().en;$('#resultSeverity').textContent=r.healthy?(state.lang==='ur'?'کوئی نہیں (صحت مند)':'None (healthy)'):(r.severity&&r.severity!=='N/A'?translateSeverity(r.severity):t('severityNA'));$('#severityConfidence').textContent=(r.healthy||r.uncertain)?'—':(r.severityConfidence?`${Math.round(r.severityConfidence*100)}%`:'—');renderSeverityArea(r);
   const status=$('.result-status');status.classList.remove('healthy','uncertain'); if(r.uncertain){status.classList.add('uncertain');$('#resultStatusLabel').textContent=t('uncertain');$('#resultStatusIcon').textContent='!'}else if(r.healthy){status.classList.add('healthy');$('#resultStatusLabel').textContent=t('healthy');$('#resultStatusIcon').textContent='✓'}else{$('#resultStatusLabel').textContent=t('detected');$('#resultStatusIcon').textContent='✦'}
   $('#uncertaintyNote').classList.toggle('hidden',!r.uncertain); const entry=r.uncertain?null:findDisease(r.disease); $('#resultGuidance').textContent=entry?(state.lang==='ur'?entry.urduSymptoms:entry.management):t('defaultGuidance');$('#demoNotice').textContent=t('demoNoticeText');$('#demoNotice').classList.toggle('hidden',!demo);renderDiagnosisSource(r);$('#resultSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function renderSeverityArea(r){
+  // Segmentation severity: show the measured % of leaf area instead of a "confidence".
+  const val=$('#severityConfidence');const lab=val&&val.previousElementSibling;if(!val||!lab)return;
+  const ur=state.lang==='ur';
+  if(r.severityMethod==='lesion_segmentation'&&r.severityPercent!=null&&!r.healthy){
+    lab.textContent=ur?'متاثرہ پتے کا رقبہ':'Leaf area affected';
+    val.textContent=`${r.severityPercent.toFixed(1)}%`+(r.severityReliability==='approximate'?(ur?' (اندازاً)':' (approx.)'):'');
+  }else{
+    lab.textContent=t('severityConfidence');
+    if(r.healthy)val.textContent='—';
+  }
 }
 function translateSeverity(s){const x=String(s).toUpperCase();if(state.lang==='en')return x;return({MILD:'ہلکی',MODERATE:'درمیانی',SEVERE:'شدید','N/A':t('severityNA')})[x]||s}
 function displayDisease(name){const entry=findDisease(name);return entry?(state.lang==='ur'?entry.ur:entry.en):name}
@@ -3123,14 +3293,14 @@ function newCheck(){state.latestDiagnosis=null;clearPhoto();$('#resultSection').
 function saveHistory(r){
   const c=activeCrop();
   const healthy=Boolean(r.healthy)||String(r.disease||'').toLowerCase()==='healthy';
-  const item={id:Date.now(),crop:c.id,disease:r.disease,confidence:r.confidence,healthy,uncertain:Boolean(r.uncertain),severity:(healthy||r.uncertain)?'N/A':(r.severity||'N/A'),severityConfidence:(healthy||r.uncertain)?null:(r.severityConfidence??null),time:new Date().toISOString()};
+  const item={id:Date.now(),crop:c.id,disease:r.disease,confidence:r.confidence,healthy,uncertain:Boolean(r.uncertain),severity:healthy?'N/A':(r.severity||'N/A'),severityConfidence:(healthy||r.uncertain)?null:(r.severityConfidence??null),severityPercent:(healthy||r.uncertain)?null:(r.severityPercent??null),time:new Date().toISOString()};
   state.history=[item,...state.history].slice(0,12);
   localStorage.setItem('ksa_history',JSON.stringify(state.history));
   renderHistory();
 }
 
 function renderDiseaseLibrary(){
-  const libraryCropId=$('#libraryCropSelect')?.value || state.selectedCrop || 'corn';
+  const libraryCropId=$('#libraryCropSelect')?.value || state.selectedCrop || crops[0].id;
   const c=cropById(libraryCropId)||crops[0];
   $('#libraryCropSelect').value=c.id;
   const entries=diseaseKnowledge[c.id]||[];
@@ -3161,7 +3331,7 @@ function openDiseaseByStableKey(cropId,key){
   const e=findDiseaseForCrop(cropId,key);
   if(e) openDisease(e,cropId);
 }
-function openDiseaseByName(name){const e=findDisease(name);if(e)openDisease(e,state.selectedCrop||'corn')}
+function openDiseaseByName(name){const e=findDisease(name);if(e)openDisease(e,state.selectedCrop||crops[0].id)}
 
 function sourceLinksHTML(e){
   const regulatory=new Set(['dppRegistered','dppBanned','punjabSoil']);
@@ -3273,7 +3443,7 @@ async function loadDiseaseReferenceImage(e){
     }catch(err){setDrawerImageFallback(e,query)}
   }
 }
-function openDisease(e,cropId=(state.selectedCrop||'corn')){
+function openDisease(e,cropId=(state.selectedCrop||crops[0].id)){
   if(!e) return;
   const crop=cropById(cropId)||activeCrop()||crops[0];
   state.openDiseaseRef={cropId:crop.id,key:e.en};
@@ -3350,7 +3520,7 @@ function closeDiseaseDrawer(){
 
 function renderHistory(){
   const list=$('#historyList'); if(!state.history.length){list.innerHTML=`<div class="history-empty"><div class="empty-icon">—</div><h3>${t('emptyHistoryTitle')}</h3><p>${t('emptyHistoryText')}</p></div>`;return}
-  list.innerHTML=state.history.map(h=>{const c=cropById(h.crop)||crops[0],e=findDisease(h.disease,h.crop);return`<article class="history-item"><div class="history-crop"><img src="${c.image}" alt="" referrerpolicy="no-referrer"></div><div><h3>${state.lang==='ur'?(e?.ur||h.disease):(e?.en||h.disease)}</h3><p>${state.lang==='ur'?c.ur:c.en} · ${new Date(h.time).toLocaleString(state.lang==='ur'?'ur-PK':'en-PK',{dateStyle:'medium',timeStyle:'short'})}</p></div><div class="history-score">${Math.round(h.confidence*100)}%</div></article>`}).join('');
+  list.innerHTML=state.history.map(h=>{const c=cropById(h.crop)||crops[0],e=findDisease(h.disease,h.crop);return`<article class="history-item"><div class="history-crop"><img src="${c.image}" alt="" referrerpolicy="no-referrer"></div><div><h3>${h.healthy?t('healthy'):h.uncertain?t('uncertain'):(state.lang==='ur'?(e?.ur||h.disease):(e?.en||h.disease))}</h3><p>${state.lang==='ur'?c.ur:c.en}${(!h.healthy&&h.severity&&h.severity!=='N/A')?` · ${t('severity')}: ${translateSeverity(h.severity)}${h.severityPercent!=null?` (${Number(h.severityPercent).toFixed(1)}%)`:''}`:''} · ${new Date(h.time).toLocaleString(state.lang==='ur'?'ur-PK':'en-PK',{dateStyle:'medium',timeStyle:'short'})}</p></div><div class="history-score">${Math.round(h.confidence*100)}%</div></article>`}).join('');
 }
 
 function seedChat(){if($('#chatMessages').children.length)return;addMessage('assistant',t('demoWelcome'));renderQuickPrompts()}
@@ -3389,7 +3559,7 @@ function renderMarkdown(text){
   if(inParagraph)html+='</p>';
   return html;
 }
-function addMessage(role,text,seed=false){const div=document.createElement('div');div.className=`message ${role}`;div.dataset.seed=seed?'true':'false';const contentSpan=document.createElement('span');contentSpan.className='msg-content';contentSpan.innerHTML=renderMarkdown(text);div.appendChild(contentSpan);const time=document.createElement('small');time.textContent=new Date().toLocaleTimeString(state.lang==='ur'?'ur-PK':'en-PK',{hour:'2-digit',minute:'2-digit'});div.appendChild(time);if(role==='assistant'){const listenBtn=document.createElement('button');listenBtn.className='msg-listen-btn';listenBtn.innerHTML='<svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';listenBtn.title='Listen';listenBtn.addEventListener('click',()=>speakText(text,listenBtn));div.appendChild(listenBtn)}$('#chatMessages').appendChild(div);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}
+function addMessage(role,text,seed=false){const div=document.createElement('div');div.className=`message ${role}`;div.dataset.seed=seed?'true':'false';const contentSpan=document.createElement('span');contentSpan.className='msg-content';contentSpan.innerHTML=renderMarkdown(text);div.appendChild(contentSpan);const time=document.createElement('small');time.textContent=new Date().toLocaleTimeString(state.lang==='ur'?'ur-PK':'en-PK',{hour:'2-digit',minute:'2-digit'});div.appendChild(time);if(role==='assistant'){const listenBtn=document.createElement('button');listenBtn.className='msg-listen-btn';listenBtn.innerHTML='<svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';listenBtn.title='Listen';listenBtn.addEventListener('click',()=>speakText(text,listenBtn));div.appendChild(msgActions(listenBtn,contentSpan))}$('#chatMessages').appendChild(div);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}
 function renderQuickPrompts(){$('#quickPrompts').innerHTML=[t('quick1'),t('quick2'),t('quick3')].map(q=>`<button class="quick-prompt">${q}</button>`).join('');$$('.quick-prompt').forEach(b=>b.addEventListener('click',()=>{ $('#chatInput').value=b.textContent; $('#chatForm').requestSubmit()}))}
 function renderChatContext(){
   const c=activeCrop();let chips=[];
@@ -3402,48 +3572,60 @@ function renderChatContext(){
   $('#chatContext').innerHTML=chips.length?chips.map(x=>`<span class="context-chip">${escapeHTML(x)}</span>`).join(''):`<span class="context-chip">${t('chooseCropPrompt')}</span>`;
 }
 function openChat(force=false){$('#chatPanel').classList.add('open');if(force)$('#chatInput').focus()}
+// one chat conversation per page load (the server keeps each conversation separate)
+const CHAT_SESSION_ID=(()=>{try{return crypto.randomUUID()}catch(_){return 's'+Date.now()+Math.random().toString(36).slice(2)}})();
 async function sendChat(e){e.preventDefault();const input=$('#chatInput'),text=input.value.trim();if(!text)return;const wasVoiceInput=_lastInputWasVoice;_lastInputWasVoice=false;addMessage('user',text);input.value='';autoGrow({target:input});
-  const assistantDiv=document.createElement('div');assistantDiv.className='message assistant';const contentSpan=document.createElement('span');contentSpan.className='msg-content';contentSpan.innerHTML='';assistantDiv.appendChild(contentSpan);const time=document.createElement('small');time.textContent=new Date().toLocaleTimeString(state.lang==='ur'?'ur-PK':'en-PK',{hour:'2-digit',minute:'2-digit'});assistantDiv.appendChild(time);const listenBtn=document.createElement('button');listenBtn.className='msg-listen-btn';listenBtn.innerHTML='<svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';listenBtn.title='Listen';assistantDiv.appendChild(listenBtn);$('#chatMessages').appendChild(assistantDiv);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight;
-  let fullReply='';
-  try{const history=$$('#chatMessages .message').map(m=>({role:m.classList.contains('user')?'user':'assistant',content:m.childNodes[0].textContent}));const healthy=Boolean(state.latestDiagnosis?.healthy)||String(state.latestDiagnosis?.disease||'').toLowerCase()==='healthy';const context={crop:state.selectedCrop,disease:state.latestDiagnosis?.disease||null,severity:healthy?'N/A':(state.latestDiagnosis?.severity||null),disease_confidence:state.latestDiagnosis?.confidence||null,severity_confidence:healthy?null:(state.latestDiagnosis?.severityConfidence??null),uncertainty:state.latestDiagnosis?.uncertain||false,healthy,language:state.lang};const r=await fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,context,history})});if(!r.ok){let message='The assistant is unavailable right now.';try{const body=await r.json();message=body?.detail?.message||body?.detail||body?.message||message}catch(_){ }throw new Error(message)}const reader=r.body.getReader();const decoder=new TextDecoder();let buffer='';while(true){const{done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});const lines=buffer.split('\n');buffer=lines.pop();for(const line of lines){if(line.startsWith('data: ')){const raw=line.slice(6);if(raw==='[DONE]')break;try{fullReply+=JSON.parse(raw)}catch(e){fullReply+=raw}contentSpan.innerHTML=renderMarkdown(fullReply);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}}}if(buffer.trim()){const blines=buffer.split('\n');for(const line of blines){if(line.startsWith('data: ')){const raw=line.slice(6);if(raw!=='[DONE]'){try{fullReply+=JSON.parse(raw)}catch(e){fullReply+=raw}contentSpan.innerHTML=renderMarkdown(fullReply);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}}}}if(!fullReply)throw new Error('The assistant returned an empty response.')}catch(err){fullReply=state.lang==='ur'?'معاون اس وقت دستیاب نہیں ہے۔ براہ کرم دوبارہ کوشش کریں۔':`Assistant unavailable: ${err.message||'Please try again.'}`;contentSpan.innerHTML=renderMarkdown(fullReply)}
+  const assistantDiv=document.createElement('div');assistantDiv.className='message assistant';const contentSpan=document.createElement('span');contentSpan.className='msg-content';contentSpan.innerHTML='';assistantDiv.appendChild(contentSpan);const time=document.createElement('small');time.textContent=new Date().toLocaleTimeString(state.lang==='ur'?'ur-PK':'en-PK',{hour:'2-digit',minute:'2-digit'});assistantDiv.appendChild(time);const listenBtn=document.createElement('button');listenBtn.className='msg-listen-btn';listenBtn.innerHTML='<svg viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';listenBtn.title='Listen';assistantDiv.appendChild(msgActions(listenBtn,contentSpan));$('#chatMessages').appendChild(assistantDiv);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight;
+  let fullReply='';const voiceOut=wasVoiceInput?streamSpeaker(listenBtn):null;
+  try{const history=$$('#chatMessages .message').map(m=>({role:m.classList.contains('user')?'user':'assistant',content:m.childNodes[0].textContent}));const healthy=Boolean(state.latestDiagnosis?.healthy)||String(state.latestDiagnosis?.disease||'').toLowerCase()==='healthy';const context={crop:state.selectedCrop,disease:state.latestDiagnosis?.disease||null,severity:healthy?'N/A':(state.latestDiagnosis?.severity||null),disease_confidence:state.latestDiagnosis?.confidence||null,severity_confidence:healthy?null:(state.latestDiagnosis?.severityConfidence??null),severity_percent:healthy?null:(state.latestDiagnosis?.severityPercent??null),uncertainty:state.latestDiagnosis?.uncertain||false,healthy,language:state.lang};const r=await fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:text,context,history,session_id:CHAT_SESSION_ID})});if(!r.ok){let message='The assistant is unavailable right now.';try{const body=await r.json();message=body?.detail?.message||body?.detail||body?.message||message}catch(_){ }throw new Error(message)}const reader=r.body.getReader();const decoder=new TextDecoder();let buffer='';while(true){const{done,value}=await reader.read();if(done)break;buffer+=decoder.decode(value,{stream:true});const lines=buffer.split('\n');buffer=lines.pop();for(const line of lines){if(line.startsWith('data: ')){const raw=line.slice(6);if(raw==='[DONE]')break;try{fullReply+=JSON.parse(raw)}catch(e){fullReply+=raw}contentSpan.innerHTML=renderMarkdown(fullReply);voiceOut&&voiceOut.feed(fullReply);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}}}if(buffer.trim()){const blines=buffer.split('\n');for(const line of blines){if(line.startsWith('data: ')){const raw=line.slice(6);if(raw!=='[DONE]'){try{fullReply+=JSON.parse(raw)}catch(e){fullReply+=raw}contentSpan.innerHTML=renderMarkdown(fullReply);voiceOut&&voiceOut.feed(fullReply);$('#chatMessages').scrollTop=$('#chatMessages').scrollHeight}}}}if(!fullReply)throw new Error('The assistant returned an empty response.')}catch(err){fullReply=state.lang==='ur'?'معاون اس وقت دستیاب نہیں ہے۔ براہ کرم دوبارہ کوشش کریں۔':`Assistant unavailable: ${err.message||'Please try again.'}`;contentSpan.innerHTML=renderMarkdown(fullReply)}
   listenBtn.addEventListener('click',()=>speakText(fullReply,listenBtn));
-  if(wasVoiceInput){speakText(fullReply,listenBtn)}}
+  if(voiceOut)voiceOut.end(fullReply)}
 function autoGrow(e){const el=e.target;el.style.height='auto';el.style.height=`${Math.min(el.scrollHeight,100)}px`}
 
-let _currentSpeakingBtn=null;
-async function speakText(text,btn){
+// ---- Voice replies: short pieces, played in order while the next pieces are prepared ----
+// Before, the whole answer was turned into ONE audio file after the answer finished (10-30 s of silence).
+function speechClean(t){return String(t||'').replace(/[•●▪]/g,' ').replace(/\*\*|__|`|#+\s/g,'').replace(/^\s*[-•*]\s+/gm,'').replace(/\[([^\]]+)\]\([^)]+\)/g,'$1')}
+function splitForSpeech(text,firstMax=110,max=230){
+  const parts=speechClean(text).split(/(?<=[.!?؟۔:])\s+|\n+/).map(x=>x.trim()).filter(Boolean);
+  const out=[];let cur='';
+  for(const p of parts){const lim=out.length?max:firstMax;if(cur&&(cur+' '+p).length>lim){out.push(cur);cur=p}else cur=cur?cur+' '+p:p}
+  if(cur)out.push(cur);return out;
+}
+const Speech={gen:0,queue:[],playing:false,btn:null,closed:true,
+  stop(){this.gen++;this.queue=[];this.playing=false;this.closed=true;const a=$('#chatAudio');try{a.pause();a.removeAttribute('src');a.load()}catch(_){}if(this.btn)this.btn.classList.remove('speaking');this.btn=null},
+  start(btn){this.stop();this.btn=btn||null;this.closed=false;if(btn)btn.classList.add('speaking')},
+  add(text){const t=String(text||'').trim();if(!t||this.closed)return;const lang=/[؀-ۿ]/.test(t)?'urdu':'english';
+    const p=fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:t,language:lang})}).then(r=>r.ok?r.blob():null).catch(()=>null);
+    this.queue.push(p);this.pump(this.gen)},
+  end(){this.closed=true;this.pump(this.gen)},
+  async pump(g){if(this.playing)return;this.playing=true;const audio=$('#chatAudio');
+    while(this.queue.length&&g===this.gen){const blob=await this.queue.shift();if(g!==this.gen)break;if(!blob)continue;
+      const url=URL.createObjectURL(blob);audio.src=url;
+      await new Promise(res=>{audio.onended=res;audio.onerror=res;audio.play().catch(res)});URL.revokeObjectURL(url)}
+    if(g===this.gen){this.playing=false;if(this.closed&&!this.queue.length){if(this.btn)this.btn.classList.remove('speaking');this.btn=null}}}
+};
+function speakText(text,btn){
   if(!text)return;
-  const audio=$('#chatAudio');
-  if(_currentSpeakingBtn===btn&&audio.src){
-    audio.pause();
-    audio.currentTime=0;
-    if(btn){btn.classList.remove('speaking');btn.disabled=false}
-    _currentSpeakingBtn=null;
-    return;
-  }
-  if(_currentSpeakingBtn){
-    audio.pause();
-    audio.currentTime=0;
-    if(_currentSpeakingBtn){_currentSpeakingBtn.classList.remove('speaking');_currentSpeakingBtn.disabled=false}
-  }
-  _currentSpeakingBtn=btn;
-  const isUrdu=/[\u0600-\u06FF]/.test(text);
-  const language=isUrdu?'urdu':'english';
-  if(btn){btn.classList.add('speaking');btn.disabled=false}
-  try{
-    const r=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,language})});
-    if(!r.ok)throw new Error('TTS failed');
-    const blob=await r.blob();
-    const url=URL.createObjectURL(blob);
-    audio.src=url;
-    audio.onended=()=>{if(btn){btn.classList.remove('speaking');btn.disabled=false}_currentSpeakingBtn=null;URL.revokeObjectURL(url)};
-    audio.onerror=()=>{if(btn){btn.classList.remove('speaking');btn.disabled=false}_currentSpeakingBtn=null;URL.revokeObjectURL(url)};
-    await audio.play();
-  }catch(err){
-    console.warn('TTS error:',err);
-    if(btn){btn.classList.remove('speaking');btn.disabled=false}
-    _currentSpeakingBtn=null;
-  }
+  if(btn&&Speech.btn===btn){Speech.stop();return}      // second tap = stop
+  Speech.start(btn);splitForSpeech(text).forEach(c=>Speech.add(c));Speech.end();
+}
+// speaks an answer WHILE it is still streaming in: each finished sentence group is sent to the voice at once
+function streamSpeaker(btn){
+  let done=0;Speech.start(btn);
+  return{feed(full){const rest=full.slice(done);const m=[...rest.matchAll(/[.!?؟۔:\n](\s|$)/g)];if(!m.length)return;
+      const cut=m[m.length-1].index+1;const piece=rest.slice(0,cut);if(speechClean(piece).trim().length<(done?150:60))return;
+      splitForSpeech(piece).forEach(c=>Speech.add(c));done+=cut},
+    end(full){splitForSpeech(full.slice(done)).forEach(c=>Speech.add(c));done=full.length;Speech.end()}};
+}
+// copy + listen buttons under every assistant answer
+function msgActions(listenBtn,contentEl){
+  const box=document.createElement('div');box.className='msg-actions';box.appendChild(listenBtn);
+  const copy=document.createElement('button');copy.type='button';copy.className='msg-listen-btn msg-copy-btn';copy.title=state.lang==='ur'?'کاپی کریں':'Copy';
+  const icon='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>';copy.innerHTML=icon;
+  copy.addEventListener('click',async()=>{const txt=contentEl.innerText.trim();let ok=false;
+    try{await navigator.clipboard.writeText(txt);ok=true}catch(_){try{const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();ok=document.execCommand('copy');ta.remove()}catch(__){}}
+    copy.innerHTML=ok?'<svg viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></svg>':icon;toast(ok?(state.lang==='ur'?'جواب کاپی ہو گیا':'Answer copied'):'Copy failed');setTimeout(()=>copy.innerHTML=icon,1500)});
+  box.appendChild(copy);return box;
 }
 
 let _recognition=null;
@@ -3485,6 +3667,7 @@ async function toggleMic(){
     const duration=Date.now()-_startedAt;
     _listening=false;_recognition=null;$('#chatMic').classList.remove('listening');
     if(duration<500&&_startedAt>0){toast('Microphone did not detect speech. Check permissions and try again.')}
+    else if(_lastInputWasVoice&&$('#chatInput').value.trim()){$('#chatForm').requestSubmit()}   // send at once, no extra tap
   };
   _recognition.onerror=(e)=>{
     _listening=false;_recognition=null;$('#chatMic').classList.remove('listening');
@@ -3529,7 +3712,7 @@ function initNeuralTree(){
   if(!wrap) return;
 
   const STEPS=[
-    {step:'01',title:'Select Crop',desc:'Choose from 12 supported crops',icon:'<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M2 12h20M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10A15 15 0 0 1 12 2z"/>',angle:-60},
+    {step:'01',title:'Select Crop',desc:'Choose from 10 supported crops',icon:'<path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M2 12h20M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10A15 15 0 0 1 12 2z"/>',angle:-60},
     {step:'02',title:'Upload Photo',desc:'Take a clear picture of the leaf',icon:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',angle:-20},
     {step:'03',title:'Get Diagnosis',desc:'AI identifies disease and severity',icon:'<path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>',angle:20},
     {step:'04',title:'AI Assistant',desc:'Get treatment advice instantly',icon:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',angle:60},

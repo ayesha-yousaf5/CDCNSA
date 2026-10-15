@@ -1,0 +1,27 @@
+{
+  "crop": "corn",
+  "disease": {
+    "runtime_kind": "classification",
+    "architecture": "densenet121",
+    "checkpoint": "models/corn/disease/corn_disease_densenet121_srcsplit.pt",
+    "image_size": 224,
+    "normalization_mean": [
+      0.485,
+      0.456,
+      0.406
+    ],
+    "normalization_std": [
+      0.229,
+      0.224,
+      0.225
+    ],
+    "class_to_idx": {
+      "Gray Leaf Spot": 0,
+      "Northern Leaf Blight": 1,
+      "healthy": 2
+    },
+    "enabled": true,
+    "note": "source-held-out training 2026-10-15; ood_test macroF1=0.6635"
+  },
+  "disease_threshold": 0.5
+}

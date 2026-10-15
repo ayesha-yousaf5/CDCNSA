@@ -1,0 +1,96 @@
+{
+  "crop": "corn",
+  "best_arch": "densenet121",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.8453,
+      "minutes": 3.1
+    },
+    "resnet50": {
+      "select_macroF1": 0.8528,
+      "minutes": 1.8
+    },
+    "densenet121": {
+      "select_macroF1": 0.8791,
+      "minutes": 3.1
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.8658,
+      "minutes": 3.0
+    }
+  },
+  "temperature": 0.685,
+  "threshold": 0.5,
+  "classes": [
+    "Gray Leaf Spot",
+    "Northern Leaf Blight",
+    "healthy"
+  ],
+  "counts": {
+    "pakistan_plantcity": {
+      "healthy": 124,
+      "Gray Leaf Spot": 120
+    },
+    "cds_purdue": {
+      "Gray Leaf Spot": 400,
+      "Northern Leaf Blight": 400
+    },
+    "bangladesh_corn": {
+      "healthy": 400,
+      "Gray Leaf Spot": 400
+    },
+    "bd_maize_multiformat": {
+      "Northern Leaf Blight": 35,
+      "Gray Leaf Spot": 12,
+      "healthy": 81
+    },
+    "plantvillage": {
+      "Northern Leaf Blight": 300
+    },
+    "plantdoc": {
+      "Northern Leaf Blight": 168,
+      "Gray Leaf Spot": 72
+    }
+  },
+  "download_status": {
+    "pakistan_plantcity": "ok",
+    "cds_purdue": "ok",
+    "bangladesh_corn": "ok",
+    "bd_maize_multiformat": "ok",
+    "plantvillage": "ok",
+    "plantdoc": "ok"
+  },
+  "val_in_distribution": {
+    "n": 258,
+    "acc": 0.9884,
+    "macroF1": 0.9874,
+    "answered": 1.0,
+    "acc_answered": 0.9884
+  },
+  "ood_test": {
+    "n": 120,
+    "acc": 0.6667,
+    "macroF1": 0.6635,
+    "answered": 0.958,
+    "acc_answered": 0.687
+  },
+  "extra_test": null,
+  "external_real_world": {
+    "pakistan_plantcity": {
+      "healthy": {
+        "n": 62,
+        "acc": 0.8387,
+        "answered": 0.952,
+        "acc_answered": 0.8475
+      },
+      "Gray Leaf Spot": {
+        "n": 60,
+        "acc": 1.0,
+        "answered": 0.983,
+        "acc_answered": 1.0
+      }
+    }
+  },
+  "verdict": "WEAK - keep Qwen as primary"
+}

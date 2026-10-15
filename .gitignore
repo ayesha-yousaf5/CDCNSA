@@ -36,3 +36,13 @@ ChatGPT*.png
 
 # Temp
 *.log
+
+# Trained model files (too large for GitHub) and local-only data
+models_final/**/*.pt
+models_final/**/*.ts
+models_final/**/*.pth
+*.tar.gz
+training/results/
+test_images/
+archive/
+.venv/

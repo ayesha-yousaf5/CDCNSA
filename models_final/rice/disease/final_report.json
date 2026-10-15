@@ -1,0 +1,100 @@
+{
+  "crop": "rice",
+  "best_arch": "dinov2_vits14",
+  "selected_on": "ood_val",
+  "backbones": {
+    "efficientnet_b0": {
+      "select_macroF1": 0.8124,
+      "minutes": 22.3
+    },
+    "resnet50": {
+      "select_macroF1": 0.8219,
+      "minutes": 22.8
+    },
+    "densenet121": {
+      "select_macroF1": 0.7931,
+      "minutes": 21.9
+    },
+    "dinov2_vits14": {
+      "select_macroF1": 0.8363,
+      "minutes": 22.4
+    }
+  },
+  "temperature": 0.645,
+  "threshold": 0.5,
+  "classes": [
+    "Bacterial Leaf Blight",
+    "Brown Spot",
+    "Leaf Scald",
+    "Rice Blast",
+    "Rice Tungro",
+    "Sheath Blight",
+    "healthy"
+  ],
+  "counts": {
+    "riceleafbd": {
+      "Rice Tungro": 400,
+      "Bacterial Leaf Blight": 335,
+      "Brown Spot": 348,
+      "healthy": 251
+    },
+    "rice_sambalpur": {
+      "Brown Spot": 169,
+      "Bacterial Leaf Blight": 136,
+      "Rice Blast": 121,
+      "Rice Tungro": 217
+    },
+    "rice_diu_5class": {
+      "Rice Blast": 400,
+      "healthy": 400,
+      "Bacterial Leaf Blight": 215,
+      "Rice Tungro": 251
+    },
+    "rice_diu_pest": {
+      "healthy": 400,
+      "Rice Tungro": 200,
+      "Leaf Scald": 372,
+      "Rice Blast": 400,
+      "Rice Leaffolder": 229
+    },
+    "dhan_white_bg": {
+      "Leaf Scald": 140,
+      "Sheath Blight": 214,
+      "Brown Spot": 89,
+      "Rice Blast": 194,
+      "Rice Tungro": 117
+    },
+    "dhan_field": {
+      "Rice Tungro": 75,
+      "Brown Spot": 49,
+      "Leaf Scald": 74,
+      "Rice Blast": 73,
+      "Sheath Blight": 64
+    }
+  },
+  "download_status": {
+    "riceleafbd": "ok",
+    "rice_sambalpur": "ok",
+    "rice_diu_5class": "ok",
+    "rice_diu_pest": "ok",
+    "dhan_white_bg": "ok",
+    "dhan_field": "ok"
+  },
+  "val_in_distribution": {
+    "n": 585,
+    "acc": 0.8667,
+    "macroF1": 0.877,
+    "answered": 0.961,
+    "acc_answered": 0.8861
+  },
+  "ood_test": {
+    "n": 418,
+    "acc": 0.8565,
+    "macroF1": 0.7556,
+    "answered": 0.943,
+    "acc_answered": 0.8883
+  },
+  "extra_test": null,
+  "external_real_world": null,
+  "verdict": "PASS (ship it)"
+}
