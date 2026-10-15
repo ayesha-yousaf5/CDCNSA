@@ -144,13 +144,18 @@ def dl_mendeley(spec, dest):
     ds, ver = spec["id"], spec.get("version", 1)
     only = re.compile(spec["only_files"], re.I) if spec.get("only_files") else None
     if not only and not spec.get("download_folders"):   # the bulk zip contains every file, so it is skipped when only some files are wanted
-        zip_url = f"https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/{ds}-{ver}.zip"
-        try:
-            print("  trying Mendeley bulk zip ...")
-            http_get(zip_url, dest / f"{ds}-{ver}.zip", timeout=600)
-            return True
-        except Exception as e:
-            print("  bulk zip failed:", e)
+        # the website's "Download All" endpoint redirects to a signed copy of the full zip (the plain S3 cache URL
+        # answers 403); the per-file API below returns at most 1,000 files per folder, so the zip is preferred.
+        for zip_url in (f"https://data.mendeley.com/public-api/zip/{ds}/download/{ver}",
+                        f"https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/{ds}-{ver}.zip"):
+            try:
+                print("  trying Mendeley bulk zip ...", zip_url.split("/")[2])
+                http_get(zip_url, dest / f"{ds}-{ver}.zip", timeout=1800)
+                if zipfile.is_zipfile(dest / f"{ds}-{ver}.zip"):
+                    return True
+                print("  bulk download is not a zip -> next option"); (dest / f"{ds}-{ver}.zip").unlink(missing_ok=True)
+            except Exception as e:
+                print("  bulk zip failed:", e)
     # fallback: public API. Files are saved under their FULL folder path (class folders like
     # "Field Background/Rice Blast/" carry the labels - flattening them loses every label).
     try:
@@ -166,7 +171,10 @@ def dl_mendeley(spec, dest):
         todo = [(Path(), f) for f in http_json(f"{base}/files?folder_id=root&version={ver}")]
         for fo in folders:
             try:
-                todo += [(folder_path(fo["id"]), f) for f in http_json(f"{base}/files?folder_id={fo['id']}&version={ver}")]
+                got = http_json(f"{base}/files?folder_id={fo['id']}&version={ver}")
+                if len(got) >= 1000:
+                    print(f"  WARNING: folder '{fo['name']}' lists 1,000 files - the Mendeley API stops there, some photos are missing")
+                todo += [(folder_path(fo["id"]), f) for f in got]
             except Exception:
                 pass
         print(f"  Mendeley API: {len(todo)} files in {len(folders)} folders")
@@ -525,7 +533,7 @@ def ingest_dataverse(spec, dest):
             if tmp.exists(): tmp.unlink()
     return True
 
-CACHE_VERSION = "2026-10-15c"   # bump when download/label logic changes -> old caches are rebuilt
+CACHE_VERSION = "2026-10-15d"   # bump when download/label logic changes -> old caches are rebuilt
 def spec_key(spec):
     return CACHE_VERSION + json.dumps({k: v for k, v in spec.items() if k != "role"}, sort_keys=True) + json.dumps(ALIASES)
 
