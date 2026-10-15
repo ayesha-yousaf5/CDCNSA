@@ -390,9 +390,12 @@ def class_for(rel_parts, require=None, exclude=None, allow_aug=False):
     if DROP_PATH.search(path_txt) and not (allow_aug and "macosx" not in path_txt): return "SKIP_AUG"
     if require and not re.search(require, path_txt, re.I): return "OTHER_CROP"
     if exclude and re.search(exclude, path_txt, re.I): return None
-    for part in reversed([norm_part(p) for p in rel_parts[:-1]] + [norm_part(Path(rel_parts[-1]).stem)]):
-        # dataset-title folders (long, or containing "dataset") must not decide the class
-        if "dataset" in part or len(part.split()) > 6 or part.endswith(" zip x"):
+    parts_ = [norm_part(p) for p in rel_parts[:-1]] + [norm_part(Path(rel_parts[-1]).stem)]
+    for i, part in reversed(list(enumerate(parts_))):
+        # dataset-title folders (long, or containing "dataset") must not decide the class;
+        # PlantVillage-style "Crop___Disease" folders are class folders and are never skipped for length
+        pv_style = i < len(rel_parts) - 1 and "___" in rel_parts[i]       # PlantVillage "Crop___Disease" class folder
+        if "dataset" in part or part.endswith(" zip x") or (len(part.split()) > 6 and not pv_style):
             continue
         for rx, target in COMPILED:
             if rx.search(part):

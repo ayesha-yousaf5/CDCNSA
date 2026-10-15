@@ -38,6 +38,13 @@ CROPS = {
             # Bangladesh multi-format: RAW_Image only (Converted/Annotation folders hold the same photos again)
             {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1,
              "require": r"(^| / )raw image( / |$)", "download_folders": r"RAW_Image"},
+            # PlantVillage corn (lab photos, Hughes & Salathe 2015) capped at 300/class: the only clean, large source of
+            # Common Rust (field sets give just 143 rust photos). Kept a minority; background-swap augmentation hides the
+            # plain lab background. (Checked: Mendeley 'Corn Leaf Disease Classification' hmkd6nbngr is PlantVillage +
+            # web images + augmented copies -> not used.)
+            {"name": "plantvillage", "kind": "plantvillage", "role": "train", "cap": 300,
+             "folders": ["Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot", "Corn_(maize)___Common_rust_",
+                         "Corn_(maize)___Northern_Leaf_Blight", "Corn_(maize)___healthy"]},
             # PlantDoc (real-world photos, folder-labelled): never trained on -> picks & calibrates the model
             {"name": "plantdoc", "kind": "plantdoc", "role": "heldout", "require": r"corn"},
         ],
