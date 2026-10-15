@@ -92,23 +92,31 @@ CROPS = {
     },
     "apple": {
         "title": "Apple",
-        # Follows Plant Pathology 2021 (FGVC8; Thapa et al., Cornell): single-label images of its 5 main classes
-        # (same protocol as arXiv 2605.08618, 15,675 images). frog_eye_leaf_spot = Black Rot fungus.
-        "classes": ["Apple Scab", "Cedar Apple Rust", "Apple Powdery Mildew", "Black Rot", "healthy"],
+        # Pakistan/Kashmir-relevant apple leaf diseases, each with field photos from >= 2 paper-backed sources:
+        #  PlantCity (Pakistan: Chitral & Charsadda, Data in Brief 2025), Indigenous Kashmir set (Data in Brief 2024),
+        #  AppleLeaf9 (Yang et al., Agronomy 2022: ATLDSD + Plant Pathology 2020/2021 + a little PlantVillage, ~94% in the wild).
+        # Dropped: rust (cedar-apple / Gymnosporangium - not a main Pakistani problem), frog-eye/black rot, grey spot,
+        # brown spot (Marssonina - one source only), multi-disease 'complex' images.
+        "classes": ["Apple Scab", "Alternaria Leaf Blotch", "Powdery Mildew", "Apple Mosaic", "healthy"],
         "aliases": [
-            (r"complex", None),
-            (r"alternaria|mosaic|marssonina|blotch", "__DISEASED__"),   # Kashmir external test: 'some disease'
+            (r"complex|rust|frog|black ?rot|gr[ae]y spot|brown spot|marssonina|blotch fruit|cedar", None),
+            (r"alternaria", "Alternaria Leaf Blotch"),
+            (r"mosaic", "Apple Mosaic"),
             (r"scab", "Apple Scab"),
-            (r"rust", "Cedar Apple Rust"),
-            (r"powdery", "Apple Powdery Mildew"),
-            (r"black ?rot|frog", "Black Rot"),
-            (r"healthy|^apple leaf$", "healthy"),
+            (r"powdery|mildew", "Powdery Mildew"),
+            (r"\bhealth(y)?\b|normal|fresh|^apple leaf$", "healthy"),
         ],
         "sources": [
-            {"name": "plant_pathology_2021", "kind": "hf", "role": "train", "repo": "timm/plant-pathology-2021",
-             "split": "train", "single_label_only": True, "space_separated_labels": True, "cap": 1500, "max_minutes": 40},
+            # Pakistan field photos: half train, half real-world test
+            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1,
+             "require": r"apple"},
+            # Kashmir orchards (neighbouring region): the download holds ONLY augmented copies -> DINOv2 grouping keeps one
+            # photo per original leaf, then half train / half test
+            {"name": "kashmir_apple", "kind": "mendeley", "role": "split", "id": "9m2dcb5mmr", "version": 3,
+             "collapse_aug": True, "cap": 3000},
+            {"name": "appleleaf9", "kind": "hf", "role": "train", "repo": "Project-AgML/appleleaf9_disease_classification",
+             "split": "train", "cap": 1500, "max_minutes": 40},
             PD(r"apple"),
-            {"name": "kashmir_apple_indigenous", "kind": "mendeley", "role": "external", "id": "9m2dcb5mmr", "version": 3},
         ],
         "auto_kaggle_inputs": False,
     },

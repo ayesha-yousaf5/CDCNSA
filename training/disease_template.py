@@ -336,9 +336,9 @@ ARCHIVES = (".zip", ".rar", ".7z", ".tar", ".tar.gz", ".tgz")
 def norm_part(s):
     return re.sub(r"[_\-\.\(\)]+", " ", s).strip().lower()
 
-def class_for(rel_parts, require=None, exclude=None):
+def class_for(rel_parts, require=None, exclude=None, allow_aug=False):
     path_txt = " / ".join(norm_part(p) for p in rel_parts)
-    if DROP_PATH.search(path_txt): return "SKIP_AUG"
+    if DROP_PATH.search(path_txt) and not (allow_aug and "macosx" not in path_txt): return "SKIP_AUG"
     if require and not re.search(require, path_txt, re.I): return "OTHER_CROP"
     if exclude and re.search(exclude, path_txt, re.I): return None
     for part in reversed([norm_part(p) for p in rel_parts[:-1]] + [norm_part(Path(rel_parts[-1]).stem)]):
@@ -377,7 +377,7 @@ def remember(hs0):
 def add_image(spec, rel_parts, opener):
     """Map -> cap -> resize -> de-dup -> save. opener() returns a PIL image."""
     name = spec["name"]
-    c = class_for(rel_parts, spec.get("require"), spec.get("exclude"))
+    c = class_for(rel_parts, spec.get("require"), spec.get("exclude"), spec.get("collapse_aug", False))
     if c == "SKIP_AUG": skipped_aug[name] += 1; return
     if c == "OTHER_CROP": return
     if c is None: unmapped[(name, "/".join(rel_parts[-3:-1]))] += 1; return
@@ -454,10 +454,10 @@ def ingest_dataverse(spec, dest):
         df = f["dataFile"]; dlab = f.get("directoryLabel", "")
         name = df.get("filename") or df.get("label")
         parts = tuple(Path(dlab).parts) + (name,)
-        if name.lower().endswith(ARCHIVES) and class_for(parts, spec.get("require"), spec.get("exclude")) in ("DROP", "SKIP_AUG"):
+        if name.lower().endswith(ARCHIVES) and class_for(parts, spec.get("require"), spec.get("exclude"), spec.get("collapse_aug", False)) in ("DROP", "SKIP_AUG"):
             print(f"    skipping {name} (class not used)"); continue
         if Path(name).suffix.lower() in IMG_EXT:
-            c = class_for(parts, spec.get("require"), spec.get("exclude"))
+            c = class_for(parts, spec.get("require"), spec.get("exclude"), spec.get("collapse_aug", False))
             if c in CLASSES and per_src[spec["name"]][c] >= cap: continue   # don't even download
             if c is None or c in ("DROP", "SKIP_AUG", "OTHER_CROP"): continue
         tmp = dest / name
@@ -542,6 +542,58 @@ for c in CLASSES:
 # ## 4. Source-based split (the anti-overfitting step)
 
 # %%
+# Sources that ship ONLY augmented copies (e.g. the Kashmir apple set: shifted/sheared/zoomed versions of each photo)
+# defeat the perceptual hash. For those ("collapse_aug": True) every image is embedded with DINOv2 and copies of the
+# same photo are grouped (cosine >= COLLAPSE_SIM, no chaining); only ONE image per group is kept, so the train half
+# and test half of a split can never contain two versions of the same leaf.
+COLLAPSE_SIM = 0.90
+def collapse_augmented(src_name):
+    rows = [r for r in kept if r["src"] == src_name]
+    if len(rows) < 2: return
+    E, how = None, "DINOv2 similarity"
+    try:
+        try:
+            enc = torch.hub.load("facebookresearch/dinov2", "dinov2_vits14")
+        except Exception:
+            repo = WORK / "dinov2_src"
+            if not repo.exists():
+                subprocess.run(["git", "clone", "-q", "--depth", "1", "https://github.com/facebookresearch/dinov2", str(repo)], check=True)
+            enc = torch.hub.load(str(repo), "dinov2_vits14", source="local")
+        enc = enc.to(DEVICE).eval()
+        tf = transforms.Compose([transforms.Resize(224), transforms.CenterCrop(224), transforms.ToTensor(),
+                                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])
+        feats = []
+        with torch.no_grad():
+            for i in range(0, len(rows), 64):
+                x = torch.stack([tf(Image.open(r["path"]).convert("RGB")) for r in rows[i:i + 64]]).to(DEVICE)
+                feats.append(F.normalize(enc(x).float(), dim=1).cpu())
+        E = torch.cat(feats); del enc
+    except Exception as e:   # no DINOv2 weights -> fall back to a looser perceptual-hash match
+        print("  DINOv2 not available for grouping (", str(e)[:120], ") -> using perceptual hash")
+        how = "perceptual hash <= 14 bits"
+        H = np.array([np.asarray(imagehash.phash(Image.open(r["path"]).convert("RGB")).hash).ravel() for r in rows])
+    removed = 0; sizes = Counter()
+    for cls_ in sorted({r["cls"] for r in rows}):
+        idx = [i for i, r in enumerate(rows) if r["cls"] == cls_]
+        if E is not None:
+            M = ((E[idx] @ E[idx].T) >= COLLAPSE_SIM).numpy()
+        else:
+            h = H[idx].astype(np.int16); M = (np.abs(h[:, None, :] - h[None, :, :]).sum(-1) <= 14)
+        free = np.ones(len(idx), bool)
+        for a in range(len(idx)):
+            if not free[a]: continue
+            grp = np.where(M[a] & free)[0]
+            free[grp] = False; sizes[len(grp)] += 1
+            for b in grp:
+                if b != a: rows[idx[b]]["role"] = "aug_copy"; removed += 1
+    if DEVICE == "cuda": torch.cuda.empty_cache()
+    left = Counter(r["cls"] for r in rows if r["role"] != "aug_copy")
+    print(f"  {src_name} ({how}): removed {removed} augmented copies -> {dict(left)} distinct photos "
+          f"(group sizes: {dict(sorted(sizes.items())[:8])})")
+for s in SOURCES:
+    if s.get("collapse_aug"): collapse_augmented(s["name"])
+kept = [r for r in kept if r["role"] != "aug_copy"]
+
 held = [r for r in kept if r["role"] == "heldout"]
 external = [r for r in kept if r["role"] == "external"]
 split_rows = [r for r in kept if r["role"] == "split" and r["cls"] != "__DISEASED__"]
