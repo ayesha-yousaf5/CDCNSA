@@ -5,6 +5,9 @@
 ## Dataset check (done before release)
 Every Mendeley/OSF/Hugging Face source used by corn, rice, tomato, apple and mango was opened file-by-file (zip directory read remotely) and every real folder name was run through the label rules before these notebooks were handed over.
 
+## Class rule (all crops)
+A disease class is kept only if it has at least **200 distinct training photos** (after removing augmented copies and near-duplicates); smaller classes are dropped automatically and printed as `DROPPED`. The app leaves those diseases to Qwen.
+
 ## Run a notebook (same steps for every file)
 1. kaggle.com → **Create → New Notebook**.
 2. **File → Import Notebook** → upload e.g. `01_corn_disease.ipynb`.
@@ -20,13 +23,13 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 ## Order (most important / best data first)
 | # | Notebook | Train sources | Held-out test source |
 |---|---|---|---|
-| 01 | Corn | Common Rust, Gray Leaf Spot, Northern Leaf Blight, Healthy: half of PlantCity Pakistan (GLS + healthy), CD&S Dataset_Original (Purdue), Bangladesh corn, Bangladesh multi-format (RAW_Image), PlantVillage corn capped at 300/class (only large rust source) | PlantDoc corn + other half of PlantCity Pakistan |
+| 01 | Corn | Gray Leaf Spot, Northern Leaf Blight, Healthy (Common Rust removed: 128 field photos): half of PlantCity Pakistan, CD&S Dataset_Original, Bangladesh corn, Bangladesh multi-format RAW | PlantDoc corn + other half of PlantCity Pakistan |
 | 02 | Cotton | SAR-CLD-2024 (Data in Brief 2024; its 7 classes) **+ half of CoSEV's Pakistani leaf-curl/healthy photos** (incl. leaf enation) | Cotton severity-levels set + real-world Pakistan tests: Southern Punjab field set (all) and the other half of CoSEV |
 | 03 | Rice | Sambalpur/Odisha (Sethy 2020), DIU 5-class + pest sets (original folders only), Dhan-Shomadhan white-background half. >= 150 photos from >= 2 datasets per class | RiceLeafBD (field, 2025) + Dhan-Shomadhan field photos |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |
 | 04 | Tomato | Tomato-Village (India field photos, Multimedia Systems 2023), DIU Bangladesh field set, half of PlantCity Pakistan tomato. The 'Pakistan tomato' Mendeley set is NOT used (all augmented / internet images) | PlantDoc tomato + other half of PlantCity Pakistan |
 | 05 | Apple | 5 Pakistan/Kashmir-relevant classes (Apple Scab, Alternaria Leaf Blotch, Powdery Mildew, Apple Mosaic, Healthy): **half of PlantCity Pakistan apple (Chitral/Charsadda)**, **half of the Indigenous Kashmir set** (its augmented copies are grouped back to one photo per leaf), AppleLeaf9 (Agronomy 2022, ~94% in-the-wild photos) | PlantDoc apple + real-world tests: other halves of PlantCity Pakistan and Kashmir |
-| 06 | Mango | MangoLeafBD's 8 classes: MangoLeafBD (Data in Brief 2023; zoom/rotate copies grouped back to one per leaf), MLD24 (6.4k orchard photos), MLDID, Ashulia field set. A class is kept only with >= 150 photos from >= 2 datasets | Pabna & Savar field photos 2024 (different orchards and season) |
+| 06 | Mango | MangoLeafBD's 8 classes: MangoLeafBD (Data in Brief 2023; zoom/rotate copies grouped back to one per leaf), MLD24 (6.4k orchard photos), MLDID, Ashulia field set. A class is kept only with >= 200 photos from >= 2 datasets | Pabna & Savar field photos 2024 (different orchards and season) |
 | 07 | Grape | Half of PlantCity Pakistan grape (anthracnose, downy, powdery, healthy), NGLD Nashik India (Data in Brief 2025: downy, powdery, healthy), PlantVillage grape capped 300/class (black rot, esca, leaf blight) | GVLiD field photos (Data in Brief; black rot, esca, leaf blight, healthy) + PlantDoc grape + other half of PlantCity Pakistan |
 | 08 | Eggplant | 9 classes from 5 checked Bangladesh sets: Eggplant Disease Recognition v2, white-background detection set, Dhaka field set (2024), 'Comprehensive' original set, Brinjal 2025 phone set (capped). jv6tnm4t5c (byte-identical copy) and mn8vfr9bw2 (copies of the hi-res set) NOT used | High-resolution DSLR field set, Savar/Gazipur 2025 (6 classes) |
 | 09 | Cucumber | Cucumber BD (Hugging Face) | none — single source (less trustworthy) |

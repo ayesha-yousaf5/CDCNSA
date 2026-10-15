@@ -32,7 +32,7 @@ order = ["corn", "cotton", "rice", "tomato", "apple", "mango", "grape", "eggplan
 for i, crop in enumerate(order, 1):
     c = CROPS[crop]
     src = (tmpl.replace("__KAGGLE_HINT__", ("**Extra data tip:** " + c["kaggle_hint"]) if c.get("kaggle_hint") else "").replace("__CROP_TITLE__", c["title"]).replace("__CROP__", crop).replace("AUTO_KAGGLE_INPUTS = True ", "AUTO_KAGGLE_INPUTS = " + str(c.get("auto_kaggle_inputs", True)) + " ")
-               .replace("__MIN_TRAIN__", str(c.get("min_train_images", 1)).ljust(4))
+               .replace("__MIN_TRAIN__", str(c.get("min_train_images", 200)).ljust(4))
                .replace("__MIN_SOURCES__", str(c.get("min_train_sources", 1)))
                .replace("__CLASSES__", pprint.pformat(c["classes"], width=110))
                .replace("__ALIASES__", pprint.pformat(c["aliases"], width=110))

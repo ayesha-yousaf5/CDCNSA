@@ -12,13 +12,13 @@ CROPS = {
     "corn": {
         "title": "Corn / Maize",
         # Pakistan-relevant core maize leaf diseases, each backed by >= 2 field datasets (see dataset map).
-        "classes": ["Common Rust", "Gray Leaf Spot", "Northern Leaf Blight", "healthy"],
+        "classes": ["Gray Leaf Spot", "Northern Leaf Blight", "healthy"],   # Common Rust removed: only 128 field photos
         "aliases": [
             # dropped: single-region or tiny classes, CD&S's Northern Leaf SPOT (different disease), severity sub-folders
             (r"northern leaf spot|\bnls\b|southern|phaeosphaeria|chlorotic|mottle|\bmcmv\b|eyespot|curvularia|"
              r"\bmln\b|lethal|necrosis|\bmsv\b|streak|bacterial|^leaf blight$", None),
             (r"gr[ae]y leaf spot|\bgls\b|cercospora", "Gray Leaf Spot"),
-            (r"common rust|\brust\b|\bcr\b", "Common Rust"),
+            (r"common rust|\brust\b|\bcr\b", None),   # removed class (too few field photos)
             (r"northern leaf blight|northern corn leaf blight|\bn?clb\b|\bnlb\b|leaf blight|\bblight\b|turcicum", "Northern Leaf Blight"),
             HEALTHY,
         ],
@@ -38,13 +38,6 @@ CROPS = {
             # Bangladesh multi-format: RAW_Image only (Converted/Annotation folders hold the same photos again)
             {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1,
              "require": r"(^| / )raw image( / |$)", "download_folders": r"RAW_Image"},
-            # PlantVillage corn (lab photos, Hughes & Salathe 2015) capped at 300/class: the only clean, large source of
-            # Common Rust (field sets give just 143 rust photos). Kept a minority; background-swap augmentation hides the
-            # plain lab background. (Checked: Mendeley 'Corn Leaf Disease Classification' hmkd6nbngr is PlantVillage +
-            # web images + augmented copies -> not used.)
-            {"name": "plantvillage", "kind": "plantvillage", "role": "train", "cap": 300,
-             "folders": ["Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot", "Corn_(maize)___Common_rust_",
-                         "Corn_(maize)___Northern_Leaf_Blight", "Corn_(maize)___healthy"]},
             # PlantDoc (real-world photos, folder-labelled): never trained on -> picks & calibrates the model
             {"name": "plantdoc", "kind": "plantdoc", "role": "heldout", "require": r"corn"},
         ],
@@ -84,7 +77,7 @@ CROPS = {
         # (so classes that exist in one dataset only - Hispa, Narrow Brown Spot, Leaffolder - drop automatically).
         "classes": ["Bacterial Leaf Blight", "Brown Spot", "Leaf Scald", "Narrow Brown Leaf Spot", "Rice Blast",
                     "Rice Hispa", "Rice Leaffolder", "Rice Tungro", "Sheath Blight", "healthy"],
-        "min_train_images": 150,
+        "min_train_images": 200,
         "min_train_sources": 2,
         "aliases": [
             (r"neck|panicle|stripe|smut|false|^insect$|^rice$", None),
@@ -125,7 +118,7 @@ CROPS = {
         # Dropped: rust (cedar-apple / Gymnosporangium - not a main Pakistani problem), frog-eye/black rot, grey spot,
         # brown spot (Marssonina - one source only), multi-disease 'complex' images.
         "classes": ["Apple Scab", "Alternaria Leaf Blotch", "Powdery Mildew", "Apple Mosaic", "healthy"],
-        "min_train_images": 150,
+        "min_train_images": 200,
         "aliases": [
             (r"complex|rust|frog|black ?rot|gr[ae]y spot|brown spot|marssonina|blotch fruit|cedar", None),
             (r"alternaria", "Alternaria Leaf Blotch"),
@@ -154,7 +147,7 @@ CROPS = {
         # >= 2 different field datasets (checked automatically in the notebook); the rest are left to Qwen.
         "classes": ["Early Blight", "Late Blight", "Leaf Mold", "Septoria Leaf Spot", "Tomato Yellow Leaf Curl Virus",
                     "Bacterial Spot", "Target Spot", "Tomato Mosaic Virus", "healthy"],
-        "min_train_images": 150,
+        "min_train_images": 200,
         "min_train_sources": 1,   # Septoria has real photos only in PlantCity; PlantDoc (held out) tests it honestly
         "aliases": [
             # not leaf diseases we can model reliably / tiny classes
@@ -194,7 +187,7 @@ CROPS = {
         # No public Pakistani mango leaf set exists (the Multan/MRI set of Tech Science CMC 2021 is not released).
         "classes": ["Anthracnose", "Bacterial Canker", "Cutting Weevil", "Die Back", "Gall Midge",
                     "Powdery Mildew", "Sooty Mould", "healthy"],
-        "min_train_images": 150,
+        "min_train_images": 200,
         "min_train_sources": 2,
         "aliases": [
             (r"anthrac", "Anthracnose"),
@@ -228,7 +221,7 @@ CROPS = {
         # tested on GVLiD field photos that are never trained on.
         "classes": ["Anthracnose", "Black Rot", "Downy Mildew", "Esca Black Measles",
                     "Leaf Blight / Isariopsis Leaf Spot", "Powdery Mildew", "healthy"],
-        "min_train_images": 100,
+        "min_train_images": 200,
         "min_train_sources": 1,
         "aliases": [
             (r"brown spot|mite|shot hole|bacterial|alternaria|insect", None),
@@ -268,7 +261,7 @@ CROPS = {
         # Classes kept only with real field photos in >= 150 images; the 2025 DSLR set (Savar/Gazipur) is held out.
         "classes": ["General Pest Damage", "Leaf Spot", "Mosaic Virus", "Wilt", "Small Leaf", "White Mold",
                     "Phomopsis Blight", "Powdery Mildew", "healthy"],
-        "min_train_images": 150,
+        "min_train_images": 200,
         "min_train_sources": 1,
         "aliases": [
             (r"curl|downy|phytophthora|magnesium|deficien|defect|^fresh eggplant$|fruit", None),
