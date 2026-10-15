@@ -102,7 +102,9 @@ CROPS = {
         "sources": [
             # RiceLeafBD (Rimi et al. 2025, arXiv 2501.08912): field photos, Sylhet & Dhaka, expert-checked labels.
             # Held out (never trained on) together with Dhan-Shomadhan's field photos -> covers 8 of the classes.
-            {"name": "riceleafbd", "kind": "mendeley", "role": "heldout", "id": "kx9rx8p2mz", "version": 1},
+            # Run 2026-10-15: held out completely it left Brown Spot / BLB with too few FIELD training photos
+            # (honest test 0.49 macro-F1). Now half trains, half stays a never-seen real-world test.
+            {"name": "riceleafbd", "kind": "mendeley", "role": "split", "id": "kx9rx8p2mz", "version": 1},
             # Sethy et al. 2020 (Computers & Electronics in Agriculture): Odisha field photos
             {"name": "rice_sambalpur", "kind": "mendeley", "role": "train", "id": "fwcj7stb8r", "version": 2},
             {"name": "rice_diu_5class", "kind": "mendeley", "role": "train", "id": "g7tcwvshff", "version": 1},
