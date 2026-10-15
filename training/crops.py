@@ -34,10 +34,15 @@ CROPS = {
              "osf_folders": r"^CD&S(/Dataset_Original)?$",
              "osf_zip_folder": "60be295acb2a5e0501690f31"},   # = CD&S/Dataset_Original
             # Bangladesh: 'Final corn dataset' - common rust 129, gray leaf spot 1,497, healthy 1,038 (+BLS, MCMV unused)
-            {"name": "bangladesh_corn", "kind": "mendeley", "role": "train", "id": "vy629dngm8", "version": 1},
+            {"name": "bangladesh_corn", "kind": "mendeley", "role": "train", "id": "vy629dngm8", "version": 1,
+             "cap": 400},   # run 2026-10-15: 828 GLS from one source made the model call NLB / healthy "GLS"
             # Bangladesh multi-format: RAW_Image only (Converted/Annotation folders hold the same photos again)
             {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1,
              "require": r"(^| / )raw image( / |$)", "download_folders": r"RAW_Image"},
+            # PlantVillage Northern Leaf Blight only (lab, capped 300): NLB otherwise comes almost only from CD&S,
+            # so the model learnt "NLB = CD&S look" and called PlantDoc NLB photos GLS (NLB recall 55%).
+            {"name": "plantvillage", "kind": "plantvillage", "role": "train", "cap": 300,
+             "folders": ["Corn_(maize)___Northern_Leaf_Blight"]},
             # PlantDoc (real-world photos, folder-labelled): never trained on -> picks & calibrates the model
             {"name": "plantdoc", "kind": "plantdoc", "role": "heldout", "require": r"corn"},
         ],
