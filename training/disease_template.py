@@ -513,10 +513,22 @@ def ingest_dataverse(spec, dest):
             if tmp.exists(): tmp.unlink()
     return True
 
+CACHE_VERSION = "2026-10-15c"   # bump when download/label logic changes -> old caches are rebuilt
+def spec_key(spec):
+    return CACHE_VERSION + json.dumps({k: v for k, v in spec.items() if k != "role"}, sort_keys=True) + json.dumps(ALIASES)
+
 def reload_done(spec):
     meta = PROC / spec["name"] / "_records.json"
     if not meta.exists(): return False
-    rows = json.loads(meta.read_text())
+    try:
+        saved = json.loads(meta.read_text())
+    except Exception:
+        return False
+    # re-process if the cache came from an older notebook / different config, or kept nothing
+    if not isinstance(saved, dict) or saved.get("key") != spec_key(spec) or not saved.get("rows"):
+        print(f"[{spec['name']}] old or empty cache -> processing again")
+        shutil.rmtree(PROC / spec["name"], ignore_errors=True); return False
+    rows = saved["rows"]
     for r in rows:
         try:
             im = Image.open(r["path"]); remember(hashes(im)[0])
@@ -559,7 +571,7 @@ for s in SOURCES:
     mine = [r for r in kept[before:] if r["src"] == name]
     if status[name] == "ok":
         (PROC / name).mkdir(parents=True, exist_ok=True)
-        (PROC / name / "_records.json").write_text(json.dumps(mine))
+        (PROC / name / "_records.json").write_text(json.dumps({"key": spec_key(s), "rows": mine}))
     print(f"   -> {status[name]}: kept {len(mine)} images {dict(per_src[name])} "
           f"({time.time()-t0:.0f}s, working disk free {shutil.disk_usage(str(WORK)).free/1e9:.1f} GB)")
 
@@ -667,6 +679,10 @@ if too_small:
 missing = [c for c in CLASSES if c not in present]
 if missing: print("Classes with NO training images (will be excluded):", missing)
 if len(present) < 2:
+    print("\n" + "!" * 80 + "\nSTOP - not enough training data. Training images per source x class:")
+    for s_ in SOURCES:
+        print(f"   {s_['name']:28s} role={s_['role']:8s} {dict(per_src[s_['name']])}  status={status.get(s_['name'])}")
+    print("Copy everything from 'DOWNLOAD STATUS' down to here and send it back.\n" + "!" * 80)
     raise SystemExit("STOP: fewer than 2 classes have training images. Check DOWNLOAD STATUS and the "
                      "'unmapped folders' list above, then send that output back.")
 CLS = present; C2I = {c: i for i, c in enumerate(CLS)}
