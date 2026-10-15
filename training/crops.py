@@ -221,20 +221,41 @@ CROPS = {
     },
     "grape": {
         "title": "Grape",
-        "classes": ["Black Rot", "Downy Mildew", "Esca Black Measles", "Leaf Blight / Isariopsis Leaf Spot", "healthy"],
+        # Every source checked file-by-file (2026-10-15). Pakistan's main grape leaf problems (powdery & downy mildew,
+        # anthracnose) come from field sets; black rot / esca / leaf blight come from PlantVillage (lab, capped) and are
+        # tested on GVLiD field photos that are never trained on.
+        "classes": ["Anthracnose", "Black Rot", "Downy Mildew", "Esca Black Measles",
+                    "Leaf Blight / Isariopsis Leaf Spot", "Powdery Mildew", "healthy"],
+        "min_train_images": 100,
+        "min_train_sources": 1,
         "aliases": [
-            (r"brown spot|mite|powdery|anthrac|alternaria", None),
-            (r"black ?rot", "Black Rot"),
-            (r"downy", "Downy Mildew"),
+            (r"brown spot|mite|shot hole|bacterial|alternaria|insect", None),
             (r"esca|measles", "Esca Black Measles"),
-            (r"isariopsis|leaf blight", "Leaf Blight / Isariopsis Leaf Spot"),
-            (r"healthy|^grape leaf$", "healthy"),
+            (r"black ?rot", "Black Rot"),
+            (r"anthrac", "Anthracnose"),
+            (r"down[e]?y", "Downy Mildew"),
+            (r"powdery", "Powdery Mildew"),
+            (r"isariopsis|leaf ?blight", "Leaf Blight / Isariopsis Leaf Spot"),
+            (r"healthy|normal|^grape leaf$", "healthy"),
         ],
         "sources": [
-            {"name": "grape_field", "kind": "mendeley", "role": "train", "id": "378c69nwk5", "version": 1},
-            PV("Grape___Black_rot", "Grape___Esca_(Black_Measles)", "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)", "Grape___healthy"),
-            PD(r"grape"),
+            # PlantCity Pakistan test.zip (originals): anthracnose 249, downy 155, powdery 301, normal 372
+            # (+ brown spot, mites, shot hole - unused). Half train, half Pakistan real-world test.
+            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1,
+             "only_files": r"^test\.zip$", "require": r"grape"},
+            # NGLD, Niphad/Nashik India (Data in Brief 61, 2025): real picked leaves photographed on paper, 256 px:
+            # downy 966, powdery 406, healthy 1000 (bacterial rot 100 - unused)
+            {"name": "grape_ngld_india", "kind": "mendeley", "role": "train", "id": "8nnd2ypcv3", "version": 1},
+            # PlantVillage grape (lab) capped at 300/class: black rot, esca, leaf blight, healthy
+            {"name": "plantvillage", "kind": "plantvillage", "role": "train", "cap": 300,
+             "folders": ["Grape___Black_rot", "Grape___Esca_(Black_Measles)",
+                         "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)", "Grape___healthy"]},
+            # GVLiD (Data in Brief, field visits, 1080 px, 3,477 photos): black rot / esca / leaf blight / healthy.
+            # Never trained on -> honest test of the PlantVillage-trained classes.
+            {"name": "grape_gvlid_field", "kind": "mendeley", "role": "heldout", "id": "wkymf8bhcg", "version": 5},
+            {"name": "plantdoc", "kind": "plantdoc", "role": "heldout", "require": r"grape"},
         ],
+        "auto_kaggle_inputs": False,
     },
     "eggplant": {
         "title": "Eggplant / Brinjal",
