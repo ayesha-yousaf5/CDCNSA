@@ -566,15 +566,28 @@ def random_shadow(im):
 P_BG, P_JPEG, P_SHADOW = 0.35, 0.35, 0.2
 
 class DS(Dataset):
-    def __init__(self, rows, tf, train=False): self.rows, self.tf, self.train = rows, tf, train
+    """Augmentation strength adapts to class size: small classes (they are oversampled by the balanced
+    sampler, so the same photo is seen many times) get stronger augmentation so the model cannot memorise them."""
+    def __init__(self, rows, tf, train=False):
+        self.rows, self.tf, self.train = rows, tf, train
+        cnt = Counter(r["cls"] for r in rows)
+        big = max(cnt.values()) if cnt else 1
+        # boost in [1, 2]: 1 for the largest class, up to 2 for classes >= 8x smaller
+        self.boost = {c: 1.0 + min(1.0, math.log2(max(1.0, big / n)) / 3.0) for c, n in cnt.items()}
+        if train:
+            print("Augmentation strength per class:", {c: round(b, 2) for c, b in sorted(self.boost.items(), key=lambda kv: -kv[1])})
     def __len__(self): return len(self.rows)
     def __getitem__(self, i):
         r = self.rows[i]
         im = Image.open(r["path"]).convert("RGB")
         if self.train:
-            if random.random() < P_BG: im = background_swap(im, self.rows)
-            if random.random() < P_SHADOW: im = random_shadow(im)
-            if random.random() < P_JPEG: im = jpeg_degrade(im)
+            b = self.boost.get(r["cls"], 1.0)
+            if random.random() < min(0.8, P_BG * b): im = background_swap(im, self.rows)
+            if random.random() < min(0.6, P_SHADOW * b): im = random_shadow(im)
+            if random.random() < min(0.7, P_JPEG * b): im = jpeg_degrade(im)
+            if b > 1.3 and random.random() < 0.5:            # extra geometric/colour variety for rare classes
+                im = transforms.RandomAffine(20, translate=(0.1, 0.1), scale=(0.8, 1.2), shear=10)(im)
+                im = transforms.ColorJitter(0.25, 0.25, 0.25, 0.03)(im)
         return self.tf(im), C2I[r["cls"]]
 
 def loader(rows, train_mode):
