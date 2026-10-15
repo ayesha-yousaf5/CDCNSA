@@ -146,7 +146,7 @@ CROPS = {
         "classes": ["Early Blight", "Late Blight", "Leaf Mold", "Septoria Leaf Spot", "Tomato Yellow Leaf Curl Virus",
                     "Bacterial Spot", "Target Spot", "Tomato Mosaic Virus", "healthy"],
         "min_train_images": 150,
-        "min_train_sources": 2,
+        "min_train_sources": 1,   # Septoria has real photos only in PlantCity; PlantDoc (held out) tests it honestly
         "aliases": [
             # not leaf diseases we can model reliably / tiny classes
             (r"cercospora|black spot|miner|insect|spider|mite|powdery|spotted wilt|nutri|deficien|\bclass 16\b|uncategori|other", None),
@@ -161,8 +161,8 @@ CROPS = {
             (r"healthy|^tomato leaf$|^h$", "healthy"),
         ],
         "sources": [
-            # Pakistan field photos (smartphone, natural light), 7,200 images, 6 classes
-            {"name": "tomato_pakistan_field", "kind": "mendeley", "role": "train", "id": "3mbnb82mxd", "version": 1},
+            # NOT used: 'Tomato Leaf Disease Classification Dataset in Pakistan' (3mbnb82mxd) - checked file by file:
+            # every image is an augmented copy ("..._aug_639.jpg") and many are internet images (Roboflow, CC web photos).
             # Bangladesh field photos (Daffodil Intl. Univ., natural light, ~2.6k)
             {"name": "tomato_bd_diu", "kind": "mendeley", "role": "train", "id": "93h9p62kg4", "version": 1},
             # Pakistan PlantCity (Data in Brief 2025, Chitral & Charsadda): half train, half real-world Pakistan test

@@ -170,16 +170,27 @@ def dl_mendeley(spec, dest):
             except Exception:
                 pass
         print(f"  Mendeley API: {len(todo)} files in {len(folders)} folders")
-        n = 0
+        jobs = []
         for sub, f in todo:
             url = (f.get("content_details") or {}).get("download_url")
             if not url: continue
             if only and not only.search(f["filename"]): continue
             if spec.get("download_folders") and not re.search(spec["download_folders"], str(sub), re.I): continue
             out = dest / sub / f["filename"]; out.parent.mkdir(parents=True, exist_ok=True)
-            if out.exists() and out.stat().st_size > 0: n += 1; continue
-            http_get(url, out, timeout=600); n += 1
-            if n % 200 == 0: print(f"    ... {n}/{len(todo)} files", flush=True)
+            if not (out.exists() and out.stat().st_size > 0): jobs.append((url, out))
+        # many small files -> 16 parallel downloads (one-by-one took ~1 s per photo)
+        from concurrent.futures import ThreadPoolExecutor
+        done = [0]
+        def _one(job):
+            try:
+                http_get(job[0], job[1], timeout=600)
+            except Exception as e:
+                print("    failed:", job[1].name, e)
+            done[0] += 1
+            if done[0] % 300 == 0: print(f"    ... {done[0]}/{len(jobs)} files", flush=True)
+        with ThreadPoolExecutor(16 if len(jobs) > 20 else 2) as ex:
+            list(ex.map(_one, jobs))
+        n = sum(1 for _, f in todo if (dest / _ / f["filename"]).exists())
         print(f"  downloaded {n} files via Mendeley API")
         return n > 0
     except Exception as e:
