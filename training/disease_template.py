@@ -973,10 +973,14 @@ registry_entry = {"runtime_kind": runtime_kind, "architecture": best_arch,
                           f"{(final['ood_test'] or {}).get('macroF1')}"}
 snippet = {"crop": CROP, "disease": registry_entry, "disease_threshold": THRESH}
 (EXPORT / "registry_snippet.json").write_text(json.dumps(snippet, indent=2))
+ok = (final["ood_test"] or {}).get("macroF1") or 0
+if not final["ood_test"]:
+    verdict = "NO HONEST TEST - the held-out dataset gave 0 images; the in-distribution score means nothing. Do not ship."
+else:
+    verdict = "PASS (ship it)" if (SELECT_ON == "ood_val" and ok >= 0.70) else ("WEAK - keep Qwen as primary" if ok >= 0.5 else "FAIL - hide crop or rely on Qwen")
+final["verdict"] = verdict
 (EXPORT / "final_report.json").write_text(json.dumps(final, indent=2))
 shutil.make_archive(str(WORK / f"cdcnsa_{CROP}_export"), "zip", EXPORT)
-ok = (final["ood_test"] or {}).get("macroF1") or 0
-verdict = "PASS (ship it)" if (SELECT_ON == "ood_val" and ok >= 0.70) else ("WEAK - keep Qwen as primary" if ok >= 0.5 else "FAIL - hide crop or rely on Qwen")
 print("\n" + "=" * 30 + " FINAL REPORT (copy everything below) " + "=" * 30)
 print(json.dumps({k: final[k] for k in ("crop", "best_arch", "selected_on", "backbones", "threshold", "classes", "ood_test", "val_in_distribution", "extra_test", "external_real_world")}, indent=1))
 print("VERDICT:", verdict)

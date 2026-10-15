@@ -65,10 +65,14 @@ CROPS = {
     },
     "rice": {
         "title": "Rice",
+        # Field photos from paper-backed sets; a class is kept only with >= 150 photos from >= 2 datasets
+        # (so classes that exist in one dataset only - Hispa, Narrow Brown Spot, Leaffolder - drop automatically).
         "classes": ["Bacterial Leaf Blight", "Brown Spot", "Leaf Scald", "Narrow Brown Leaf Spot", "Rice Blast",
                     "Rice Hispa", "Rice Leaffolder", "Rice Tungro", "Sheath Blight", "healthy"],
+        "min_train_images": 150,
+        "min_train_sources": 2,
         "aliases": [
-            (r"neck|panicle|stripe|smut|false|white background|white bg|^insect$|^rice$", None),
+            (r"neck|panicle|stripe|smut|false|^insect$|^rice$", None),
             (r"leaf ?folder", "Rice Leaffolder"),
             (r"narrow", "Narrow Brown Leaf Spot"),
             (r"brown ?spot", "Brown Spot"),
@@ -78,17 +82,25 @@ CROPS = {
             (r"blast", "Rice Blast"),
             (r"hispa", "Rice Hispa"),
             (r"tungro|turngo", "Rice Tungro"),
-            HEALTHY,
+            (r"healthy|normal|fresh", "healthy"),
         ],
         "sources": [
-            {"name": "riceleafbd", "kind": "mendeley", "role": "train", "id": "sjkptpgv79", "version": 1},
-            {"name": "rice_10class", "kind": "mendeley", "role": "train", "id": "zfwkkdj6dk", "version": 2},
+            # RiceLeafBD (Rimi et al. 2025, arXiv 2501.08912): field photos, Sylhet & Dhaka, expert-checked labels.
+            # Held out (never trained on) together with Dhan-Shomadhan's field photos -> covers 8 of the classes.
+            {"name": "riceleafbd", "kind": "mendeley", "role": "heldout", "id": "kx9rx8p2mz", "version": 1},
+            # Sethy et al. 2020 (Computers & Electronics in Agriculture): Odisha field photos
             {"name": "rice_sambalpur", "kind": "mendeley", "role": "train", "id": "fwcj7stb8r", "version": 2},
             {"name": "rice_diu_5class", "kind": "mendeley", "role": "train", "id": "g7tcwvshff", "version": 1},
             {"name": "rice_diu_pest", "kind": "mendeley", "role": "train", "id": "vwv3nry3wr", "version": 1},
-            {"name": "dhan_shomadhan", "kind": "mendeley", "role": "heldout", "id": "znsxdctwtt", "version": 1,
-             "exclude": r"white"},
+            # 10-class Mendeley set: no paper / unknown origin -> capped so it cannot dominate
+            {"name": "rice_10class", "kind": "mendeley", "role": "train", "id": "zfwkkdj6dk", "version": 2, "cap": 400},
+            # Dhan-Shomadhan (arXiv 2309.07515): white-background half trains, field half is the never-seen test
+            {"name": "dhan_white_bg", "kind": "mendeley", "role": "train", "id": "znsxdctwtt", "version": 1,
+             "require": r"(^| / )white"},
+            {"name": "dhan_field", "kind": "mendeley", "role": "heldout", "id": "znsxdctwtt", "version": 1,
+             "exclude": r"(^| / )white"},
         ],
+        "auto_kaggle_inputs": False,
     },
     "apple": {
         "title": "Apple",
