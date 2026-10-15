@@ -17,7 +17,7 @@ Kaggle gives ~30 GPU hours/week; each disease notebook takes ~30–90 min. You c
 ## Order (most important / best data first)
 | # | Notebook | Train sources | Held-out test source |
 |---|---|---|---|
-| 01 | Corn | Tanzania maize (Dataverse), Bangladesh seasonal corn + Bangladesh multi-format maize (Mendeley), PlantVillage (capped) | South Africa field maize (Figshare) + PlantDoc |
+| 01 | Corn | 4 Pakistan-relevant classes (Common Rust, Gray Leaf Spot, Northern Leaf Blight, Healthy): **half of PlantCity Pakistan maize (Data in Brief 2025, Chitral/Charsadda)**, CD&S (Purdue, OSF), Bangladesh seasonal + multi-format maize (Mendeley), Tanzania (healthy only) | South Africa field maize (Pretoria) + real-world tests: other half of PlantCity Pakistan, PlantDoc corn |
 | 02 | Cotton | SAR-CLD-2024 (Data in Brief 2024; its 7 classes) **+ half of CoSEV's Pakistani leaf-curl/healthy photos** (incl. leaf enation) | Cotton severity-levels set + real-world Pakistan tests: Southern Punjab field set (all) and the other half of CoSEV |
 | 03 | Rice | RiceLeafBD, Rice 10-class, Sambalpur rice (5.9k), DIU rice 5-class, DIU rice pests incl. Leaffolder (Mendeley) | Dhan-Shomadhan field photos (Mendeley) |
 | 11 | **Severity** (all crops) | PlantSeg (Zenodo) | PlantSeg test split + labelled cotton severity set |

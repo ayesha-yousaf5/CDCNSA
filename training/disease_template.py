@@ -204,6 +204,32 @@ def dl_zenodo(spec, dest):
         http_get(f["links"]["self"], dest / name, timeout=3600)
     return True
 
+def dl_osf(spec, dest):
+    """OSF project: try the whole-storage zip, else walk the API and download every file."""
+    node = spec["id"]
+    try:
+        print("  trying OSF storage zip ...")
+        http_get(f"https://files.osf.io/v1/resources/{node}/providers/osfstorage/?zip=", dest / f"{node}.zip", timeout=3600)
+        return True
+    except Exception as e:
+        print("  OSF zip failed:", e)
+    n = 0
+    def walk(url, sub):
+        nonlocal n
+        while url:
+            page = http_json(url)
+            for item in page.get("data", []):
+                a = item["attributes"]
+                if a.get("kind") == "folder":
+                    walk(item["relationships"]["files"]["links"]["related"]["href"], sub / a["name"])
+                else:
+                    (dest / sub).mkdir(parents=True, exist_ok=True)
+                    http_get(item["links"]["download"], dest / sub / a["name"], timeout=3600); n += 1
+            url = (page.get("links") or {}).get("next")
+    walk(f"https://api.osf.io/v2/nodes/{node}/files/osfstorage/", Path("."))
+    print(f"  downloaded {n} files via OSF API")
+    return n > 0
+
 def dl_plantdoc(spec, dest):
     if not (dest / "PlantDoc-Dataset").exists():
         subprocess.run(["git", "clone", "--depth", "1", "https://github.com/pratikkayal/PlantDoc-Dataset", str(dest / "PlantDoc-Dataset")], check=True)
@@ -281,7 +307,7 @@ def dl_kaggle_input(spec, dest):
         print("  Kaggle input not attached:", src); return False
     return True   # files are read in place from /kaggle/input
 
-DL = {"mendeley": dl_mendeley, "dataverse": dl_dataverse, "figshare": dl_figshare, "zenodo": dl_zenodo,
+DL = {"osf": dl_osf, "mendeley": dl_mendeley, "dataverse": dl_dataverse, "figshare": dl_figshare, "zenodo": dl_zenodo,
       "plantdoc": dl_plantdoc, "plantvillage": dl_plantvillage, "hf": dl_hf, "kaggle_input": dl_kaggle_input}
 
 # %% [markdown]
@@ -428,6 +454,8 @@ def ingest_dataverse(spec, dest):
         df = f["dataFile"]; dlab = f.get("directoryLabel", "")
         name = df.get("filename") or df.get("label")
         parts = tuple(Path(dlab).parts) + (name,)
+        if name.lower().endswith(ARCHIVES) and class_for(parts, spec.get("require"), spec.get("exclude")) in ("DROP", "SKIP_AUG"):
+            print(f"    skipping {name} (class not used)"); continue
         if Path(name).suffix.lower() in IMG_EXT:
             c = class_for(parts, spec.get("require"), spec.get("exclude"))
             if c in CLASSES and per_src[spec["name"]][c] >= cap: continue   # don't even download

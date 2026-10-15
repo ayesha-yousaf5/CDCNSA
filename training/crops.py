@@ -11,27 +11,29 @@ PD = lambda require: {"name": "plantdoc", "kind": "plantdoc", "role": "heldout",
 CROPS = {
     "corn": {
         "title": "Corn / Maize",
-        "classes": ["Bacterial Leaf Streak", "Common Rust", "Gray Leaf Spot", "Maize Lethal Necrosis",
-                    "Maize Streak Virus", "Northern Leaf Blight", "healthy"],
+        # Pakistan-relevant core maize leaf diseases, each backed by >= 2 field datasets (see dataset map).
+        "classes": ["Common Rust", "Gray Leaf Spot", "Northern Leaf Blight", "healthy"],
         "aliases": [
-            (r"southern|phaeosphaeria|chlorotic|mottle|\bmcmv\b|eyespot|curvularia|^leaf blight$", None),
-            (r"\bmln\b|lethal|necrosis", "Maize Lethal Necrosis"),
-            (r"\bmsv\b|streak virus|maize streak|streak disease|^streak$", "Maize Streak Virus"),
-            (r"bacterial leaf streak|bacterial streak|\bbls\b", "Bacterial Leaf Streak"),
+            # dropped: single-region or tiny classes, CD&S's Northern Leaf SPOT (different disease), severity sub-folders
+            (r"northern leaf spot|\bnls\b|southern|phaeosphaeria|chlorotic|mottle|\bmcmv\b|eyespot|curvularia|"
+             r"\bmln\b|lethal|necrosis|\bmsv\b|streak|bacterial|^leaf blight$", None),
             (r"gr[ae]y leaf spot|\bgls\b|cercospora", "Gray Leaf Spot"),
             (r"common rust|\brust\b|\bcr\b", "Common Rust"),
-            (r"northern|\bn?clb\b|\bnlb\b|leaf blight|\bblight\b", "Northern Leaf Blight"),
+            (r"northern leaf blight|northern corn leaf blight|\bn?clb\b|\bnlb\b|leaf blight|\bblight\b|turcicum", "Northern Leaf Blight"),
             HEALTHY,
         ],
         "sources": [
-            {"name": "tanzania_maize", "kind": "dataverse", "role": "train", "doi": "doi:10.7910/DVN/GDON8Q"},
+            # Pakistan field photos (PlantCity, Data in Brief 2025, Chitral & Charsadda): half train, half real-world test
+            {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1,
+             "require": r"maize|corn"},
+            {"name": "cds_purdue", "kind": "osf", "role": "train", "id": "s6ru5"},
             {"name": "bangladesh_corn", "kind": "mendeley", "role": "train", "id": "vy629dngm8", "version": 1},
             {"name": "bd_maize_multiformat", "kind": "mendeley", "role": "train", "id": "sb4wwjs8bz", "version": 1},
-            PV("Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot", "Corn_(maize)___Common_rust_",
-               "Corn_(maize)___Northern_Leaf_Blight", "Corn_(maize)___healthy"),
+            {"name": "tanzania_maize", "kind": "dataverse", "role": "train", "doi": "doi:10.7910/DVN/GDON8Q", "cap": 800},
             {"name": "pretoria_field", "kind": "figshare", "role": "heldout", "id": 20237613},
-            PD(r"corn"),
+            {"name": "plantdoc", "kind": "plantdoc", "role": "external", "require": r"corn"},
         ],
+        "auto_kaggle_inputs": False,
     },
     "cotton": {
         "title": "Cotton",
