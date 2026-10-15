@@ -165,6 +165,11 @@ CROPS = {
             # every image is an augmented copy ("..._aug_639.jpg") and many are internet images (Roboflow, CC web photos).
             # Bangladesh field photos (Daffodil Intl. Univ., natural light, ~2.6k)
             {"name": "tomato_bd_diu", "kind": "mendeley", "role": "train", "id": "93h9p62kg4", "version": 1},
+            # Tomato-Village (Gehlot et al., Multimedia Systems 2023): Rajasthan (India) field photos, phone camera
+            # (IMG2022....jpg, checked). Multiclass variant: early blight 496, late blight 904, healthy 216
+            # (+ leaf miner, spotted wilt, nutrient deficiencies - not used).
+            {"name": "tomato_village_india", "kind": "git", "role": "train",
+             "repo": "https://github.com/mamta-joshi-gehlot/Tomato-Village", "paths": ["Variant-a(Multiclass Classification)"]},
             # Pakistan PlantCity (Data in Brief 2025, Chitral & Charsadda): half train, half real-world Pakistan test
             {"name": "pakistan_plantcity", "kind": "mendeley", "role": "split", "id": "w8kh2xkspx", "version": 1, "only_files": r"^test\.zip$",
              "require": r"tomato"},

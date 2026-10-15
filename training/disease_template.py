@@ -283,6 +283,15 @@ def dl_plantvillage(spec, dest):
     subprocess.run(["git", "-C", str(repo), "sparse-checkout", "set"] + [f"raw/color/{d}" for d in spec["folders"]], check=True)
     return True
 
+def dl_git(spec, dest):
+    """Git repo, checking out only the listed folders (no history, blobs fetched only for those folders)."""
+    repo = dest / "repo"
+    if not repo.exists():
+        subprocess.run(["git", "clone", "--depth", "1", "--filter=blob:none", "--sparse", spec["repo"], str(repo)], check=True)
+    subprocess.run(["git", "-C", str(repo), "sparse-checkout", "set", "--no-cone"] + [p.rstrip("/") + "/" for p in spec["paths"]], check=True)
+    shutil.rmtree(repo / ".git", ignore_errors=True)
+    return True
+
 def _hf_token():
     if os.environ.get("HF_TOKEN"): return os.environ["HF_TOKEN"]
     try:
@@ -347,7 +356,7 @@ def dl_kaggle_input(spec, dest):
         print("  Kaggle input not attached:", src); return False
     return True   # files are read in place from /kaggle/input
 
-DL = {"osf": dl_osf, "mendeley": dl_mendeley, "dataverse": dl_dataverse, "figshare": dl_figshare, "zenodo": dl_zenodo,
+DL = {"git": dl_git, "osf": dl_osf, "mendeley": dl_mendeley, "dataverse": dl_dataverse, "figshare": dl_figshare, "zenodo": dl_zenodo,
       "plantdoc": dl_plantdoc, "plantvillage": dl_plantvillage, "hf": dl_hf, "kaggle_input": dl_kaggle_input}
 
 # %% [markdown]
