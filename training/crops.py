@@ -259,22 +259,45 @@ CROPS = {
     },
     "eggplant": {
         "title": "Eggplant / Brinjal",
-        "classes": ["General Pest Damage", "Leaf Spot", "Mosaic Virus", "White Mold", "Wilt", "healthy"],
+        # Checked file-by-file 2026-10-15 (zip directories read remotely, CRC-32 compared across datasets):
+        #  - jv6tnm4t5c ("Curated Dataset of Eggplant Leaves") is a byte-identical copy of r3tb5mzn4d v2 -> not used
+        #    (it was the old held-out set = leakage).
+        #  - mn8vfr9bw2 originals: 235 of 285 identical to ss63ftnjnh -> not used.
+        # Classes kept only with real field photos in >= 150 images; the 2025 DSLR set (Savar/Gazipur) is held out.
+        "classes": ["General Pest Damage", "Leaf Spot", "Mosaic Virus", "Wilt", "Small Leaf", "White Mold",
+                    "Phomopsis Blight", "Powdery Mildew", "healthy"],
+        "min_train_images": 150,
+        "min_train_sources": 1,
         "aliases": [
-            (r"small ?leaf|phomopsis", None),
-            (r"insect|pest", "General Pest Damage"),
-            (r"spot", "Leaf Spot"),
-            (r"mosaic", "Mosaic Virus"),
+            (r"curl|downy|phytophthora|magnesium|deficien|defect|^fresh eggplant$|fruit", None),
+            (r"small ?leaf|little ?leaf", "Small Leaf"),
+            (r"mosaic|\btmv\b", "Mosaic Virus"),
             (r"white ?mo", "White Mold"),
+            (r"phomopsis", "Phomopsis Blight"),
+            (r"powdery", "Powdery Mildew"),
             (r"wilt", "Wilt"),
-            HEALTHY,
+            (r"insect|pest|beetle|aphid|caterpillar|jassid|hopper", "General Pest Damage"),
+            (r"cercospora|alternaria|leaf ?spot", "Leaf Spot"),
+            (r"healthy|fresh eggplant leaf|normal", "healthy"),
         ],
         "sources": [
-            {"name": "eggplant_bd", "kind": "mendeley", "role": "train", "id": "r3tb5mzn4d", "version": 2},
-            {"name": "eggplant_hires", "kind": "mendeley", "role": "train", "id": "ss63ftnjnh", "version": 6},
-            {"name": "eggplant_detect", "kind": "mendeley", "role": "train", "id": "d3ypkphghb", "version": 1},
-            {"name": "eggplant_curated", "kind": "mendeley", "role": "heldout", "id": "jv6tnm4t5c", "version": 1},
+            # Eggplant Disease Recognition (Bangladesh, field): 'Original Images (Version 02)' 200/class x 7
+            {"name": "eggplant_bd_recognition", "kind": "mendeley", "role": "train", "id": "r3tb5mzn4d", "version": 2},
+            # Eggplant Leaf Disease Detection: 'Classified Images' 4,089 leaves on white background (augmented folder skipped)
+            {"name": "eggplant_whitebg", "kind": "mendeley", "role": "train", "id": "d3ypkphghb", "version": 2},
+            # Changao/Ashulia/Narsingdi field set (2024): cercospora 628, TMV 356, phomopsis 218, verticillium wilt 163,
+            # beetles/caterpillar/jassids (pests), healthy 188
+            {"name": "eggplant_dhaka_field", "kind": "mendeley", "role": "train", "id": "pvsv534ccg", "version": 2},
+            # 'Original Dataset': cercospora 133, TMV 406, powdery 213, leaf wilt 85, aphids/flea beetles, healthy leaf 256
+            # (fruit folders dropped; augmented zip skipped)
+            {"name": "eggplant_comprehensive", "kind": "mendeley", "role": "train", "id": "5drkk544k8", "version": 1},
+            # Meherpur/Joypurhat/Savar 2025 phone photos, 500/class (several shots per leaf -> capped):
+            # alternaria & cercospora leaf spot, phomopsis, powdery, healthy (downy - one source only - dropped)
+            {"name": "eggplant_brinjal_2025", "kind": "mendeley", "role": "train", "id": "6k94t3fydy", "version": 1, "cap": 300},
+            # High-resolution DSLR field set, Savar & Gazipur 2025 (1,338 originals, 6 classes) - never trained on
+            {"name": "eggplant_hires_field", "kind": "mendeley", "role": "heldout", "id": "ss63ftnjnh", "version": 6},
         ],
+        "auto_kaggle_inputs": False,
     },
     "cucumber": {
         "title": "Cucumber",
