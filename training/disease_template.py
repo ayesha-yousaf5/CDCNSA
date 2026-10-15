@@ -27,7 +27,7 @@ CLASSES = __CLASSES__          # canonical names = names used by the website
 ALIASES = __ALIASES__
 # Sources. role: "train" or "heldout". kind: mendeley | dataverse | figshare | zenodo | hf | plantdoc | plantvillage | kaggle_input
 SOURCES = __SOURCES__
-CAP_PER_CLASS_PER_SOURCE = 1500   # max original images per class per source (keeps lab sets from dominating)
+CAP_PER_CLASS_PER_SOURCE = 400    # max photos per class from ONE dataset -> no single dataset can dominate a class
 IMG_SIDE = 320                    # stored shorter side; training crops 224
 EPOCHS_HEAD, EPOCHS_FULL = 3, 14
 BATCH = 48
@@ -533,7 +533,7 @@ def ingest_dataverse(spec, dest):
             if tmp.exists(): tmp.unlink()
     return True
 
-CACHE_VERSION = "2026-10-15d"   # bump when download/label logic changes -> old caches are rebuilt
+CACHE_VERSION = "2026-10-15e"   # bump when download/label logic changes -> old caches are rebuilt
 def spec_key(spec):
     return CACHE_VERSION + json.dumps({k: v for k, v in spec.items() if k != "role"}, sort_keys=True) + json.dumps(ALIASES)
 
