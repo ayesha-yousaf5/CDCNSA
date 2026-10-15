@@ -3089,6 +3089,7 @@ function normalizeDiagnosis(r){
     symptoms:r.visible_symptoms||null,
     symptomsUr:r.visible_symptoms_ur||null,
     cnnDisease:r.cnn_disease||null,
+    vlmDisease:r.vlm_disease||null,
     modelsAgree:r.models_agree??null,
     reason:r.reason||null
   };
@@ -3105,6 +3106,12 @@ function renderDiagnosisSource(r){
   if(r.reason&&reasons[r.reason])parts.push(reasons[r.reason][ur?1:0]);
   const sym=ur?(r.symptomsUr||r.symptoms):r.symptoms;
   if(sym)parts.push((ur?'تصویر میں نظر آنے والی علامات: ':'What we see: ')+sym);
+  if(r.source==='trained_model'){
+    const v=r.vlmDisease;
+    const agree=v&&displayDisease(v)===displayDisease(r.disease);
+    const vt=v?(agree?(ur?'Qwen-VL بھی متفق ہے':'Qwen-VL agrees'):(ur?`Qwen-VL کا اندازہ: ${displayDisease(v)}`:`Qwen-VL suggested: ${displayDisease(v)}`)):'';
+    parts.push((ur?'تشخیص: ہمارا تربیت یافتہ ماڈل':'Diagnosed by our trained model')+(vt?' · '+vt:''));
+  }
   if(r.source==='qwen_vl'){
     const agreeTxt=r.modelsAgree===true?(ur?'CNN ماڈل بھی متفق ہے':'CNN model agrees'):(r.cnnDisease?(ur?`CNN ماڈل کا اندازہ: ${displayDisease(r.cnnDisease)}`:`CNN model suggested: ${displayDisease(r.cnnDisease)}`):'');
     parts.push((ur?'تشخیص: Qwen-VL بصری ماڈل':'Diagnosed by Qwen-VL vision model')+(agreeTxt?' · '+agreeTxt:''));

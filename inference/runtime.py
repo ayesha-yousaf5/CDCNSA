@@ -226,7 +226,19 @@ class ModelRuntime:
         reason=None
         if not v['is_plant_photo']: reason='image_not_a_plant'
         elif not v['matches_selected_crop']: reason='image_does_not_match_selected_crop'
-        elif not v['diagnosis']: reason='disease_not_recognised'
+        # Crops whose own trained model PASSED the held-out-source test: its confident answer is primary,
+        # Qwen-VL only acts as the safety check (plant? right crop?) and supplies the visible symptoms.
+        spec=self.registry.task(crop,'disease')
+        if reason is None and spec.get('primary') and cnn_label not in (None,'Uncertain') and not cnn.get('uncertain',True):
+            healthy=is_healthy(cnn_label)
+            out.update({'diagnosis_source':'trained_model','disease':'healthy' if healthy else display_label(cnn_label),
+                        'confidence':round(cnn_conf,6),'healthy':healthy,'candidate_healthy':healthy,'uncertain':False,
+                        'severity':'N/A' if healthy or v['severity']=='N/A' else v['severity'],
+                        'severity_confidence':None if healthy or v['severity']=='N/A' else round(v['confidence'],6),
+                        'severity_abstained':(not healthy and v['severity']=='N/A'),
+                        'vlm_disease':v['diagnosis'],'reason':'healthy_skips_severity' if healthy else 'ok'})
+            return out
+        if reason is None and not v['diagnosis']: reason='disease_not_recognised'
         conf=v['confidence']
         if agree and not cnn.get('uncertain',True): conf=max(conf,cnn_conf)
         else: conf=min(conf,0.9)

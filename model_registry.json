@@ -41,10 +41,29 @@
       "architecture": "resnet50",
       "checkpoint": "models/combined/disease_model.pt",
       "image_size": 224,
-      "normalization_mean": [0.485, 0.456, 0.406],
-      "normalization_std": [0.229, 0.224, 0.225],
+      "normalization_mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "normalization_std": [
+        0.229,
+        0.224,
+        0.225
+      ],
       "enabled": true,
-      "crops": ["apple", "corn", "cotton", "grape", "mango", "peas", "pepper", "potato", "rice", "sunflower", "tomato"],
+      "crops": [
+        "apple",
+        "corn",
+        "grape",
+        "mango",
+        "peas",
+        "pepper",
+        "potato",
+        "rice",
+        "sunflower",
+        "tomato"
+      ],
       "source": "PlantDis combined disease checkpoint"
     },
     "severity": {
@@ -52,11 +71,35 @@
       "architecture": "efficientnet_b0",
       "checkpoint": "models/combined/severity_model.pt",
       "image_size": 224,
-      "class_to_idx": {"MILD": 0, "MODERATE": 1, "SEVERE": 2},
-      "normalization_mean": [0.485, 0.456, 0.406],
-      "normalization_std": [0.229, 0.224, 0.225],
+      "class_to_idx": {
+        "MILD": 0,
+        "MODERATE": 1,
+        "SEVERE": 2
+      },
+      "normalization_mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "normalization_std": [
+        0.229,
+        0.224,
+        0.225
+      ],
       "enabled": true,
-      "crops": ["apple", "corn", "cotton", "grape", "mango", "peas", "pepper", "potato", "rice", "sunflower", "tomato"],
+      "crops": [
+        "apple",
+        "corn",
+        "cotton",
+        "grape",
+        "mango",
+        "peas",
+        "pepper",
+        "potato",
+        "rice",
+        "sunflower",
+        "tomato"
+      ],
       "source": "PlantDis combined severity checkpoint"
     }
   },
@@ -76,8 +119,16 @@
           "Northern Leaf Blight": 5,
           "healthy": 6
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "ae5ef35703cc622d0ccb53115c1acecc023496c7efc287d2096c8c34ab70db10",
         "note": "Checkpoint embeds class_mapping and architecture=efficientnet_b0.",
@@ -93,8 +144,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": false,
         "expected_sha256": null,
         "note": "Corn severity uses lesion-area/segmentation + abstention. No classification checkpoint available.",
@@ -103,27 +162,36 @@
     },
     "cotton": {
       "disease": {
-        "runtime_kind": "classification",
-        "architecture": "mobilenet_v3_large",
-        "checkpoint": "models/cotton/disease/cotton_mobilenetv3_stage_a_best.pt",
+        "runtime_kind": "torchscript",
+        "architecture": "dinov2_vits14",
+        "checkpoint": "models/cotton/disease/cotton_disease_dinov2_srcsplit.ts",
         "image_size": 224,
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "class_to_idx": {
-          "Alternaria Leaf Spot": 0,
-          "Bacterial Blight": 1,
-          "Curl Virus": 2,
-          "Herbicide Growth Damage": 3,
-          "Leaf Hopper Jassids": 4,
-          "Leaf Redding": 5,
-          "Leaf Variegation": 6,
-          "Verticillium Wilt": 7,
-          "healthy": 8
+          "Bacterial Blight": 0,
+          "Leaf Curl": 1,
+          "Herbicide Growth Damage": 2,
+          "Leaf Hopper Jassids": 3,
+          "Leaf Reddening": 4,
+          "Leaf Variegation": 5,
+          "healthy": 6
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
         "enabled": true,
-        "expected_sha256": "9f51d1eb6cd6f093f5c7d006acc29d9e10f479f99ee4d5aeded5a5d465ea4dcc",
-        "note": "Checkpoint embeds class_to_idx and model_name=mobilenet_v3_large.",
-        "source": "attached checkpoint"
+        "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7298",
+        "primary": true,
+        "download": {
+          "gdrive_id": "",
+          "note": "set to the Google Drive file id of cotton_disease_dinov2_srcsplit.ts"
+        }
       },
       "severity": {
         "runtime_kind": "classification",
@@ -135,8 +203,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "20817f1e402f2af9b71808cc1eadde27479375509aefb8c62ec303f7bdf3715a",
         "note": "Checkpoint embeds severity_to_idx and model_name=mobilenet_v3_large.",
@@ -166,8 +242,16 @@
           "Tomato Yellow Leaf Curl Virus": 13,
           "healthy": 14
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "c4c535ad2566e9fc29c2035db34991c48fb07a266bc2360aee407b8c32c10660",
         "note": "Checkpoint embeds class_order and architecture=efficientnet_b0.",
@@ -183,8 +267,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "70e5d82602e28c999a4bd348f93ad432ca85ad27d396f26fe29b75dcfb85b61e",
         "note": "Checkpoint embeds severity_classes and architecture=MobileNetV3-Large.",
@@ -205,8 +297,16 @@
           "Cedar Apple Rust": 4,
           "healthy": 5
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "22e129ee92f8f4e52f89ba4cca32a3417fc45b60a1ec0a5993307751e25841fc",
         "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
@@ -222,8 +322,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "8a98f69a1977dea5030dbcc6bc407e57c2a7e9038382051faa072170b7f78457",
         "note": "Checkpoint embeds class_to_idx and architecture=mobilenet_v3_large.",
@@ -249,8 +357,16 @@
           "Rice / Sheath Blight": 9,
           "Rice / healthy": 10
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Checkpoint embeds class_to_idx and backbone=resnet50.",
@@ -266,8 +382,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Checkpoint embeds class_to_idx and backbone=efficientnet_b0.",
@@ -291,8 +415,16 @@
           "Mango / healthy": 7,
           "Mango / senescence or dry": 8
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Checkpoint embeds class_to_idx and backbone=efficientnet_b0.",
@@ -308,8 +440,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Checkpoint embeds class_to_idx and backbone=resnet50.",
@@ -331,8 +471,16 @@
           "Grape / Yellow Leaf Spot": 5,
           "Grape / healthy": 6
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Checkpoint embeds class_to_idx and backbone=resnet50.",
@@ -348,8 +496,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Checkpoint embeds class_to_idx and backbone=mobilenet_v3.",
@@ -369,8 +525,16 @@
           "Phomopsis Blight": 3,
           "White Mold": 4
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Pure state_dict; no healthy class. Class mapping from registry.",
@@ -386,8 +550,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Pure state_dict; class mapping from registry.",
@@ -407,8 +579,16 @@
           "Gummy Stem Blight": 3,
           "Pythium Fruit Rot": 4
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Pure state_dict; no healthy class. Class mapping from registry.",
@@ -424,8 +604,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": null,
         "note": "Pure state_dict; class mapping from registry.",
@@ -445,8 +633,16 @@
           "Pod Borer Damage": 3,
           "healthy": 4
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "25ed16f2d231c9a250374384be3b049a5697f9d747d2052439e6f7661850e2e9",
         "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
@@ -462,8 +658,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": true,
         "expected_sha256": "b0b8e4ecd6fa11ba8099ebd8cecaf209dec1adde97922f67d37e5c9d846c6a62",
         "note": "Checkpoint embeds class_to_idx and architecture=resnet50.",
@@ -481,8 +685,16 @@
           "citrus_canker": 1,
           "sooty_mould": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": false,
         "expected_sha256": null,
         "note": "No checkpoint binary available. Disabled.",
@@ -498,8 +710,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": false,
         "expected_sha256": null,
         "note": "No checkpoint binary available. Disabled.",
@@ -517,8 +737,16 @@
           "bacterial_blight": 1,
           "frogeye_leaf_spot": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": false,
         "expected_sha256": null,
         "note": "No checkpoint binary available. Disabled.",
@@ -534,8 +762,16 @@
           "MODERATE": 1,
           "SEVERE": 2
         },
-        "normalization_mean": [0.485, 0.456, 0.406],
-        "normalization_std": [0.229, 0.224, 0.225],
+        "normalization_mean": [
+          0.485,
+          0.456,
+          0.406
+        ],
+        "normalization_std": [
+          0.229,
+          0.224,
+          0.225
+        ],
         "enabled": false,
         "expected_sha256": null,
         "note": "No checkpoint binary available. Disabled.",

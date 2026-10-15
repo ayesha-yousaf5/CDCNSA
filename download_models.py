@@ -15,21 +15,38 @@ ROOT = Path(__file__).resolve().parent
 MODELS_DIR = ROOT / "models"
 def required_checkpoints() -> list[tuple[Path, str | None]]:
     registry = json.loads((ROOT / "model_registry.json").read_text(encoding="utf-8"))
-    combined_crops = {
-        crop
-        for spec in registry.get("combined_models", {}).values()
-        for crop in spec.get("crops", [])
-    }
+    combined = registry.get("combined_models", {})
     required: list[tuple[Path, str | None]] = []
     for crop, tasks in registry["crops"].items():
-        for spec in tasks.values():
+        for task, spec in tasks.items():
+            routed_to_combined = crop in combined.get(task, {}).get("crops", [])
             if (
                 spec.get("enabled")
                 and spec.get("runtime_kind") == "classification"
-                and crop not in combined_crops
+                and not routed_to_combined
             ):
                 required.append((ROOT / spec["checkpoint"], spec.get("expected_sha256")))
     return required
+
+
+def download_individual_models(gdown) -> None:
+    """Newly trained models (e.g. cotton DINOv2) are single files with their own Google Drive id
+    in model_registry.json -> crops.<crop>.<task>.download.gdrive_id. Missing ids only warn: the app
+    then falls back to the Qwen vision diagnosis for that crop."""
+    registry = json.loads((ROOT / "model_registry.json").read_text(encoding="utf-8"))
+    for crop, tasks in registry["crops"].items():
+        for task, spec in tasks.items():
+            gid = (spec.get("download") or {}).get("gdrive_id")
+            target = ROOT / spec.get("checkpoint", "")
+            if not spec.get("enabled") or spec.get("runtime_kind") != "torchscript" or target.is_file():
+                continue
+            if not gid:
+                print(f"[download_models] WARNING: {crop} {task} model not present and no gdrive_id set -> Qwen fallback")
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            print(f"[download_models] Downloading {crop} {task} model ...")
+            if not gdown.download(f"https://drive.google.com/uc?id={gid}", output=str(target), quiet=False, use_cookies=False):
+                print(f"[download_models] WARNING: download failed for {crop} {task} -> Qwen fallback")
 
 
 def required_combined_checkpoints() -> list[Path]:
@@ -103,6 +120,7 @@ def main():
         import gdown
     for filename, file_id in ARCHIVE_IDS.items():
         download_archive(gdown, filename, file_id)
+    download_individual_models(gdown)
 
     pt_files = list(MODELS_DIR.rglob("*.pt"))
     pth_files = list(MODELS_DIR.rglob("*.pth"))
