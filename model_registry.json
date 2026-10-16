@@ -129,7 +129,7 @@
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.6635",
     "final": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1V974Xj2hREBISuBouWdZ7guKgYM0as7l",
      "bytes": 28417411
     }
    },
@@ -189,7 +189,7 @@
     "final": true,
     "primary": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1_pZ1D5bvFo2Ekm33JlmnTGGu2UihySsu",
      "bytes": 94408021
     }
    },
@@ -246,7 +246,7 @@
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.559",
     "final": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1E39CIWPEXAy9o_ncj4_KgT8a2D61VL7e",
      "bytes": 88663191
     }
    },
@@ -304,7 +304,7 @@
     "final": true,
     "primary": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1BEbX6dFJrjLudkqxbTMtGbpZmtttc9qX",
      "bytes": 88662478
     }
    },
@@ -364,7 +364,7 @@
     "final": true,
     "primary": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1loGNRRP-BgeKJ87mR95wBf0mVOFViYn6",
      "bytes": 88663813
     }
    },
@@ -425,7 +425,7 @@
     "final": true,
     "primary": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1SYJBxqAT9rwpXEmfXZHgJtmCm5ioKMGa",
      "bytes": 88667086
     }
    },
@@ -484,7 +484,7 @@
     "final": true,
     "primary": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1JuZI-0VbzwjAUvC52BsQ5USwdPml9qcX",
      "bytes": 88664078
     }
    },
@@ -546,7 +546,7 @@
     "final": true,
     "primary": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1_fh6Xp90vlQHwHacQv3aUHFoy4iC-Seq",
      "bytes": 16370123
     }
    },
@@ -601,7 +601,7 @@
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.8797",
     "final": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "1yB2syP1uFz_hNTL5wym5T-j5OdwwUIbD",
      "bytes": 94375265
     }
    },
@@ -660,7 +660,7 @@
     "source": "attached checkpoint",
     "final": true,
     "download": {
-     "gdrive_id": "",
+     "gdrive_id": "16ht2yOYwzKrlvoEjKiIyZFluiflKYdT6",
      "bytes": 94398449
     }
    },
@@ -842,7 +842,7 @@
    "deficiency"
   ],
   "download": {
-   "gdrive_id": "",
+   "gdrive_id": "1ZKSPke2f1Pyvzld_iLmN9Tq_4O-121wV",
    "bytes": 98233937
   }
  }
