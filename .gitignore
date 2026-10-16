@@ -46,3 +46,6 @@ training/results/
 test_images/
 archive/
 .venv/
+
+# Interrupted model downloads
+models_final/**/*.part
