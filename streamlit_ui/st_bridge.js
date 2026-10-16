@@ -72,5 +72,20 @@
     });
   };
 
+  // Streamlit creates the component frame with scrolling="no", which blocks mouse-wheel and touch
+  // scrolling of the website. The frame is same-origin, so switch scrolling back on from inside.
+  function allowScrolling() {
+    try {
+      const fe = window.frameElement;
+      if (fe && fe.getAttribute('scrolling') !== 'auto') {
+        fe.setAttribute('scrolling', 'auto');
+        fe.style.overflow = 'auto';
+      }
+    } catch (e) { /* not same-origin: nothing to do */ }
+  }
+  allowScrolling();
+  window.addEventListener('load', allowScrolling);
+  setInterval(allowScrolling, 2000);  // Streamlit may re-render the frame element
+
   post('streamlit:componentReady', { apiVersion: 1 });
 })();
