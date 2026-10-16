@@ -1,9 +1,7 @@
-[theme]
-base = "light"
-primaryColor = "#2f6b35"
-backgroundColor = "#f7f8f3"
-secondaryBackgroundColor = "#e9efe2"
-textColor = "#1d2a1f"
-
 [server]
 maxUploadSize = 25
+maxMessageSize = 200
+
+[client]
+toolbarMode = "minimal"
+showSidebarNavigation = false

@@ -49,3 +49,6 @@ archive/
 
 # Interrupted model downloads
 models_final/**/*.part
+
+# Streamlit copy of the website, rebuilt at start-up
+_streamlit_ui_build/
