@@ -1,6 +1,10 @@
 {
  "registry_version": 2,
  "project": "CDCNSA",
+ "model_source": {
+  "hf_repo": "",
+  "note": "Hugging Face model repo holding the 11 model files flat (same file names). Tried first; each file's gdrive_id is the fallback. CDCNSA_HF_REPO env var overrides this."
+ },
  "device_policy": "cuda_if_available_else_cpu",
  "disease_confidence_threshold": 0.55,
  "disease_margin_threshold": 0.08,
