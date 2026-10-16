@@ -1,147 +1,80 @@
-"""Download the model archives from Google Drive for Render deployment."""
-import hashlib
+"""Download the trained model files from Google Drive at deploy time (Render build step).
+
+The model files are too large for GitHub. Each one is listed in model_registry.json with a
+"download" block:   {"gdrive_id": "<Google Drive file id or share link>", "bytes": <exact size>}
+for every crop's final disease model and for the severity model ("severity_segmentation").
+
+Run:  python download_models.py
+- files that already exist with the right size are skipped (fast re-deploys);
+- a missing id or a failed download only WARNS: the app still runs, using the Qwen photo check
+  and the other models (it never crashes on a missing model).
+"""
 import json
+import re
 import subprocess
 import sys
-import tarfile
 from pathlib import Path
 
-ARCHIVE_IDS = {
-    "brinjal_cucumber_models.tar.gz": "1ow6SCPK9o4NRdL8-b21s4xzenJ6l5AzZ",
-    "combined_models.tar.gz": "10lXq0GCMxNqTRM7vaTbYP_bi0yELy3UK",
-}
-
 ROOT = Path(__file__).resolve().parent
-MODELS_DIR = ROOT / "models"
-def required_checkpoints() -> list[tuple[Path, str | None]]:
-    registry = json.loads((ROOT / "model_registry.json").read_text(encoding="utf-8"))
-    combined = registry.get("combined_models", {})
-    required: list[tuple[Path, str | None]] = []
-    for crop, tasks in registry["crops"].items():
-        for task, spec in tasks.items():
-            routed_to_combined = crop in combined.get(task, {}).get("crops", [])
-            if (
-                spec.get("enabled")
-                and spec.get("runtime_kind") == "classification"
-                and not routed_to_combined
-                and not spec.get("final")  # models_final/* live on the laptop; missing -> Qwen fallback
-            ):
-                required.append((ROOT / spec["checkpoint"], spec.get("expected_sha256")))
-    return required
 
 
-def download_individual_models(gdown) -> None:
-    """Newly trained models (e.g. cotton DINOv2) are single files with their own Google Drive id
-    in model_registry.json -> crops.<crop>.<task>.download.gdrive_id. Missing ids only warn: the app
-    then falls back to the Qwen vision diagnosis for that crop."""
-    registry = json.loads((ROOT / "model_registry.json").read_text(encoding="utf-8"))
-    for crop, tasks in registry["crops"].items():
-        for task, spec in tasks.items():
-            gid = (spec.get("download") or {}).get("gdrive_id")
-            target = ROOT / spec.get("checkpoint", "")
-            if not spec.get("enabled") or spec.get("runtime_kind") != "torchscript" or target.is_file():
-                continue
-            if not gid:
-                print(f"[download_models] WARNING: {crop} {task} model not present and no gdrive_id set -> Qwen fallback")
-                continue
-            target.parent.mkdir(parents=True, exist_ok=True)
-            print(f"[download_models] Downloading {crop} {task} model ...")
-            if not gdown.download(f"https://drive.google.com/uc?id={gid}", output=str(target), quiet=False, use_cookies=False):
-                print(f"[download_models] WARNING: download failed for {crop} {task} -> Qwen fallback")
+def _file_id(value: str) -> str:
+    """Accept a bare id or any Google Drive share link."""
+    value = (value or "").strip()
+    m = re.search(r"/d/([A-Za-z0-9_-]{10,})", value) or re.search(r"[?&]id=([A-Za-z0-9_-]{10,})", value)
+    return m.group(1) if m else value
 
 
-def required_combined_checkpoints() -> list[Path]:
-    registry = json.loads((ROOT / "model_registry.json").read_text(encoding="utf-8"))
-    return [
-        ROOT / spec["checkpoint"]
-        for spec in registry.get("combined_models", {}).values()
-        if spec.get("enabled")
-    ]
+def wanted_files() -> list[dict]:
+    reg = json.loads((ROOT / "model_registry.json").read_text(encoding="utf-8"))
+    out = []
+    for crop, tasks in reg["crops"].items():
+        spec = tasks.get("disease") or {}
+        if spec.get("enabled") and spec.get("download"):
+            out.append({"name": f"{crop} disease", "path": ROOT / spec["checkpoint"], **spec["download"]})
+    seg = reg.get("severity_segmentation") or {}
+    if seg.get("enabled") and seg.get("download"):
+        out.append({"name": "severity (all crops)", "path": ROOT / seg["checkpoint"], **seg["download"]})
+    return out
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as handle:
-        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def checkpoint_issues() -> list[tuple[Path, str]]:
-    issues: list[tuple[Path, str]] = []
-    for path, expected in required_checkpoints():
-        if not path.is_file():
-            issues.append((path, "missing"))
-        elif expected and sha256(path) != expected:
-            issues.append((path, "sha256_mismatch"))
-    return issues
-
-
-def combined_checkpoint_issues() -> list[Path]:
-    return [path for path in required_combined_checkpoints() if not path.is_file()]
-
-
-def extract_archive_safely(archive_path: Path) -> None:
-    root = ROOT.resolve()
-    with tarfile.open(archive_path, "r:gz") as archive:
-        for member in archive.getmembers():
-            target = (ROOT / member.name).resolve()
-            if target != root and root not in target.parents:
-                raise RuntimeError(f"Unsafe archive path: {member.name}")
-            if member.issym() or member.islnk():
-                raise RuntimeError(f"Archive links are not allowed: {member.name}")
-        archive.extractall(path=ROOT)
-
-
-def download_archive(gdown, filename: str, file_id: str) -> None:
-    archive = ROOT / filename
-    if archive.is_file():
-        return
-    print(f"[download_models] Downloading {filename}...")
-    result = gdown.download(
-        f"https://drive.google.com/uc?id={file_id}",
-        output=str(archive),
-        quiet=False,
-        use_cookies=False,
-        resume=True,
-    )
-    if not result:
-        raise SystemExit(f"[download_models] Archive download failed: {filename}")
-    print(f"[download_models] Extracting {filename}...")
-    extract_archive_safely(archive)
-    archive.unlink()
-
-
-def main():
+def main() -> None:
     try:
         import gdown
     except ImportError:
-        print("[download_models] gdown not installed, installing now...")
         subprocess.check_call([sys.executable, "-m", "pip", "install", "gdown", "-q"])
         import gdown
-    for filename, file_id in ARCHIVE_IDS.items():
-        download_archive(gdown, filename, file_id)
-    download_individual_models(gdown)
 
-    pt_files = list(MODELS_DIR.rglob("*.pt"))
-    pth_files = list(MODELS_DIR.rglob("*.pth"))
-    all_models = pt_files + pth_files
-    print(f"[download_models] Found {len(all_models)} model files:")
-    for f in all_models:
-        size_mb = f.stat().st_size / (1024 * 1024)
-        print(f"  {f.relative_to(ROOT)} ({size_mb:.1f} MB)")
+    ok, missing = [], []
+    for f in wanted_files():
+        path, size = f["path"], int(f.get("bytes") or 0)
+        if path.is_file() and (not size or path.stat().st_size == size):
+            print(f"[models] present   {f['name']}: {path.relative_to(ROOT)}")
+            ok.append(f["name"])
+            continue
+        gid = _file_id(f.get("gdrive_id", ""))
+        if not gid:
+            print(f"[models] WARNING   {f['name']}: no gdrive_id in model_registry.json -> not downloaded")
+            missing.append(f["name"])
+            continue
+        path.parent.mkdir(parents=True, exist_ok=True)
+        print(f"[models] download  {f['name']} -> {path.relative_to(ROOT)}")
+        try:
+            got = gdown.download(id=gid, output=str(path), quiet=True)
+        except Exception as exc:  # network / permission / quota
+            got = None
+            print(f"[models] WARNING   {f['name']}: {exc}")
+        if not got or not path.is_file() or (size and path.stat().st_size != size):
+            have = path.stat().st_size if path.is_file() else 0
+            print(f"[models] WARNING   {f['name']}: download failed or wrong size ({have} of {size} bytes). "
+                  "Is the Drive file shared as 'Anyone with the link'?")
+            if path.is_file():
+                path.unlink()
+            missing.append(f["name"])
+            continue
+        ok.append(f["name"])
 
-    issues_after = checkpoint_issues()
-    combined_issues = combined_checkpoint_issues()
-    if issues_after or combined_issues:
-        print("[download_models] ERROR: Download completed but required checkpoints are missing or invalid:")
-        for path, reason in issues_after:
-            print(f"  {path.relative_to(ROOT)}: {reason}")
-        for path in combined_issues:
-            print(f"  {path.relative_to(ROOT)}: missing")
-        raise SystemExit(1)
-
-    print("[download_models] All enabled classification checkpoints are ready.")
+    print(f"[models] ready: {len(ok)}  missing: {len(missing)} {missing if missing else ''}")
 
 
 if __name__ == "__main__":

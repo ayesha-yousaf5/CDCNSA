@@ -127,7 +127,11 @@
     },
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.6635",
-    "final": true
+    "final": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 28417411
+    }
    },
    "severity": {
     "runtime_kind": "lesion_area_abstention",
@@ -183,7 +187,11 @@
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7057",
     "final": true,
-    "primary": true
+    "primary": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 94408021
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -236,7 +244,11 @@
     },
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.559",
-    "final": true
+    "final": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 88663191
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -290,7 +302,11 @@
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7955",
     "final": true,
-    "primary": true
+    "primary": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 88662478
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -346,7 +362,11 @@
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7556",
     "final": true,
-    "primary": true
+    "primary": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 88663813
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -403,7 +423,11 @@
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.8842",
     "final": true,
-    "primary": true
+    "primary": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 88667086
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -458,7 +482,11 @@
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7778",
     "final": true,
-    "primary": true
+    "primary": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 88664078
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -516,7 +544,11 @@
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.7421",
     "final": true,
-    "primary": true
+    "primary": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 16370123
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -567,7 +599,11 @@
     },
     "enabled": true,
     "note": "source-held-out training 2026-10-15; ood_test macroF1=0.8797",
-    "final": true
+    "final": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 94375265
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -622,7 +658,11 @@
     "expected_sha256": "25ed16f2d231c9a250374384be3b049a5697f9d747d2052439e6f7661850e2e9",
     "note": "Previous peas model (ResNet50, trained mostly on pod photos; not retrained - not enough new data). Qwen gives the main answer when available.",
     "source": "attached checkpoint",
-    "final": true
+    "final": true,
+    "download": {
+     "gdrive_id": "",
+     "bytes": 94398449
+    }
    },
    "severity": {
     "runtime_kind": "classification",
@@ -800,6 +840,10 @@
    "hispa",
    "leaffolder",
    "deficiency"
-  ]
+  ],
+  "download": {
+   "gdrive_id": "",
+   "bytes": 98233937
+  }
  }
 }
