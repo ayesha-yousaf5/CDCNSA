@@ -560,9 +560,9 @@ def _build_knowledge_context(disease_info, user_question):
     for t in disease_info['treatment_organic']:
         parts.append(f"- {t}")
 
-    parts.append(f"\nChemical treatments:")
+    parts.append(f"\nChemical treatments (names only; doses come from the product label):")
     for t in disease_info['treatment_chemical']:
-        parts.append(f"- {t}")
+        parts.append(f"- {_strip_doses(t, note=False)}")
 
     parts.append(f"\nPrevention methods:")
     for p in disease_info['prevention']:
@@ -573,14 +573,7 @@ def _build_knowledge_context(disease_info, user_question):
         for level, desc in disease_info['severity_indicators'].items():
             parts.append(f"- {level.capitalize()}: {desc}")
 
-    parts.append(f"\n=== RECOMMENDED PRODUCTS ===")
-    disease_lower = disease_info['disease'].lower()
-    for category, products in PESTICIDE_GUIDE.get("fungicides", {}).items():
-        for product in products:
-            targets = [t.lower() for t in product.get("target", [])]
-            if any(disease_lower in t or t in disease_lower for t in targets) or "all fungal" in " ".join(targets):
-                parts.append(f"- {product['name']} ({product['brand']}): {product['dose']}, PHI: {product['phi']}")
-
+    # product doses / PHI from the old guide are NOT passed on: they are unverified for Pakistan (DPP)
     parts.append(f"=== END KNOWLEDGE ===\n")
     return "\n".join(parts)
 
@@ -769,6 +762,85 @@ def _named_disease(crop, question_en, question_raw=""):
     return best[1] if best else None
 
 
+_SYMPTOM_WORDS = {
+    "curl": ["curl", "curling", "curled", "twist"], "spot": ["spot", "spots", "lesion", "lesions"],
+    "yellow": ["yellow", "yellowing", "chlorosis", "chlorotic"], "wilt": ["wilt", "wilting", "wilted", "droop"],
+    "mosaic": ["mosaic", "mottle", "mottling"], "rot": ["rot", "rotting", "decay"],
+    "powder": ["powder", "powdery", "white coating"], "rust": ["rust", "pustule", "pustules"],
+    "hole": ["hole", "holes", "chewed"], "red": ["red", "reddening", "purple"],
+}
+
+
+def _symptoms_fit(crop, disease, question_en):
+    """False when the question describes symptoms that the current disease's library entry never mentions
+    (keeps 'what should I spray for it?' on the same disease, but 'leaves are curling' leaves bacterial blight)."""
+    q = " " + _norm_name(question_en) + " "
+    asked = {k for k, words in _SYMPTOM_WORDS.items() if any(f" {w} " in q for w in words)}
+    if not asked:
+        return True
+    e = _library_entry(crop, disease)
+    if not e:
+        return True
+    text = " " + _norm_name(" ".join([e["name"], e.get("symptoms", ""), e.get("type", "")])) + " "
+    return any(any(w in text for w in _SYMPTOM_WORDS[k]) for k in asked)
+
+
+def _crop_problem_list(crop, urdu):
+    entries = APP_LIBRARY.get(crop or "", [])
+    if not entries:
+        return ""
+    lines = [f"\n=== CROP PROBLEM LIST for {crop} (the only problems this app covers) ==="]
+    for e in entries:
+        name = f"{e['name']} ({e['name_ur']})" if urdu and e.get("name_ur") else e["name"]
+        lines.append(f"- {name} [{e.get('type', '')}; {e.get('cause', '')}]: {e.get('symptoms', '')}")
+    lines.append("=== END CROP PROBLEM LIST ===")
+    return "\n".join(lines)
+
+
+_UNIT = r"(?:g|gm|gms|grams?|mg|kg|ml|mL|cc|l|L|lit(?:er|re)s?|oz|lbs?)"
+_DOSE_RE = re.compile(
+    rf"\d+(?:[.,]\d+)?(?:\s*[-\u2013]\s*\d+(?:[.,]\d+)?)?\s*{_UNIT}\b"
+    rf"(?:\s*(?:/|per|\s)\s*(?:\d+\s*)?(?:{_UNIT}|acres?|ha|hectares?|kanals?|water|tank)\b)?(?:\s*\u207b\u00b9)?")
+_PHI_RE = re.compile(r"(?:\bPHI\b|pre[- ]harvest interval)[^.;\n\u06d4]*", re.I)
+
+
+def _strip_doses(line, note=True):
+    """Removes doses, rates and PHI from one line of text; adds a 'use the label' note where something went."""
+    if not line:
+        return line
+    new = _PHI_RE.sub("", _DOSE_RE.sub("", line))
+    if new == line:
+        return line
+    new = re.sub(r"\(\s*(?:water|of water|in water)?\s*\)", "", new)
+    new = re.sub(r"\u061b\s*\u06d4", "\u06d4", new)
+    new = re.sub(r"\s*[-\u2013:;,]\s*(?=[-\u2013:;,.\u06d4]|$)", "", new)
+    new = re.sub(r"[ \t]{2,}", " ", new).rstrip(" -\u2013:;,")
+    if note:
+        new += " (\u062e\u0648\u0631\u0627\u06a9 \u0644\u06cc\u0628\u0644 \u06a9\u06d2 \u0645\u0637\u0627\u0628\u0642)" if _is_urdu(line) else " (use the dose on the product label)"
+    return new
+
+
+def _strip_doses_text(text):
+    return "\n".join(_strip_doses(l) for l in str(text or "").split("\n"))
+
+
+class _LineFilter:
+    """Streams whole lines so a dose split across chunks is still caught."""
+    def __init__(self):
+        self.buf = ""
+
+    def feed(self, chunk):
+        self.buf += chunk
+        if "\n" not in self.buf:
+            return ""
+        head, self.buf = self.buf.rsplit("\n", 1)
+        return _strip_doses_text(head) + "\n"
+
+    def flush(self):
+        rest, self.buf = self.buf, ""
+        return _strip_doses(rest)
+
+
 def _library_context(e, urdu):
     lines = [f"=== APP DISEASE LIBRARY (verified; use FIRST): {e['name']} ({e['name_ur']}) ===",
              f"Type: {e['type']} - {e['cause']}",
@@ -804,11 +876,11 @@ def _build_messages(user_question, retrieved_results, urdu_match=None, kb_record
     if urdu_match and urdu_match["type"] == "pest":
         pest_info = urdu_match["pest_info"]
         knowledge_context += _build_pest_context(pest_info)
-    elif urdu_match and urdu_match["type"] == "disease":
+    elif urdu_match and urdu_match["type"] == "disease" and not lib:
         disease_info = get_disease_info(urdu_match["crop"], urdu_match["disease"])
         if disease_info:
             knowledge_context += _build_knowledge_context(disease_info, user_question)
-    elif crop and disease:
+    elif crop and disease and not lib:
         disease_info = get_disease_info(CROP_DK_IDS.get(crop, crop), disease) or get_disease_info(crop, disease)
         if disease_info:
             knowledge_context += _build_knowledge_context(disease_info, user_question)
@@ -856,7 +928,8 @@ def _build_messages(user_question, retrieved_results, urdu_match=None, kb_record
     elif crop and not conversation_context.get("healthy"):
         notes.append("No disease has been confirmed yet. If the farmer describes symptoms, give the 2-3 most likely "
                      "causes for this crop (say they are possibilities, not a diagnosis) and suggest uploading a clear "
-                     "photo in the Diagnose page.")
+                     "photo in the Diagnose page. Choose the possible causes ONLY from the CROP PROBLEM LIST below.")
+        knowledge_context += _crop_problem_list(crop, urdu_mode)
     if conversation_context.get("severity"):
         pct = conversation_context.get("severity_percent")
         notes.append(f"The photo diagnosis severity is {conversation_context['severity']}"
@@ -883,7 +956,10 @@ Retrieved from plant disease dataset:
 Answer the farmer's question using the information above.
 - PRIORITY: 1) APP DISEASE LIBRARY, 2) PLANT HEALTH KNOWLEDGE BASE, 3) DISEASE KNOWLEDGE, 4) the Q&A dataset.
 - Use only sources about the farmer's crop; ignore retrieved text about other crops or other diseases.
-- Give product names or doses ONLY if they appear in the sources above; never invent a product or dose.
+- When an APP DISEASE LIBRARY section is present, take the cause, the vector (the insect that spreads it),
+  the symptoms and any chemical names ONLY from it. Do not add facts from your own memory.
+- Name a chemical ONLY if it appears in the APP DISEASE LIBRARY. NEVER write a dose, a rate (g/L, ml/L, per acre),
+  a pre-harvest interval (PHI) or a spray interval; say "use the dose on the product label" instead.
   Remind the farmer to check the product label / local agriculture officer before spraying.
 - If the sources above do not cover the question, say so in one line, then give only general, widely accepted
   advice for Pakistan (Rabi/Kharif seasons); never state crop stages, timings or doses you are not sure of.
@@ -978,6 +1054,7 @@ async def _stream_llm(messages, hist, user_question):
     loop = asyncio.get_event_loop()
     loop.run_in_executor(None, process_stream)
     flt = _ThinkFilter()
+    lines = _LineFilter()
     full_answer = ""
     while True:
         try:
@@ -993,11 +1070,11 @@ async def _stream_llm(messages, hist, user_question):
                 else:
                     yield f"Sorry, the assistant encountered an error: {chunk}. Please try again."
             return
-        text = flt.feed(chunk)
+        text = lines.feed(flt.feed(chunk))
         if text:
             full_answer += text
             yield text
-    tail = flt.flush()
+    tail = lines.feed(flt.flush()) + lines.flush()
     if tail:
         full_answer += tail
         yield tail
@@ -1220,6 +1297,14 @@ def _prepare(message, context=None):
             conversation_context["disease"] = pest_info["pest"]
 
     follow_up = _is_follow_up(search_message) or _is_follow_up(message)
+    unresolved = search_message                         # before 'it' is replaced by the disease being discussed
+    named_now = _named_disease(crop, unresolved, message) if crop else None
+    if crop and not named_now and conversation_context.get("disease") and \
+            not _symptoms_fit(crop, conversation_context.get("disease"), unresolved):
+        conversation_context["disease"] = None          # 'leaves are curling' after talking about bacterial blight
+        conversation_context["severity"] = None
+        conversation_context["severity_percent"] = None
+        follow_up = False
     search_message = _resolve_pronouns(search_message)
     results = search_dataset(search_message, top_k=3, crop=crop)
     kb_records = _kb_for_crop(search_message, crop)
@@ -1234,10 +1319,10 @@ def _prepare(message, context=None):
 
     # remember a disease only when the farmer NAMES it (before, symptom words locked a guessed disease:
     # 'tomato spots' -> Yellow Leaf Curl Virus, 'eggplant wilt' -> Whiteflies, 'rice brown spots' -> Leaf Scald)
-    if crop and not follow_up and not urdu_match:
-        dis = _named_disease(crop, search_message, message)
+    if crop and (named_now or (not follow_up and not urdu_match)):
+        dis = named_now
         if not dis:
-            q = " " + _norm_name(search_message) + " "
+            q = " " + _norm_name(unresolved) + " "
             for r in list(kb_records) + list(results):
                 name = str(r.get("topic") or r.get("disease") or "")
                 if _canon_crop(r.get("crop")) == crop and name.lower() != "healthy" and \
@@ -1273,8 +1358,8 @@ def ask(message: str, context: dict = None, session_id: str = "default") -> str:
         _bind_session(session_id)
         kind, payload = _prepare(message, context)
         if kind == "reply":
-            return payload
-        return _clean(generate_answer(**payload))
+            return _strip_doses_text(payload)
+        return _strip_doses_text(_clean(generate_answer(**payload)))
 
 
 async def ask_stream(message: str, context: dict = None, session_id: str = "default"):
@@ -1292,7 +1377,7 @@ async def ask_stream(message: str, context: dict = None, session_id: str = "defa
 
     kind, payload, hist = await asyncio.to_thread(prepare)
     if kind == "reply":
-        yield payload
+        yield _strip_doses_text(payload)
         return
     async for chunk in _stream_llm(payload, hist, message):
         yield chunk
